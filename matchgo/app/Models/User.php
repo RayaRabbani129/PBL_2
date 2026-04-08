@@ -2,48 +2,93 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
         'email',
         'password',
+        'phone',
+        'role',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
+     * ========================
+     * CONSTANTS
+     * ========================
      */
-    protected function casts(): array
+
+    const ROLE_PLAYER = 'player';
+    const ROLE_ADMIN  = 'admin';
+
+    /**
+     * ========================
+     * RELATIONSHIPS
+     * ========================
+     */
+
+    // User punya banyak team (via pivot)
+    public function teams()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->belongsToMany(Team::class, 'team_members')
+                    ->withPivot(['role', 'status', 'joined_at'])
+                    ->withTimestamps();
+    }
+
+    // User sebagai owner/captain tim
+    public function ownedTeams()
+    {
+        return $this->hasMany(Team::class, 'user_id');
+    }
+
+    // Relasi ke team_members (detail pivot)
+    public function teamMemberships()
+    {
+        return $this->hasMany(TeamMember::class);
+    }
+
+    // Venue yang dibuat (khusus admin)
+    public function venues()
+    {
+        return $this->hasMany(Venue::class, 'created_by');
+    }
+
+    /**
+     * ========================
+     * HELPER METHODS
+     * ========================
+     */
+
+    public function isAdmin()
+    {
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function isPlayer()
+    {
+        return $this->role === self::ROLE_PLAYER;
+    }
+
+    // Cek apakah user adalah captain di tim tertentu
+    public function isCaptainOf($teamId)
+    {
+        return $this->teamMemberships()
+                    ->where('team_id', $teamId)
+                    ->where('role', TeamMember::ROLE_CAPTAIN)
+                    ->exists();
     }
 }
