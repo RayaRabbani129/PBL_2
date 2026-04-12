@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Filament\Panel;
+use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -34,6 +36,7 @@ class User extends Authenticatable
 
     const ROLE_PLAYER = 'player';
     const ROLE_ADMIN  = 'admin';
+    const ROLE_ADMIN_LAPANGAN  = 'admin_lapangan';
 
     /**
      * ========================
@@ -73,12 +76,22 @@ class User extends Authenticatable
      * ========================
      */
 
-    public function isAdmin()
+    public function isAdmin(): bool
+    {
+        return in_array($this->role, [self::ROLE_ADMIN, self::ROLE_ADMIN_LAPANGAN]);
+    }
+
+    public function isAdminUtama(): bool
     {
         return $this->role === self::ROLE_ADMIN;
     }
 
-    public function isPlayer()
+    public function isAdminLapangan(): bool
+    {
+        return $this->role === self::ROLE_ADMIN_LAPANGAN;
+    }
+
+    public function isPlayer(): bool
     {
         return $this->role === self::ROLE_PLAYER;
     }
@@ -90,5 +103,10 @@ class User extends Authenticatable
                     ->where('team_id', $teamId)
                     ->where('role', TeamMember::ROLE_CAPTAIN)
                     ->exists();
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->isAdmin();
     }
 }

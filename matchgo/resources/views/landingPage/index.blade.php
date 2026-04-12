@@ -11,7 +11,7 @@
   <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <!-- Custom CSS -->
-  <link href="{{ asset('storage/css/style.css') }}" rel="stylesheet">
+  <link href="{{ asset('css/landing_page/style.css') }}" rel="stylesheet">
 
   <script data-design-ignore="true">
   (function() {
@@ -66,7 +66,7 @@
             <i class="bi bi-moon-fill icon-moon"></i>
             <i class="bi bi-sun-fill icon-sun"></i>
           </button>
-          <a href="#" class="btn btn-outline-lime btn-sm" data-design-id="navbar-btn-login">Masuk</a>
+          <a href="{{ route('login') }}" class="btn btn-outline-lime btn-sm" data-design-id="navbar-btn-login">Masuk</a>
           <a href="#" class="btn btn-lime btn-sm" data-design-id="navbar-btn-signup">Daftar Gratis</a>
         </div>
       </div>
@@ -663,6 +663,6 @@
   <!-- Bootstrap 5.3 JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <!-- Custom JS -->
-  <script src="{{ asset('storage/js/main.js') }}"></script>
+  <script src="{{ asset('js/landing_page/main.js') }}"></script>
 </body>
 </html>
