@@ -5,42 +5,8 @@
                 MATCH<span class="brand-accent">GO</span>
             </a>
 
-            <button class="navbar-toggler" type="button"
-                data-bs-toggle="collapse" data-bs-target="#navbarUser"
-                aria-controls="navbarUser" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarUser">
-                <ul class="navbar-nav mx-auto">
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->is('dashboard') ? 'active' : '' }}"
-                           href="{{ url('/dashboard') }}">
-                            <i class="bi bi-speedometer2 me-1"></i>Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->is('teams*') ? 'active' : '' }}"
-                           href="#">
-                            <i class="bi bi-people me-1"></i>Tim
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->is('matches*') ? 'active' : '' }}"
-                           href="#">
-                            <i class="bi bi-trophy me-1"></i>Match
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->is('venues*') ? 'active' : '' }}"
-                           href="#">
-                            <i class="bi bi-geo-alt me-1"></i>Venue
-                        </a>
-                    </li>
-                </ul>
-
-                <div class="d-flex gap-2 align-items-center mt-3 mt-lg-0">
-                    <!-- Theme Toggle -->
+            <div class="d-flex gap-2 align-items-center ms-auto">
+                <!-- Theme Toggle -->
                     <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
                         <i class="bi bi-moon-fill icon-moon"></i>
                         <i class="bi bi-sun-fill icon-sun"></i>
@@ -92,6 +58,5 @@
                         <a href="#" class="btn btn-lime btn-sm">Daftar</a>
                     @endauth
                 </div>
-            </div>
         </div>
     </nav>

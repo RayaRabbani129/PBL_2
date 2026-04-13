@@ -20,5 +20,4 @@ Route::post('/logout', [LoginController::class, 'logout'])
 // ── Player Dashboard ─────────────────────────────────
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    // route player lainnya...
 });
