@@ -440,7 +440,7 @@
 
         {{-- Register --}}
         <p class="register-text">
-          Belum punya akun? <a href="#">Daftar Gratis</a>
+          Belum punya akun? <a href="{{ route('register') }}">Daftar Gratis</a>
         </p>
 
       </div>

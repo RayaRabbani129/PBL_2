@@ -20,14 +20,9 @@ class User extends Authenticatable
         'phone',
     ];
 
-    public function teams()
+    public function team()
     {
-        return $this->hasMany(Team::class);
-    }
-
-    public function teamMemberships()
-    {
-        return $this->hasMany(TeamMember::class);
+        return $this->hasOne(Team::class);
     }
 
     public function venues()

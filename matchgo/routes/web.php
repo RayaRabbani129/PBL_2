@@ -3,6 +3,9 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TeamMemberController;
+use App\Http\Controllers\User\TeamScheduleController;
 use Illuminate\Support\Facades\Route;
 
 // Landing
@@ -23,4 +26,34 @@ Route::post('/logout', [LoginController::class, 'logout'])
 // ── Player Dashboard ─────────────────────────────────
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Tim
+    Route::prefix('team')->name('team.')->group(function () {
+
+        // Halaman utama "Tim Saya"
+        Route::get('/', [TeamController::class, 'index'])->name('index');
+        Route::get('/create', [TeamController::class, 'create'])->name('create');
+        Route::post('/', [TeamController::class, 'store'])->name('store');
+        Route::get('/{team}/edit', [TeamController::class, 'edit'])->name('edit');
+        Route::put('/{team}', [TeamController::class, 'update'])->name('update');
+        Route::delete('/{team}', [TeamController::class, 'destroy'])->name('destroy');
+
+        // Anggota Tim
+        Route::prefix('members')->name('members.')->group(function () {
+            Route::get('/create', [TeamMemberController::class, 'create'])->name('create');
+            Route::post('/', [TeamMemberController::class, 'store'])->name('store');
+            Route::get('/{member}/edit', [TeamMemberController::class, 'edit'])->name('edit');
+            Route::put('/{member}', [TeamMemberController::class, 'update'])->name('update');
+            Route::delete('/{member}', [TeamMemberController::class, 'destroy'])->name('destroy');
+        });
+        
+        Route::prefix('schedule')->name('schedule.')->group(function () {
+            Route::get('/', [TeamScheduleController::class, 'index'])->name('index');
+            Route::get('/create', [TeamScheduleController::class, 'create'])->name('create');
+            Route::post('/', [TeamScheduleController::class, 'store'])->name('store');
+            Route::get('/{schedule}/edit', [TeamScheduleController::class, 'edit'])->name('edit');
+            Route::put('/{schedule}', [TeamScheduleController::class, 'update'])->name('update');
+            Route::delete('/{schedule}', [TeamScheduleController::class, 'destroy'])->name('destroy');
+        });
+    });
 });

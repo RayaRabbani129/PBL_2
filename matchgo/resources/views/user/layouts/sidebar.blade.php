@@ -20,14 +20,14 @@
             Dashboard
         </a>
 
-        <a href="{{ url('/teams') }}"
-           class="mg-nav-item {{ request()->is('teams*') ? 'active' : '' }}">
+        <a href="{{ url('/team') }}"
+           class="mg-nav-item {{ request()->is('team*') ? 'active' : '' }}">
             <i class="bi bi-people"></i>
             Tim Saya
         </a>
 
-        <a href="{{ url('/schedule') }}"
-           class="mg-nav-item {{ request()->is('schedule*') ? 'active' : '' }}">
+        <a href="{{ url('/team/schedule') }}"
+           class="mg-nav-item {{ request()->is('team/schedule*') ? 'active' : '' }}">
             <i class="bi bi-calendar3"></i>
             Jadwal Saya
         </a>

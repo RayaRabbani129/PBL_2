@@ -22,10 +22,6 @@ return new class extends Migration
                   ->constrained('teams')
                   ->cascadeOnDelete();
 
-            $table->foreignId('user_id')
-                  ->constrained('users')
-                  ->cascadeOnDelete();
-
             // captain = kapten/pemilik tim, player = anggota biasa
             $table->enum('role', ['captain', 'player'])->default('player');
 
@@ -35,7 +31,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Satu user hanya bisa satu kali terdaftar di satu tim
-            $table->unique(['team_id', 'user_id']);
+            $table->unique(['team_id']);
 
             $table->index(['team_id', 'status']);
         });

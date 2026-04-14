@@ -32,62 +32,61 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
 
-            // 🎨 Warna utama (lebih modern)
             ->colors([
                 'primary' => Color::Amber,
                 'gray' => Color::Zinc,
             ])
 
-            // 🔤 Font + Custom CSS
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
                 fn () => Blade::render('
-                    <link rel="preconnect" href="https://fonts.googleapis.com">
-                    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-                    <style>
-                        * {
-                            font-family: "Plus Jakarta Sans", sans-serif;
-                        }
-
-                        /* Sidebar lebih clean */
-                        .fi-sidebar {
-                            backdrop-filter: blur(12px);
-                            background-color: rgba(255,255,255,0.85);
-                            border-right: 1px solid #eee;
-                        }
-
-                        /* Topbar */
-                        .fi-topbar {
-                            backdrop-filter: blur(12px);
-                            background-color: rgba(255,255,255,0.85);
-                            border-bottom: 1px solid #eee;
-                        }
-
-                        /* Card lebih modern */
-                        .fi-card {
-                            border-radius: 16px;
-                            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-                        }
-
-                        /* Button lebih smooth */
-                        .fi-btn {
-                            border-radius: 12px;
-                        }
-                    </style>
+                    <link rel="stylesheet" href="' . asset('css/admin-themes.css') . '">
                 ')
             )
+            // ->renderHook(
+            //     PanelsRenderHook::HEAD_END,
+            //     fn () => Blade::render('
+            //         <link rel="preconnect" href="https://fonts.googleapis.com">
+            //         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-            // 🧭 Navigation grouping
+            //         <style>
+            //             * {
+            //                 font-family: "Plus Jakarta Sans", sans-serif;
+            //             }
+
+            //             /* Sidebar lebih clean */
+            //             .fi-sidebar {
+            //                 backdrop-filter: blur(12px);
+            //                 background-color: rgba(255,255,255,0.85);
+            //                 border-right: 1px solid #eee;
+            //             }
+
+            //             /* Topbar */
+            //             .fi-topbar {
+            //                 backdrop-filter: blur(12px);
+            //                 background-color: rgba(255,255,255,0.85);
+            //                 border-bottom: 1px solid #eee;
+            //             }
+
+            //             /* Card lebih modern */
+            //             .fi-card {
+            //                 border-radius: 16px;
+            //                 box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            //             }
+
+            //             /* Button lebih smooth */
+            //             .fi-btn {
+            //                 border-radius: 12px;
+            //             }
+            //         </style>
+            //     ')
+            // )
+
             ->navigationGroups([
                 NavigationGroup::make()
                     ->label('Dashboard')
                     ->icon('heroicon-o-home'),
 
-                NavigationGroup::make()
-                    ->label('User Management')
-                    ->icon('heroicon-o-users'),
-                
                 NavigationGroup::make()
                     ->label('Team Management')
                     ->icon('heroicon-o-shield-check'),
@@ -103,9 +102,13 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make()
                     ->label('System')
                     ->icon('heroicon-o-cog-6-tooth'),
+                
+                NavigationGroup::make()
+                    ->label('User Management')
+                    ->icon('heroicon-o-users'),
+                
             ])
 
-            // 📦 Resources & Pages
             ->discoverResources(
                 in: app_path('Filament/Resources'),
                 for: 'App\\Filament\\Resources'
@@ -128,7 +131,6 @@ class AdminPanelProvider extends PanelProvider
                 // nanti bisa isi custom widget
             ])
 
-            // ⚙️ Middleware
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -141,14 +143,12 @@ class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
 
-            // 🔐 Auth
             ->authMiddleware([
                 Authenticate::class,
                 EnsureAdminAccess::class,
             ]);
     }
 
-    // 🔒 Batasi akses panel
     public function canAccessPanel(Panel $panel): bool
     {
         return auth()->user()?->hasRole('super_admin');
