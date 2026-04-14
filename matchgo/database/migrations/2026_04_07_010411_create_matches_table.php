@@ -35,7 +35,7 @@ return new class extends Migration
                   ->restrictOnDelete();
 
             // Lapangan hasil Auto Venue
-            $table->foreignId('venue_id')
+            $table->foreignId('venue_id')->nullable()
                   ->constrained('venues')
                   ->restrictOnDelete();
 

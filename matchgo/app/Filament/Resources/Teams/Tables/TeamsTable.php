@@ -10,6 +10,7 @@ use Filament\Tables\Table;
 
 class TeamsTable
 {
+    protected static ?string $navigationGroup = 'Team Management';
     public static function configure(Table $table): Table
     {
         return $table
@@ -21,15 +22,11 @@ class TeamsTable
                     ->searchable(),
                 TextColumn::make('city')
                     ->searchable(),
-                TextColumn::make('province')
-                    ->searchable(),
-                TextColumn::make('latitude')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('longitude')
-                    ->numeric()
-                    ->sortable(),
                 TextColumn::make('level')
+                    ->badge(),
+                TextColumn::make('logo_path')
+                    ->searchable(),
+                TextColumn::make('status')
                     ->badge(),
                 TextColumn::make('total_matches')
                     ->numeric()
@@ -37,30 +34,6 @@ class TeamsTable
                 TextColumn::make('total_wins')
                     ->numeric()
                     ->sortable(),
-                TextColumn::make('total_losses')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('total_draws')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('total_goals_scored')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('total_goals_conceded')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('logo_path')
-                    ->searchable(),
-                TextColumn::make('status')
-                    ->badge(),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //

@@ -15,7 +15,6 @@ class ModifyUsersTable extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('phone', 20)->nullable()->after('password');
-            $table->enum('role', ['player', 'admin'])->default('player')->after('phone');
         });
     }
 

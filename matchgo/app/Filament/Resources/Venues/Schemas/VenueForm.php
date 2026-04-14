@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Venues\Schemas;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 
 class VenueForm
@@ -46,6 +47,8 @@ class VenueForm
                 Select::make('status')
                     ->options(['active' => 'Active', 'inactive' => 'Inactive'])
                     ->default('active')
+                    ->required(),
+                Toggle::make('is_available')
                     ->required(),
             ]);
     }

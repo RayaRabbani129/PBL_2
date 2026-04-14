@@ -11,8 +11,8 @@ class LoginController extends Controller
 {
     public function showLoginForm()
     {
-        // Jika sudah login sebagai player, redirect dashboard
-        if (Auth::guard('web')->check()) {
+        // Jika sudah login
+        if (Auth::check()) {
             return redirect('/dashboard');
         }
 
@@ -26,10 +26,10 @@ class LoginController extends Controller
             'password' => ['required'],
         ]);
 
-        // Blok admin masuk dari form player
         $user = User::where('email', $request->email)->first();
 
-        if ($user?->isAdmin()) {
+        // 🔥 CEK ROLE DENGAN SPATIE
+        if ($user && $user->hasAnyRole(['super_admin', 'admin_field', 'auditor'])) {
             return back()
                 ->withInput($request->only('email'))
                 ->withErrors([
@@ -37,19 +37,22 @@ class LoginController extends Controller
                 ]);
         }
 
-        if (Auth::guard('web')->attempt($credentials, $request->boolean('remember'))) {
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+
             return redirect()->intended('/dashboard');
         }
 
         return back()
             ->withInput($request->only('email'))
-            ->withErrors(['email' => 'Email atau password salah.']);
+            ->withErrors([
+                'email' => 'Email atau password salah.',
+            ]);
     }
 
     public function logout(Request $request)
     {
-        Auth::guard('web')->logout();
+        Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

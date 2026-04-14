@@ -42,6 +42,7 @@ return new class extends Migration
             $table->string('photo_path')->nullable();
 
             $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->boolean('is_available')->default(true);
 
             $table->timestamps();
         });

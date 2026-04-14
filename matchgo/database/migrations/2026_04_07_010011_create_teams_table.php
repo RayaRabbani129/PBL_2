@@ -35,14 +35,6 @@ return new class extends Migration
             $table->enum('level', ['casual', 'semi_pro', 'competitive'])
                   ->default('casual');
 
-            // Statistik pertandingan
-            $table->unsignedInteger('total_matches')->default(0);
-            $table->unsignedInteger('total_wins')->default(0);
-            $table->unsignedInteger('total_losses')->default(0);
-            $table->unsignedInteger('total_draws')->default(0);
-            $table->unsignedInteger('total_goals_scored')->default(0);
-            $table->unsignedInteger('total_goals_conceded')->default(0);
-
             $table->text('description')->nullable();
             $table->string('logo_path')->nullable();
 

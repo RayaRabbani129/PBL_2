@@ -1,62 +1,73 @@
-    <nav class="navbar navbar-expand-lg navbar-matchgo fixed-top">
-        <div class="container">
-            <a class="navbar-brand-custom" href="{{ url('/') }}">
-                <span class="brand-icon"><i class="bi bi-lightning-charge-fill"></i></span>
-                MATCH<span class="brand-accent">GO</span>
+<header class="mg-topbar">
+    {{-- Kiri: judul halaman --}}
+    <div class="d-flex align-items-center gap-3">
+        {{-- Tombol hamburger mobile --}}
+        <button id="sidebarToggle" class="mg-icon-btn d-none d-lg-none" aria-label="Menu"
+            style="display: none !important;">
+            <i class="bi bi-list" style="font-size: 1.1rem;"></i>
+        </button>
+        <button id="sidebarToggle" class="mg-icon-btn" aria-label="Menu"
+            style="display: none;"
+            @media(max-width:1199px) { display: flex; }>
+        </button>
+
+        <h1 class="mg-topbar-title">
+            @yield('page_title', 'Dashboard')
+        </h1>
+    </div>
+
+    {{-- Kanan: search + notif + user --}}
+    <div class="mg-topbar-right">
+
+        {{-- Search --}}
+        <div class="mg-search-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" class="mg-search" placeholder="Cari sesuatu...">
+        </div>
+
+        @auth
+            {{-- Notifikasi --}}
+            <a href="#" class="mg-icon-btn" aria-label="Notifikasi">
+                <i class="bi bi-bell"></i>
+                <span class="mg-notif-dot"></span>
             </a>
 
-            <div class="d-flex gap-2 align-items-center ms-auto">
-                <!-- Theme Toggle -->
-                    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-                        <i class="bi bi-moon-fill icon-moon"></i>
-                        <i class="bi bi-sun-fill icon-sun"></i>
-                    </button>
+            <div class="mg-divider-v"></div>
 
-                    @auth
-                        <!-- Notifikasi -->
-                        <button class="btn btn-sm"
-                            style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary, #cbd5e1); border-radius: 8px; padding: 0.35rem 0.65rem;">
-                            <i class="bi bi-bell"></i>
+            {{-- User dropdown --}}
+            <div style="position: relative;">
+                <button id="topbarUserBtn" class="mg-topbar-user" style="background:none;border:none;">
+                    <div class="mg-topbar-avatar">
+                        {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+                    </div>
+                    <span class="mg-topbar-username">
+                        {{ Str::limit(Auth::user()->name, 12) }}
+                    </span>
+                    <i class="bi bi-chevron-down" style="font-size:0.7rem;color:var(--txt-muted);"></i>
+                </button>
+
+                <div id="topbarDropdown" class="mg-dropdown">
+                    <a href="#" class="mg-dropdown-item">
+                        <i class="bi bi-person" style="width:16px;text-align:center;"></i>
+                        Profil Saya
+                    </a>
+                    <a href="#" class="mg-dropdown-item">
+                        <i class="bi bi-gear" style="width:16px;text-align:center;"></i>
+                        Pengaturan
+                    </a>
+                    <div class="mg-dropdown-sep"></div>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="mg-dropdown-item danger">
+                            <i class="bi bi-box-arrow-right" style="width:16px;text-align:center;"></i>
+                            Keluar
                         </button>
-
-                        <!-- Dropdown User -->
-                        <div class="dropdown">
-                            <button class="btn btn-sm dropdown-toggle d-flex align-items-center gap-2"
-                                style="background: rgba(163,230,53,0.08); border: 1px solid rgba(163,230,53,0.2); color: var(--lime, #a3e635); border-radius: 8px; padding: 0.35rem 0.85rem; font-weight: 600; font-size: 0.85rem;"
-                                type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-person-circle"></i>
-                                {{ Str::limit(Auth::user()->name, 12) }}
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end"
-                                style="background: var(--card-bg-solid, #131c2e); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 0.5rem; min-width: 180px;">
-                                <li>
-                                    <a class="dropdown-item" href="#"
-                                        style="color: var(--text-secondary, #cbd5e1); border-radius: 8px; font-size: 0.875rem; padding: 0.5rem 0.75rem;">
-                                        <i class="bi bi-person me-2"></i>Profil Saya
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="#"
-                                        style="color: var(--text-secondary, #cbd5e1); border-radius: 8px; font-size: 0.875rem; padding: 0.5rem 0.75rem;">
-                                        <i class="bi bi-gear me-2"></i>Pengaturan
-                                    </a>
-                                </li>
-                                <li><hr style="border-color: rgba(255,255,255,0.08); margin: 0.4rem 0;"></li>
-                                <li>
-                                    <form method="POST" action="{{ route('logout') }}">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item"
-                                            style="color: #fca5a5; border-radius: 8px; font-size: 0.875rem; padding: 0.5rem 0.75rem; background: none; border: none; width: 100%; text-align: left; cursor: pointer;">
-                                            <i class="bi bi-box-arrow-right me-2"></i>Keluar
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </div>
-                    @else
-                        <a href="{{ route('login') }}" class="btn btn-outline-lime btn-sm">Masuk</a>
-                        <a href="#" class="btn btn-lime btn-sm">Daftar</a>
-                    @endauth
+                    </form>
                 </div>
-        </div>
-    </nav>
+            </div>
+        @else
+            <a href="{{ route('login') }}" class="btn-outline-lime btn-sm">Masuk</a>
+            <a href="{{ route('register') }}" class="btn-lime btn-sm">Daftar</a>
+        @endauth
+    </div>
+</header>

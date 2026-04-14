@@ -67,7 +67,7 @@
             <i class="bi bi-sun-fill icon-sun"></i>
           </button>
           <a href="{{ route('login') }}" class="btn btn-outline-lime btn-sm" data-design-id="navbar-btn-login">Masuk</a>
-          <a href="#" class="btn btn-lime btn-sm" data-design-id="navbar-btn-signup">Daftar Gratis</a>
+          <a href="{{ route('register') }}" class="btn btn-lime btn-sm" data-design-id="navbar-btn-signup">Daftar Gratis</a>
         </div>
       </div>
     </div>
