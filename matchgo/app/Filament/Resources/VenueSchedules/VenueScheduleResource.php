@@ -18,7 +18,8 @@ class VenueScheduleResource extends Resource
 {
     protected static ?string $model = VenueSchedule::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    // protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string | \UnitEnum | null $navigationGroup = 'Venue Management';
 
     protected static ?string $recordTitleAttribute = 'venue.name';
 

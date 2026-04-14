@@ -17,8 +17,10 @@ use Filament\Tables\Table;
 class TeamResource extends Resource
 {
     protected static ?string $model = Team::class;
+    protected static string | \UnitEnum | null $navigationGroup = 'Team Management';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+
+    // protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $recordTitleAttribute = 'name';
     protected static ?int $navigationSort = 2;

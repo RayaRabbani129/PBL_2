@@ -106,7 +106,7 @@
             Platform matchmaking futsal paling canggih. Cari lawan setara, booking lapangan otomatis, dan split biaya &mdash; semua dalam satu platform web.
           </p>
           <div class="d-flex gap-3 flex-wrap reveal reveal-delay-3" data-design-id="hero-cta-buttons">
-            <a href="#" class="btn btn-lime btn-lg px-4" data-design-id="hero-btn-primary">
+            <a href="{{ route('register') }}" class="btn btn-lime btn-lg px-4" data-design-id="hero-btn-primary">
               <i class="bi bi-rocket-takeoff me-2"></i>Mulai Sekarang
             </a>
             <a href="#features" class="btn btn-outline-lime btn-lg px-4" data-design-id="hero-btn-secondary">
@@ -649,7 +649,7 @@
       </div>
 
       <div class="footer-bottom" data-design-id="footer-bottom">
-        <p data-design-id="footer-copyright">&copy; 2025 MATCHGO. All rights reserved.</p>
+        <p data-design-id="footer-copyright">&copy; 2026 MATCHGO. All rights reserved.</p>
         <div class="footer-socials" data-design-id="footer-socials">
           <a href="#" data-design-id="footer-social-instagram"><i class="bi bi-instagram"></i></a>
           <a href="#" data-design-id="footer-social-twitter"><i class="bi bi-twitter-x"></i></a>

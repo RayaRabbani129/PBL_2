@@ -18,7 +18,9 @@ class VenueResource extends Resource
 {
     protected static ?string $model = Venue::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string | \UnitEnum | null $navigationGroup = 'Venue Management';
+
+    // protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $recordTitleAttribute = 'name';
     protected static ?int $navigationSort = 5;

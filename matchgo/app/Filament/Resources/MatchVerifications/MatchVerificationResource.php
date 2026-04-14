@@ -20,7 +20,8 @@ class MatchVerificationResource extends Resource
 {
     protected static ?string $model = MatchVerification::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    // protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string | \UnitEnum | null $navigationGroup = 'Match Management';
 
     protected static ?string $recordTitleAttribute = 'match_id';
     protected static ?int $navigationSort = 4;
