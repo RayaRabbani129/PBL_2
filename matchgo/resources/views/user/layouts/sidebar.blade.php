@@ -26,8 +26,8 @@
             Tim Saya
         </a>
 
-        <a href="{{ url('/team/schedule') }}"
-           class="mg-nav-item {{ request()->is('team/schedule*') ? 'active' : '' }}">
+        <a href="{{ url('/schedule') }}"
+           class="mg-nav-item {{ request()->is('schedule*') ? 'active' : '' }}">
             <i class="bi bi-calendar3"></i>
             Jadwal Saya
         </a>

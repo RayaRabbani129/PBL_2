@@ -5,7 +5,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TeamMemberController;
-use App\Http\Controllers\User\TeamScheduleController;
+use App\Http\Controllers\TeamScheduleController;
 use Illuminate\Support\Facades\Route;
 
 // Landing
@@ -46,14 +46,14 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/{member}', [TeamMemberController::class, 'update'])->name('update');
             Route::delete('/{member}', [TeamMemberController::class, 'destroy'])->name('destroy');
         });
-        
-        Route::prefix('schedule')->name('schedule.')->group(function () {
-            Route::get('/', [TeamScheduleController::class, 'index'])->name('index');
-            Route::get('/create', [TeamScheduleController::class, 'create'])->name('create');
-            Route::post('/', [TeamScheduleController::class, 'store'])->name('store');
-            Route::get('/{schedule}/edit', [TeamScheduleController::class, 'edit'])->name('edit');
-            Route::put('/{schedule}', [TeamScheduleController::class, 'update'])->name('update');
-            Route::delete('/{schedule}', [TeamScheduleController::class, 'destroy'])->name('destroy');
-        });
+    });
+
+    Route::prefix('schedule')->name('schedule.')->group(function () {
+        Route::get('/', [TeamScheduleController::class, 'index'])->name('index');
+        Route::get('/create', [TeamScheduleController::class, 'create'])->name('create');
+        Route::post('/', [TeamScheduleController::class, 'store'])->name('store');
+        Route::get('/{schedule}/edit', [TeamScheduleController::class, 'edit'])->name('edit');
+        Route::put('/{schedule}', [TeamScheduleController::class, 'update'])->name('update');
+        Route::delete('/{schedule}', [TeamScheduleController::class, 'destroy'])->name('destroy');
     });
 });
