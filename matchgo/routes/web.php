@@ -7,6 +7,7 @@ use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TeamMemberController;
 use App\Http\Controllers\TeamScheduleController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProfileController;
 
 // Landing
 Route::get('/', fn() => view('landingPage.index'))->name('home');
@@ -56,4 +57,13 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{schedule}', [TeamScheduleController::class, 'update'])->name('update');
         Route::delete('/{schedule}', [TeamScheduleController::class, 'destroy'])->name('destroy');
     });
+
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+
+    Route::put('/profile/team', [ProfileController::class, 'updateTeam'])
+    ->name('profile.updateTeam');
+
+    Route::put('/profile/update', [ProfileController::class, 'update'])
+    ->name('profile.update');
 });

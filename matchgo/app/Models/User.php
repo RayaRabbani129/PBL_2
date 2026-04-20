@@ -18,6 +18,9 @@ class User extends Authenticatable
         'email',
         'password',
         'phone',
+        'city',
+        'bio',
+        'photo',
     ];
 
     public function team()
