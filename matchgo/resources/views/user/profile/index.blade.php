@@ -8,65 +8,107 @@
 .mg-profile-grid {
     display: grid;
     grid-template-columns: 300px 1fr;
-    gap: 28px;
+    gap: 32px;
+}
+
+.mg-left {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
 }
 
 .mg-card {
-    background: linear-gradient(145deg, #161616, #111111);
-    border: 1px solid rgba(255,255,255,0.06);
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
     border-radius: 20px;
-    padding: 28px;
+    padding: 32px;
 }
 
-.mg-avatar {
-    width: 100px;
-    height: 100px;
-    border-radius: 20px;
-    object-fit: cover;
-    background: #A3B14B;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:bold;
-    margin: 0 auto;
+.mg-label {
+    font-size: 13px;
+    color: var(--txt-secondary);
+    margin-bottom: 8px;
+    display: block;
 }
 
 .form-control-mg {
-    width:100%;
-    padding:14px;
-    border-radius:14px;
-    background:#0B0B0B;
-    border:1px solid rgba(255,255,255,0.08);
-    color:white;
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: var(--surface-3);
+    border: 1px solid var(--border-medium);
+    color: var(--txt-primary);
+    font-size: 14px;
+    box-sizing: border-box;
+    outline: none;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s;
+}
+
+.form-control-mg:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+textarea.form-control-mg {
+    min-height: 120px;
+    resize: vertical;
 }
 
 .btn-primary-mg {
-    background:#A3B14B;
-    color:#000;
-    padding:12px 20px;
-    border-radius:12px;
+    background: var(--accent);
+    color: var(--btn-primary-txt);
+    padding: 13px 28px;
+    border-radius: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: background 0.15s;
 }
 
+.btn-primary-mg:hover { background: var(--accent-hover); }
+
 .btn-outline-mg {
-    border:1px solid rgba(255,255,255,0.1);
-    padding:12px 20px;
-    border-radius:12px;
+    border: 1px solid var(--border-strong);
+    padding: 13px 28px;
+    border-radius: 14px;
+    color: var(--txt-primary);
+    background: transparent;
+    font-size: 14px;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.15s;
+}
+
+.btn-outline-mg:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    text-decoration: none;
+}
+
+@media (max-width: 900px) {
+    .mg-profile-grid { grid-template-columns: 1fr; }
 }
 </style>
 @endpush
 
 @section('content')
 
-@if(session('success'))
-<div class="mb-4 text-green-400">
-    {{ session('success') }}
-</div>
-@endif
+{{-- BREADCRUMB --}}
+<ul class="breadcrumb-matchgo">
+    <li><a href="#">Akun</a></li>
+    <li class="separator">›</li>
+    <li class="active">Profile</li>
+</ul>
 
 <div class="mg-profile-grid">
 
     {{-- LEFT --}}
-    <div class="space-y-6">
+    <div class="mg-left">
         @include('user.profile._profile-card')
         @include('user.profile._team-info')
     </div>
@@ -74,82 +116,73 @@
     {{-- RIGHT --}}
     <div class="mg-card">
 
-        <h3 class="text-lg font-bold mb-6">Edit Profile</h3>
+        <h3 style="font-size:1.1rem; font-weight:600; margin-bottom:28px; color:var(--txt-primary);">Edit Profile</h3>
 
-        <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('profile.update') }}" method="POST">
             @csrf
             @method('PUT')
 
-            <div class="grid grid-cols-2 gap-4">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
 
                 <div>
-                    <label>Nama</label>
+                    <label class="mg-label">Nama Lengkap</label>
                     <input type="text" name="name" value="{{ $user->name }}" class="form-control-mg">
                 </div>
 
                 <div>
-                    <label>Email</label>
+                    <label class="mg-label">Email</label>
                     <input type="email" name="email" value="{{ $user->email }}" class="form-control-mg">
                 </div>
 
                 <div>
-                    <label>No. Telepon</label>
+                    <label class="mg-label">No. Telepon</label>
                     <input type="text" name="phone" value="{{ $user->phone }}" class="form-control-mg">
                 </div>
 
                 <div>
-                    <label>Kota</label>
+                    <label class="mg-label">Kota</label>
                     <input type="text" name="city" value="{{ $user->city }}" class="form-control-mg">
                 </div>
 
             </div>
 
-            <div class="mt-4">
-                <label>Bio</label>
+            <div style="margin-top:24px;">
+                <label class="mg-label">Bio</label>
                 <textarea name="bio" class="form-control-mg">{{ $user->bio }}</textarea>
             </div>
 
-            <div class="mt-4">
-                <label>Foto Profil</label>
-                <input type="file" name="photo" id="photoInput" class="form-control-mg">
-            </div>
-
-            <div class="flex gap-3 mt-6">
-                <button class="btn-primary-mg">✔ Simpan</button>
+            <div style="display:flex; gap:16px; margin-top:28px;">
+                <button type="submit" class="btn-primary-mg">✓ Simpan</button>
                 <a href="{{ route('dashboard') }}" class="btn-outline-mg">Batal</a>
             </div>
 
         </form>
 
-        <script>
-        document.getElementById('photoInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-
-            if (file) {
-                // preview
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const avatar = document.getElementById('avatarPreview');
-
-                    if (avatar.tagName === 'IMG') {
-                        avatar.src = e.target.result;
-                    } else {
-                        avatar.innerHTML = '';
-                        avatar.style.backgroundImage = `url(${e.target.result})`;
-                        avatar.style.backgroundSize = 'cover';
-                        avatar.style.backgroundPosition = 'center';
-                    }
-                }
-                reader.readAsDataURL(file);
-
-                // AUTO SUBMIT TANPA TOMBOL
-                document.getElementById('photoForm').submit();
-            }
-        });
-        </script>
-
     </div>
 
 </div>
+
+{{-- JS FOTO --}}
+<script>
+document.getElementById('photoInputAvatar').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const avatar = document.getElementById('avatarPreview');
+            if (avatar.tagName === 'IMG') {
+                avatar.src = e.target.result;
+            } else {
+                avatar.innerHTML = '';
+                avatar.style.backgroundImage = `url(${e.target.result})`;
+                avatar.style.backgroundSize = 'cover';
+                avatar.style.backgroundPosition = 'center';
+            }
+        }
+        reader.readAsDataURL(file);
+        document.getElementById('photoForm').submit();
+    }
+});
+</script>
 
 @endsection
