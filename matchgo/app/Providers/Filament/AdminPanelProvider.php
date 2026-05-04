@@ -145,12 +145,13 @@ class AdminPanelProvider extends PanelProvider
 
             ->authMiddleware([
                 Authenticate::class,
-                EnsureAdminAccess::class,
+                // EnsureAdminAccess::class,
             ]);
     }
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return auth()->user()?->hasRole('super_admin');
+        dd('canAccessPanel called', auth()->user()?->getRoleNames());exit;
+        return auth()->user()?->hasAnyRole(['super_admin', 'admin_field', 'auditor']);
     }
 }

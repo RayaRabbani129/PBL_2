@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\FieldAdmin\Widgets\FieldOverviewWidget;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -11,13 +12,6 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
-use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
-use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
-use Illuminate\Routing\Middleware\SubstituteBindings;
-use Illuminate\Session\Middleware\StartSession;
-use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class FieldAdminPanelProvider extends PanelProvider
 {
@@ -26,27 +20,37 @@ class FieldAdminPanelProvider extends PanelProvider
         return $panel
             ->id('field-admin')
             ->path('field-admin')
+            ->login()
             ->colors([
                 'primary' => Color::Amber,
             ])
-            ->discoverResources(in: app_path('Filament/FieldAdmin/Resources'), for: 'App\Filament\FieldAdmin\Resources')
-            ->discoverPages(in: app_path('Filament/FieldAdmin/Pages'), for: 'App\Filament\FieldAdmin\Pages')
+            ->discoverResources(
+                in: app_path('Filament/FieldAdmin/Resources'),
+                for: 'App\Filament\FieldAdmin\Resources'
+            )
+            ->discoverPages(
+                in: app_path('Filament/FieldAdmin/Pages'),
+                for: 'App\Filament\FieldAdmin\Pages'
+            )
             ->pages([
                 Dashboard::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/FieldAdmin/Widgets'), for: 'App\Filament\FieldAdmin\Widgets')
+            ->discoverWidgets(
+                in: app_path('Filament/FieldAdmin/Widgets'),
+                for: 'App\Filament\FieldAdmin\Widgets'
+            )
             ->widgets([
                 AccountWidget::class,
-                FilamentInfoWidget::class,
+                FieldOverviewWidget::class,   // overview stats lapangan
             ])
             ->middleware([
-                EncryptCookies::class,
-                AddQueuedCookiesToResponse::class,
-                StartSession::class,
+                \Illuminate\Cookie\Middleware\EncryptCookies::class,
+                \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+                \Illuminate\Session\Middleware\StartSession::class,
                 AuthenticateSession::class,
-                ShareErrorsFromSession::class,
-                VerifyCsrfToken::class,
-                SubstituteBindings::class,
+                \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+                \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+                \Illuminate\Routing\Middleware\SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])

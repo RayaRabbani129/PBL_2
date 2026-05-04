@@ -26,6 +26,7 @@ class AuditorPanelProvider extends PanelProvider
         return $panel
             ->id('auditor')
             ->path('auditor')
+            ->login()
             ->colors([
                 'primary' => Color::Amber,
             ])

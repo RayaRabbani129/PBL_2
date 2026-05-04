@@ -37,16 +37,16 @@ class Matches extends Model
 
     public function cost()
     {
-        return $this->hasOne(MatchCost::class);
+        return $this->hasOne(MatchCost::class, 'match_id');
     }
 
     public function booking()
     {
-        return $this->hasOne(Booking::class);
+        return $this->hasOne(Booking::class, 'match_id');
     }
 
     public function verification()
     {
-        return $this->hasOne(MatchVerification::class);
+        return $this->hasOne(MatchVerification::class, 'match_id');
     }
 }

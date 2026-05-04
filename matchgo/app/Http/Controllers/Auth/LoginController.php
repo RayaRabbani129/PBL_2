@@ -11,7 +11,6 @@ class LoginController extends Controller
 {
     public function showLoginForm()
     {
-        // Jika sudah login
         if (Auth::check()) {
             return redirect('/dashboard');
         }
@@ -28,7 +27,6 @@ class LoginController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        // 🔥 CEK ROLE DENGAN SPATIE
         if ($user && $user->hasAnyRole(['super_admin', 'admin_field', 'auditor'])) {
             return back()
                 ->withInput($request->only('email'))
@@ -40,7 +38,9 @@ class LoginController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            return redirect()->intended('/dashboard');
+            $request->session()->forget('url.intended');
+
+            return redirect('/dashboard');
         }
 
         return back()

@@ -2,7 +2,7 @@
 
 namespace App\Http\Responses;
 
-use Filament\Http\Responses\Auth\Contracts\LoginResponse as LoginResponseContract;
+use Filament\Auth\Http\Responses\Contracts\LoginResponse as LoginResponseContract;
 
 class LoginResponse implements LoginResponseContract
 {
@@ -10,18 +10,20 @@ class LoginResponse implements LoginResponseContract
     {
         $user = auth()->user();
 
+        session()->forget('url.intended');
+
         if ($user->hasRole('super_admin')) {
-            return redirect('/admin');
+            return redirect()->to('/admin');
         }
 
         if ($user->hasRole('admin_field')) {
-            return redirect('/field-admin');
+            return redirect()->to('/field-admin');
         }
 
         if ($user->hasRole('auditor')) {
-            return redirect('/auditor');
+            return redirect()->to('/auditor');
         }
 
-        return redirect('/');
+        return redirect()->to('/dashboard');
     }
 }

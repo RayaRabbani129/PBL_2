@@ -103,6 +103,29 @@ class VenueRecommendationService
         };
     }
 
+    /**
+     * Temukan venue terbaik untuk pertandingan otomatis berdasarkan
+     * jadwal, waktu, dan titik tengah kedua tim.
+     */
+    public function findBestVenueForMatch(
+        Team    $myTeam,
+        Team    $opponentTeam,
+        string  $date,
+        string  $startTime,
+        string  $endTime
+    ): ?Venue {
+        $midpoint = $this->calcMidpoint($myTeam, $opponentTeam);
+        $filters  = [
+            'date'       => $date,
+            'start_time' => $startTime,
+            'end_time'   => $endTime,
+        ];
+
+        $results = $this->recommend($myTeam, $opponentTeam, $filters, $midpoint);
+
+        return $results->first()['venue'] ?? null;
+    }
+
     // ─────────────────────────────────────────────────────────────
     //  MIDPOINT
     // ─────────────────────────────────────────────────────────────
