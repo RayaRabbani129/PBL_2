@@ -28,7 +28,7 @@
                 </div>
                 <div>
                     <label for="logo_path" class="btn-matchgo-outline" style="cursor:pointer;margin-bottom:0;">
-                        <i class="bi bi-upload"></i> Pilih Foto
+                        <i class="bi b-iupload"></i> Pilih Foto
                     </label>
                     <input type="file" id="logo_path" name="logo_path" accept="image/*"
                            style="display:none;" onchange="previewLogo(this)">
@@ -136,21 +136,21 @@
         <div class="row g-4">
             <div class="col-lg-6">
                 <div class="form-group-mg">
-                    <label for="latitude" class="form-label-mg">Latitude</label>
+                    <label for="latitude" class="form-label-mg">Latitude <span style="color:#f87171">*</span></label>
                     <input type="text" id="latitude" name="latitude"
                            class="form-control-mg @error('latitude') is-invalid-mg @enderror"
                            value="{{ old('latitude', $team?->latitude) }}"
-                           placeholder="cth. -7.9839">
+                           placeholder="cth. -7.9839" required>
                     @error('latitude')<div class="field-error-mg">{{ $message }}</div>@enderror
                 </div>
             </div>
             <div class="col-lg-6">
                 <div class="form-group-mg">
-                    <label for="longitude" class="form-label-mg">Longitude</label>
+                    <label for="longitude" class="form-label-mg">Longitude <span style="color:#f87171">*</span></label>
                     <input type="text" id="longitude" name="longitude"
                            class="form-control-mg @error('longitude') is-invalid-mg @enderror"
                            value="{{ old('longitude', $team?->longitude) }}"
-                           placeholder="cth. 112.6212">
+                           placeholder="cth. 112.6212" required>
                     @error('longitude')<div class="field-error-mg">{{ $message }}</div>@enderror
                 </div>
             </div>

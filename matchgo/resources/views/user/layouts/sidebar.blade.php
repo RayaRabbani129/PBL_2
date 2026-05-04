@@ -2,7 +2,10 @@
 
     {{-- Logo --}}
     <a href="{{ url('/') }}" class="mg-sidebar-logo">
-        <div class="mg-sidebar-logo-icon">M</div>
+        {{-- <div class="mg-sidebar-logo-icon">M</div> --}}
+        <div class="mg-sidebar-logo-icon">
+            <img src="{{ asset('img/logo/logo.png') }}" alt="MatchGo Logo" style="width:100%;height:100%;object-fit:contain;">
+        </div>
         <div>
             <span class="mg-sidebar-logo-text">MatchGo</span>
             <span class="mg-sidebar-logo-sub">v1.0.0</span>

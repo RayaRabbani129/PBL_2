@@ -3,11 +3,15 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MatchController;
+use App\Http\Controllers\MatchmakingController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TeamMemberController;
 use App\Http\Controllers\TeamScheduleController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\MatchCostController;
+use App\Http\Controllers\VenueRecommendationController;
 
 // Landing
 Route::get('/', fn() => view('landingPage.index'))->name('home');
@@ -66,4 +70,45 @@ Route::middleware(['auth'])->group(function () {
 
     Route::put('/profile/update', [ProfileController::class, 'update'])
     ->name('profile.update');
+
+    Route::prefix('matchmaking')->name('matchmaking.')->group(function () {
+        Route::match(['get', 'post'], '/', [MatchmakingController::class, 'index'])->name('index');
+        Route::post('/search',             [MatchmakingController::class, 'search'])->name('search');
+        Route::post('/challenge/{opponent}',[MatchmakingController::class, 'challenge'])->name('challenge');
+        Route::get('/incoming',            [MatchmakingController::class, 'incomingChallenges'])->name('incoming');
+        Route::get('/outgoing',            [MatchmakingController::class, 'outgoingChallenges'])->name('outgoing');
+        Route::post('/accept/{matchRequest}', [MatchmakingController::class, 'acceptChallenge'])->name('accept');
+        Route::post('/reject/{matchRequest}', [MatchmakingController::class, 'rejectChallenge'])->name('reject');
+        Route::delete('/cancel/{matchRequest}',[MatchmakingController::class, 'cancelChallenge'])->name('cancel');
+    });
+
+    Route::prefix('matches')->name('matches.')->group(function () {
+        Route::get('/', [MatchController::class, 'index'])->name('index');
+
+        // Harus di atas /{match} agar "challenge" tidak ditangkap sebagai {match}
+        Route::post('/challenge/{matchRequest}/accept', [MatchController::class, 'acceptChallenge'])->name('challenge.accept');
+        Route::post('/challenge/{matchRequest}/reject', [MatchController::class, 'rejectChallenge'])->name('challenge.reject');
+
+        Route::get('/{match}', [MatchController::class, 'show'])->name('show');
+        Route::post('/{match}/cancel', [MatchController::class, 'cancel'])->name('cancel');
+        Route::post('/{match}/score', [MatchController::class, 'inputScore'])->name('score');
+    });
+
+    Route::prefix('venues')->name('venues.')->group(function () {
+        Route::match(['get', 'post'], '/', [VenueRecommendationController::class, 'index'])->name('index');
+        Route::post('/search', [VenueRecommendationController::class, 'ajaxSearch'])->name('search');
+        Route::get('/{venue}', [VenueRecommendationController::class, 'show'])->name('show');
+    });
+
+    Route::prefix('split-bill')->name('match-cost.')->middleware(['auth'])->group(function () {
+ 
+        Route::get('/', [MatchCostController::class, 'index'])->name('index');
+        Route::get('/create', [MatchCostController::class, 'create'])->name('create');
+        Route::post('/', [MatchCostController::class, 'store'])->name('store');
+        Route::get('/{matchCost}', [MatchCostController::class, 'show'])->name('show');
+        Route::get('/{matchCost}/edit', [MatchCostController::class, 'edit'])->name('edit');
+        Route::put('/{matchCost}', [MatchCostController::class, 'update'])->name('update');
+        Route::patch('/{matchCost}/finalize',  [MatchCostController::class, 'finalize'])->name('finalize');
+        Route::delete('/{matchCost}', [MatchCostController::class, 'destroy'])->name('destroy');
+    });
 });

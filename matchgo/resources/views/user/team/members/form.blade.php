@@ -39,17 +39,22 @@
             <div class="col-lg-6">
                 <div class="form-group-mg">
                     <label for="role" class="form-label-mg">
-                        Posisi / Role <span style="color:#f87171">*</span>
+                        Role <span style="color:#f87171">*</span>
                     </label>
-                    <input
-                        type="text"
+                    <select
                         id="role"
                         name="role"
                         class="form-control-mg @error('role') is-invalid-mg @enderror"
-                        value="{{ old('role', $member?->role) }}"
-                        placeholder="cth. Striker, Goalkeeper, Penjaga Gawang"
                         required
                     >
+                        <option value="" disabled {{ old('role', $member?->role) === null ? 'selected' : '' }}>-- Pilih role --</option>
+                        <option value="player"   {{ old('role', $member?->role) === 'player'   ? 'selected' : '' }}>Player</option>
+                        <option value="captain" {{ old('role', $member?->role) === 'captain' ? 'selected' : '' }}>Captain</option>
+                        <option value="goalkeeper" {{ old('role', $member?->role) === 'goalkeeper' ? 'selected' : '' }}>Goalkeeper</option>
+                        <option value="defender" {{ old('role', $member?->role) === 'defender' ? 'selected' : '' }}>Defender</option>
+                        <option value="midfielder" {{ old('role', $member?->role) === 'midfielder' ? 'selected' : '' }}>Midfielder</option>
+                        <option value="striker" {{ old('role', $member?->role) === 'striker' ? 'selected' : '' }}>Striker</option>
+                    </select>
                     @error('role')
                         <div class="field-error-mg">{{ $message }}</div>
                     @enderror

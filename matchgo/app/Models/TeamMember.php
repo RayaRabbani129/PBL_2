@@ -13,6 +13,8 @@ class TeamMember extends Model
         'status'
     ];
 
+    
+
     public function team()
     {
         return $this->belongsTo(Team::class);

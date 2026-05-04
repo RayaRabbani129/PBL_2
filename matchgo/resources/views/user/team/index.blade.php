@@ -63,7 +63,11 @@
     {{-- Kiri: Logo + info --}}
     <div class="d-flex align-items-center gap-3 flex-grow-1">
         <div class="team-logo-wrap">
-            <span>⚽</span>
+            @if($team?->logo_path)
+                <img src="{{ Storage::url($team->logo_path) }}" style="width:100%;height:100%;object-fit:cover;">
+            @else
+                ⚽
+            @endif        
         </div>
         <div>
             <h4 class="team-name mb-0">{{ $team->name }}</h4>

@@ -40,8 +40,9 @@
   <nav class="navbar navbar-expand-lg navbar-matchgo fixed-top" data-design-id="navbar">
     <div class="container" data-design-id="navbar-container">
       <a class="navbar-brand-custom" href="#" data-design-id="navbar-brand">
-        <span class="brand-icon" data-design-id="navbar-brand-icon"><i class="bi bi-lightning-charge-fill"></i></span>
-        MATCH<span class="brand-accent" data-design-id="navbar-brand-accent">GO</span>
+        {{-- <span class="brand-icon" data-design-id="navbar-brand-icon"><i class="bi bi-lightning-charge-fill"></i></span> --}}
+        <img src="{{ asset('img/logo/logo.png') }}" alt="MatchGo Logo" style="width:10%;height:10%;object-fit:contain;">
+        {{-- MATCH<span class="brand-accent" data-design-id="navbar-brand-accent">GO</span> --}}
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation" data-design-id="navbar-toggler">
         <span class="navbar-toggler-icon"></span>
@@ -67,7 +68,7 @@
             <i class="bi bi-sun-fill icon-sun"></i>
           </button>
           <a href="{{ route('login') }}" class="btn btn-outline-lime btn-sm" data-design-id="navbar-btn-login">Masuk</a>
-          <a href="{{ route('register') }}" class="btn btn-lime btn-sm" data-design-id="navbar-btn-signup">Daftar Gratis</a>
+          <a href="{{ route('register') }}" class="btn btn-lime btn-sm" data-design-id="navbar-btn-signup">Daftar</a>
         </div>
       </div>
     </div>
