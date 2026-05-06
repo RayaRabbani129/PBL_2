@@ -1,330 +1,591 @@
 @extends('user.layouts.app')
 
 @section('title', 'Dashboard — MATCHGO')
-@section('page_title', 'Dashboard')
+@section('page-title', 'Dashboard')
+
+@push('styles')
+<style>
+
+/* ══════════════════════════════════════════
+   SECTION
+══════════════════════════════════════════ */
+
+.section-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:18px;
+    gap:12px;
+}
+
+.section-title{
+    font-family:'Manrope',sans-serif;
+    font-size:1.8rem;
+    font-weight:800;
+    color:var(--txt-primary);
+    margin:0;
+}
+
+.view-all{
+    font-size:.85rem;
+    font-weight:600;
+    color:var(--accent);
+    text-decoration:none;
+    transition:.15s;
+}
+
+.view-all:hover{
+    color:var(--txt-primary);
+    text-decoration:none;
+}
+
+/* ══════════════════════════════════════════
+   GRID
+══════════════════════════════════════════ */
+
+.dashboard-grid{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 340px;
+    gap:20px;
+    align-items:start;
+}
+
+.stats-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:14px;
+    margin-bottom:24px;
+}
+
+/* ══════════════════════════════════════════
+   STAT CARD
+══════════════════════════════════════════ */
+
+.stat-card{
+    background:var(--surface-2);
+    border:1px solid var(--border-subtle);
+    border-radius:18px;
+    padding:20px;
+    transition:
+        border-color .18s,
+        background .25s,
+        transform .15s;
+}
+
+.stat-card:hover{
+    border-color:rgba(163,177,75,.18);
+    transform:translateY(-1px);
+}
+
+.stat-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:26px;
+}
+
+.stat-icon{
+    width:46px;
+    height:46px;
+    border-radius:14px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:1.1rem;
+}
+
+.icon-accent{
+    background:var(--accent-dim);
+    color:var(--accent);
+}
+
+.icon-emerald{
+    background:rgba(16,185,129,.12);
+    color:#10b981;
+}
+
+.icon-red{
+    background:rgba(239,68,68,.10);
+    color:#ef4444;
+}
+
+.icon-yellow{
+    background:rgba(245,158,11,.10);
+    color:#f59e0b;
+}
+
+.badge-green{
+    background:rgba(16,185,129,.10);
+    color:#10b981;
+}
+
+.badge-red{
+    background:rgba(239,68,68,.10);
+    color:#ef4444;
+}
+
+.badge-green,
+.badge-red{
+    border-radius:999px;
+    padding:4px 10px;
+    font-size:.72rem;
+    font-weight:700;
+}
+
+.stat-number{
+    font-family:'Manrope',sans-serif;
+    font-size:2.6rem;
+    font-weight:800;
+    line-height:1;
+    color:var(--txt-primary);
+}
+
+.stat-number span{
+    font-size:1rem;
+    font-weight:600;
+    color:var(--txt-muted);
+}
+
+.stat-text{
+    margin-top:10px;
+    font-size:.82rem;
+    color:var(--txt-muted);
+}
+
+/* ══════════════════════════════════════════
+   EMPTY STATE
+══════════════════════════════════════════ */
+
+.empty-card{
+    background:var(--surface-2);
+    border:1px dashed var(--border-medium);
+    border-radius:18px;
+    padding:70px 20px;
+    text-align:center;
+}
+
+.empty-icon{
+    font-size:2.8rem;
+    color:var(--txt-faint);
+    margin-bottom:12px;
+}
+
+.empty-text{
+    color:var(--txt-muted);
+    font-size:.9rem;
+}
+
+/* ══════════════════════════════════════════
+   QUICK ACTION
+══════════════════════════════════════════ */
+
+.quick-title{
+    font-family:'Manrope',sans-serif;
+    font-size:1.7rem;
+    font-weight:800;
+    color:var(--txt-primary);
+    margin:0 0 18px 0;
+}
+
+.quick-actions{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.quick-card{
+    background:var(--surface-2);
+    border:1px solid var(--border-subtle);
+    border-radius:16px;
+
+    padding:16px;
+
+    display:flex;
+    align-items:center;
+    gap:14px;
+
+    text-decoration:none;
+
+    transition:
+        border-color .18s,
+        background .2s,
+        transform .15s;
+}
+
+.quick-card:hover{
+    border-color:rgba(163,177,75,.25);
+    background:var(--surface-3);
+    transform:translateY(-1px);
+
+    text-decoration:none;
+}
+
+.quick-icon{
+    width:48px;
+    height:48px;
+    border-radius:13px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:1rem;
+
+    flex-shrink:0;
+}
+
+.quick-green{
+    background:var(--accent-dim);
+    color:var(--accent);
+}
+
+.quick-blue{
+    background:rgba(59,130,246,.10);
+    color:#60a5fa;
+}
+
+.quick-orange{
+    background:rgba(249,115,22,.10);
+    color:#fb923c;
+}
+
+.quick-purple{
+    background:rgba(168,85,247,.10);
+    color:#c084fc;
+}
+
+.quick-emerald{
+    background:rgba(16,185,129,.10);
+    color:#10b981;
+}
+
+.quick-yellow{
+    background:rgba(245,158,11,.10);
+    color:#f59e0b;
+}
+
+.quick-heading{
+    font-family:'Manrope',sans-serif;
+    font-size:.92rem;
+    font-weight:700;
+    color:var(--txt-primary);
+}
+
+.quick-sub{
+    font-size:.76rem;
+    color:var(--txt-muted);
+    margin-top:3px;
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════ */
+
+@media(max-width:1200px){
+
+    .dashboard-grid{
+        grid-template-columns:1fr;
+    }
+
+}
+
+@media(max-width:992px){
+
+    .stats-grid{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+}
+
+@media(max-width:575px){
+
+    .stats-grid{
+        grid-template-columns:1fr;
+    }
+
+    .section-title,
+    .quick-title{
+        font-size:1.35rem;
+    }
+
+}
+
+</style>
+@endpush
 
 @section('content')
 
-{{-- Page Header --}}
-<div class="page-header d-flex align-items-center justify-content-between flex-wrap gap-3">
+<div class="dashboard-grid">
+
+    {{-- LEFT CONTENT --}}
     <div>
-        <h1 class="mb-1">Halo, {{ Auth::user()->name }}! 👋</h1>
-        <p>Kelola tim, cari lawan, dan atur pertandingan futsalmu di sini.</p>
-    </div>
-    <a href="{{ '#' ?? '#' }}" class="btn-lime btn-sm px-3">
-        <i class="bi bi-search me-2"></i>Cari Lawan
-    </a>
-</div>
 
-{{-- ── Statistik Tim ─────────────────────────────────────────── --}}
-@if($myTeam ?? null)
-<div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3">
-        <div class="card-matchgo h-100">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <span style="font-size:.75rem;font-weight:600;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.05em;">Total Match</span>
-                <div style="width:34px;height:34px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--accent);">
-                    <i class="bi bi-trophy"></i>
-                </div>
-            </div>
-            <div style="font-size:2rem;font-weight:700;color:var(--txt-primary);line-height:1;">{{ $myTeam->total_matches ?? 0 }}</div>
-            <div style="font-size:.78rem;color:var(--txt-faint);margin-top:.4rem;">Pertandingan dimainkan</div>
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="card-matchgo h-100">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <span style="font-size:.75rem;font-weight:600;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.05em;">Kemenangan</span>
-                <div style="width:34px;height:34px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--accent);">
-                    <i class="bi bi-check-circle"></i>
-                </div>
-            </div>
-            <div style="font-size:2rem;font-weight:700;color:var(--accent);line-height:1;">{{ $myTeam->wins ?? 0 }}</div>
-            <div style="font-size:.78rem;color:var(--txt-faint);margin-top:.4rem;">Total menang</div>
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="card-matchgo h-100">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <span style="font-size:.75rem;font-weight:600;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.05em;">Kekalahan</span>
-                <div style="width:34px;height:34px;background:rgba(239,68,68,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#f87171;">
-                    <i class="bi bi-x-circle"></i>
-                </div>
-            </div>
-            <div style="font-size:2rem;font-weight:700;color:#f87171;line-height:1;">{{ $myTeam->losses ?? 0 }}</div>
-            <div style="font-size:.78rem;color:var(--txt-faint);margin-top:.4rem;">Total kalah</div>
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="card-matchgo h-100">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <span style="font-size:.75rem;font-weight:600;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.05em;">Gol Dicetak</span>
-                <div style="width:34px;height:34px;background:rgba(34,211,238,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#22d3ee;">
-                    <i class="bi bi-dribbble"></i>
-                </div>
-            </div>
-            <div style="font-size:2rem;font-weight:700;color:#22d3ee;line-height:1;">{{ $myTeam->total_goals ?? 0 }}</div>
-            @php
-                $total   = $myTeam->total_matches ?? 0;
-                $winRate = $total > 0 ? round(($myTeam->wins ?? 0) / $total * 100) : 0;
-            @endphp
-            <div style="margin-top:.6rem;">
-                <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--txt-faint);margin-bottom:4px;">
-                    <span>Win Rate</span><span style="color:#22d3ee;">{{ $winRate }}%</span>
-                </div>
-                <div style="height:4px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;">
-                    <div style="height:100%;width:{{ $winRate }}%;background:#22d3ee;border-radius:4px;"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-@endif
+        {{-- =========================
+            STATS
+        ========================== --}}
+        <div class="stats-grid">
 
-{{-- ── Row Utama ─────────────────────────────────────────────── --}}
-<div class="row g-4">
+            {{-- TOTAL MATCH --}}
+            <div class="stat-card">
 
-    {{-- Profil Tim --}}
-    <div class="col-lg-4">
-        <div class="card-matchgo h-100">
-            <div class="d-flex align-items-center justify-content-between mb-4">
-                <h2 style="font-size:1rem;font-weight:700;color:var(--txt-primary);margin:0;font-family:'Manrope',sans-serif;">
-                    <i class="bi bi-shield-fill me-2" style="color:#a78bfa;"></i>Profil Tim
+                <div class="stat-top">
+
+                    <div class="stat-icon icon-accent">
+                        🏆
+                    </div>
+
+                    <div class="badge-green">
+                        +0
+                    </div>
+
+                </div>
+
+                <div class="stat-number">
+                    0
+                </div>
+
+                <div class="stat-text">
+                    Total Match
+                </div>
+
+            </div>
+
+            {{-- WIN --}}
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <div class="stat-icon icon-emerald">
+                        ↗
+                    </div>
+
+                    <div class="badge-green">
+                        0%
+                    </div>
+
+                </div>
+
+                <div class="stat-number">
+                    0
+                    <span>Win</span>
+                </div>
+
+                <div class="stat-text">
+                    Menang
+                </div>
+
+            </div>
+
+            {{-- LOSS --}}
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <div class="stat-icon icon-red">
+                        ↘
+                    </div>
+
+                    <div class="badge-red">
+                        0%
+                    </div>
+
+                </div>
+
+                <div class="stat-number">
+                    0
+                    <span>Loss</span>
+                </div>
+
+                <div class="stat-text">
+                    Kalah
+                </div>
+
+            </div>
+
+            {{-- TEAM RATING --}}
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <div class="stat-icon icon-yellow">
+                        ⭐
+                    </div>
+
+                </div>
+
+                <div class="stat-number">
+                    0
+                </div>
+
+                <div class="stat-text">
+                    Team Rating
+                </div>
+
+            </div>
+
+        </div>
+
+        {{-- =========================
+            UPCOMING MATCHES
+        ========================== --}}
+        <div>
+
+            <div class="section-header">
+
+                <h2 class="section-title">
+                    Upcoming Matches
                 </h2>
-                <a href="#" style="font-size:.8rem;color:var(--accent);text-decoration:none;">Edit <i class="bi bi-pencil"></i></a>
+
+                {{-- VIEW ALL --}}
+                <a href="{{ route('schedule.index') }}" class="view-all">
+                    View All →
+                </a>
+
             </div>
 
-            @if($myTeam ?? null)
-                <div class="text-center mb-4">
-                    <div style="width:64px;height:64px;background:var(--accent-dim);border:2px solid rgba(163,177,75,.2);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto .75rem;">⚽</div>
-                    <p style="font-size:1rem;font-weight:700;color:var(--txt-primary);margin:0;font-family:'Manrope',sans-serif;">{{ $myTeam->name }}</p>
-                    <p style="font-size:.8rem;color:var(--txt-muted);margin:0;"><i class="bi bi-geo-alt me-1"></i>{{ $myTeam->location ?? 'Lokasi belum diisi' }}</p>
+            <div class="empty-card">
+
+                <div class="empty-icon">
+                    ⚽
                 </div>
 
-                <div class="text-center mb-4">
-                    @php
-                        $levelColor = match($myTeam->level ?? '') {
-                            'competitive' => ['bg' => 'rgba(239,68,68,.12)',  'color' => '#f87171',       'label' => 'Competitive'],
-                            'semi_pro'    => ['bg' => 'rgba(251,191,36,.12)', 'color' => '#fcd34d',       'label' => 'Semi-Pro'],
-                            default       => ['bg' => 'var(--accent-dim)',    'color' => 'var(--accent)', 'label' => 'Casual'],
-                        };
-                    @endphp
-                    <span style="display:inline-block;background:{{ $levelColor['bg'] }};color:{{ $levelColor['color'] }};font-size:.78rem;font-weight:700;padding:4px 14px;border-radius:20px;">
-                        <i class="bi bi-star-fill me-1" style="font-size:.65rem;"></i>{{ $levelColor['label'] }}
-                    </span>
+                <div class="empty-text">
+                    Belum ada pertandingan mendatang
                 </div>
 
-                <div style="display:flex;flex-direction:column;gap:.5rem;">
-                    <div style="display:flex;justify-content:space-between;font-size:.85rem;padding:.5rem .75rem;background:rgba(255,255,255,.02);border-radius:8px;">
-                        <span style="color:var(--txt-muted);">Anggota</span>
-                        <span style="color:var(--txt-primary);font-weight:600;">{{ $myTeam->members_count ?? 0 }} orang</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;font-size:.85rem;padding:.5rem .75rem;background:rgba(255,255,255,.02);border-radius:8px;">
-                        <span style="color:var(--txt-muted);">Role Saya</span>
-                        <span style="color:var(--accent);font-weight:600;">{{ ucfirst($myTeam->pivot->role ?? 'member') }}</span>
-                    </div>
-                </div>
-            @else
-                <div class="text-center" style="padding:2rem 1rem;">
-                    <div style="font-size:2.5rem;opacity:.3;margin-bottom:.75rem;">⚽</div>
-                    <p style="font-size:.875rem;color:var(--txt-faint);margin-bottom:1rem;">Kamu belum memiliki tim. Buat tim untuk mulai bermain!</p>
-                    <a href="{{ '#' ?? '#' }}" class="btn-lime btn-sm">
-                        <i class="bi bi-plus-circle me-1"></i>Buat Tim Sekarang
-                    </a>
-                </div>
-            @endif
-        </div>
-    </div>
-
-    {{-- Pertandingan Mendatang + Jadwal + Cost Split --}}
-    <div class="col-lg-8">
-        <div class="row g-4">
-
-            {{-- Pertandingan Mendatang --}}
-            <div class="col-12">
-                <div class="card-matchgo">
-                    <div class="d-flex align-items-center justify-content-between mb-4">
-                        <h2 style="font-size:1rem;font-weight:700;color:var(--txt-primary);margin:0;font-family:'Manrope',sans-serif;">
-                            <i class="bi bi-calendar-event me-2" style="color:var(--accent);"></i>Pertandingan Mendatang
-                        </h2>
-                        <a href="#" style="font-size:.8rem;color:var(--accent);text-decoration:none;">Semua <i class="bi bi-arrow-right"></i></a>
-                    </div>
-                    <div style="display:flex;flex-direction:column;gap:.65rem;">
-                        @forelse($upcomingMatches ?? [] as $match)
-                            <div style="display:flex;align-items:center;gap:1rem;padding:.85rem 1rem;background:var(--accent-dim);border:1px solid rgba(163,177,75,.12);border-radius:10px;">
-                                <div style="width:42px;height:42px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0;">
-                                    <i class="bi bi-lightning-charge-fill"></i>
-                                </div>
-                                <div style="flex:1;min-width:0;">
-                                    <p style="font-size:.875rem;font-weight:600;color:var(--txt-primary);margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                                        vs {{ $match->opponent_team_name ?? $match->name }}
-                                    </p>
-                                    <div style="display:flex;gap:1rem;font-size:.75rem;color:var(--txt-muted);margin-top:2px;flex-wrap:wrap;">
-                                        <span><i class="bi bi-clock me-1"></i>{{ $match->scheduled_at->format('d M Y, H:i') }}</span>
-                                        @if($match->venue_name ?? null)
-                                            <span><i class="bi bi-geo-alt me-1"></i>{{ $match->venue_name }}</span>
-                                        @endif
-                                        @if($match->cost_per_player ?? null)
-                                            <span><i class="bi bi-wallet2 me-1"></i>Rp {{ number_format($match->cost_per_player, 0, ',', '.') }}/orang</span>
-                                        @endif
-                                    </div>
-                                </div>
-                                <a href="#" style="font-size:.75rem;font-weight:600;background:var(--accent-dim);color:var(--accent);padding:4px 12px;border-radius:20px;text-decoration:none;white-space:nowrap;flex-shrink:0;">Detail</a>
-                            </div>
-                        @empty
-                            <div style="text-align:center;padding:1.5rem 1rem;">
-                                <div style="font-size:2rem;opacity:.25;margin-bottom:.5rem;">🏟️</div>
-                                <p style="font-size:.875rem;color:var(--txt-faint);margin-bottom:.75rem;">Tidak ada pertandingan mendatang</p>
-                                <a href="#" class="btn-outline-lime btn-sm"><i class="bi bi-search me-1"></i>Cari Lawan Sekarang</a>
-                            </div>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
-
-            {{-- Jadwal Bermain --}}
-            <div class="col-md-6">
-                <div class="card-matchgo h-100">
-                    <div class="d-flex align-items-center justify-content-between mb-4">
-                        <h2 style="font-size:1rem;font-weight:700;color:var(--txt-primary);margin:0;font-family:'Manrope',sans-serif;">
-                            <i class="bi bi-clock me-2" style="color:#22d3ee;"></i>Jadwal Saya
-                        </h2>
-                        <a href="#" style="font-size:.8rem;color:var(--accent);text-decoration:none;"><i class="bi bi-plus"></i> Tambah</a>
-                    </div>
-                    <div style="display:flex;flex-direction:column;gap:.5rem;">
-                        @forelse($mySchedules ?? [] as $schedule)
-                            <div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .85rem;background:rgba(34,211,238,.04);border:1px solid rgba(34,211,238,.08);border-radius:8px;">
-                                <i class="bi bi-calendar3" style="color:#22d3ee;flex-shrink:0;"></i>
-                                <div style="flex:1;">
-                                    <p style="font-size:.82rem;font-weight:600;color:var(--txt-primary);margin:0;">{{ $schedule->day_name ?? $schedule->day }}</p>
-                                    <p style="font-size:.75rem;color:var(--txt-muted);margin:0;">{{ $schedule->time_start }} – {{ $schedule->time_end }}</p>
-                                </div>
-                                <span style="font-size:.7rem;background:rgba(34,211,238,.1);color:#22d3ee;padding:2px 8px;border-radius:12px;">Tersedia</span>
-                            </div>
-                        @empty
-                            <div style="text-align:center;padding:1.25rem .5rem;">
-                                <p style="font-size:.82rem;color:var(--txt-faint);margin-bottom:.75rem;">Belum ada jadwal tersedia</p>
-                                <a href="#" class="btn-outline-lime btn-sm" style="font-size:.78rem;"><i class="bi bi-plus me-1"></i>Tambah Jadwal</a>
-                            </div>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
-
-            {{-- Smart Cost Split Preview --}}
-            <div class="col-md-6">
-                <div class="card-matchgo h-100">
-                    <div class="d-flex align-items-center justify-content-between mb-4">
-                        <h2 style="font-size:1rem;font-weight:700;color:var(--txt-primary);margin:0;font-family:'Manrope',sans-serif;">
-                            <i class="bi bi-calculator me-2" style="color:#fb923c;"></i>Cost Split
-                        </h2>
-                        <a href="#" style="font-size:.8rem;color:var(--accent);text-decoration:none;">Hitung <i class="bi bi-arrow-right"></i></a>
-                    </div>
-                    @if($latestCostSplit ?? null)
-                        <div style="display:flex;flex-direction:column;gap:.45rem;">
-                            <div style="display:flex;justify-content:space-between;font-size:.82rem;padding:.45rem .7rem;background:rgba(255,255,255,.02);border-radius:7px;">
-                                <span style="color:var(--txt-muted);">Sewa Lapangan</span>
-                                <span style="color:var(--txt-primary);font-weight:600;">Rp {{ number_format($latestCostSplit->venue_cost ?? 0, 0, ',', '.') }}</span>
-                            </div>
-                            <div style="display:flex;justify-content:space-between;font-size:.82rem;padding:.45rem .7rem;background:rgba(255,255,255,.02);border-radius:7px;">
-                                <span style="color:var(--txt-muted);">Jumlah Pemain</span>
-                                <span style="color:var(--txt-primary);font-weight:600;">{{ $latestCostSplit->player_count ?? 0 }} orang</span>
-                            </div>
-                            <div style="display:flex;justify-content:space-between;font-size:.82rem;padding:.55rem .7rem;background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.15);border-radius:7px;margin-top:.25rem;">
-                                <span style="color:#fb923c;font-weight:600;">Per Orang</span>
-                                <span style="color:#fb923c;font-weight:700;">Rp {{ number_format($latestCostSplit->cost_per_player ?? 0, 0, ',', '.') }}</span>
-                            </div>
-                        </div>
-                    @else
-                        <div style="text-align:center;padding:1.25rem .5rem;">
-                            <div style="font-size:2rem;opacity:.25;margin-bottom:.5rem;">💰</div>
-                            <p style="font-size:.82rem;color:var(--txt-faint);margin-bottom:.75rem;">Belum ada data pembagian biaya</p>
-                            <a href="#" style="display:inline-flex;align-items:center;gap:6px;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.2);color:#fb923c;border-radius:8px;font-size:.78rem;padding:.35rem .9rem;text-decoration:none;">
-                                <i class="bi bi-calculator"></i>Hitung Biaya
-                            </a>
-                        </div>
-                    @endif
-                </div>
             </div>
 
         </div>
+
     </div>
 
-    {{-- Riwayat Pertandingan --}}
-    <div class="col-lg-8">
-        <div class="card-matchgo">
-            <div class="d-flex align-items-center justify-content-between mb-4">
-                <h2 style="font-size:1rem;font-weight:700;color:var(--txt-primary);margin:0;font-family:'Manrope',sans-serif;">
-                    <i class="bi bi-clock-history me-2" style="color:#22d3ee;"></i>Riwayat Pertandingan
-                </h2>
-                <a href="#" style="font-size:.8rem;color:var(--accent);text-decoration:none;">Semua <i class="bi bi-arrow-right"></i></a>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:.65rem;">
-                @forelse($recentMatches ?? [] as $match)
-                    @php
-                        $isWin  = ($match->result ?? '') === 'win';
-                        $isLoss = ($match->result ?? '') === 'loss';
-                    @endphp
-                    <div style="display:flex;align-items:center;gap:1rem;padding:.85rem 1rem;background:rgba(255,255,255,.015);border:1px solid var(--border-subtle);border-radius:10px;">
-                        <div style="width:42px;height:42px;background:{{ $isWin ? 'var(--accent-dim)' : ($isLoss ? 'rgba(239,68,68,.1)' : 'rgba(255,255,255,.04)') }};border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">
-                            {{ $isWin ? '🏆' : ($isLoss ? '😔' : '⚽') }}
-                        </div>
-                        <div style="flex:1;min-width:0;">
-                            <p style="font-size:.875rem;font-weight:600;color:var(--txt-primary);margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                                vs {{ $match->opponent_team_name ?? $match->name }}
-                            </p>
-                            <div style="display:flex;gap:1rem;font-size:.75rem;color:var(--txt-muted);margin-top:2px;flex-wrap:wrap;">
-                                <span><i class="bi bi-calendar3 me-1"></i>{{ $match->played_at->format('d M Y') }}</span>
-                                @if($match->venue_name ?? null)
-                                    <span><i class="bi bi-geo-alt me-1"></i>{{ $match->venue_name }}</span>
-                                @endif
-                                @if($match->score ?? null)
-                                    <span style="font-weight:600;color:{{ $isWin ? 'var(--accent)' : '#f87171' }};">{{ $match->score }}</span>
-                                @endif
-                            </div>
-                        </div>
-                        @if(isset($match->result))
-                            <span style="font-size:.72rem;font-weight:700;background:{{ $isWin ? 'var(--accent-dim)' : 'rgba(239,68,68,.12)' }};color:{{ $isWin ? 'var(--accent)' : '#f87171' }};padding:4px 12px;border-radius:20px;flex-shrink:0;">
-                                {{ $isWin ? 'Menang' : 'Kalah' }}
-                            </span>
-                        @endif
-                    </div>
-                @empty
-                    <div style="text-align:center;padding:1.5rem 1rem;">
-                        <div style="font-size:2rem;opacity:.25;margin-bottom:.5rem;">⚽</div>
-                        <p style="font-size:.875rem;color:var(--txt-faint);margin:0;">Belum ada riwayat pertandingan</p>
-                    </div>
-                @endforelse
-            </div>
-        </div>
-    </div>
+    {{-- =========================
+        RIGHT SIDEBAR
+    ========================== --}}
+    <div>
 
-    {{-- Quick Actions --}}
-    <div class="col-lg-4">
-        <div class="card-matchgo h-100">
-            <h2 style="font-size:1rem;font-weight:700;color:var(--txt-primary);margin-bottom:1.25rem;font-family:'Manrope',sans-serif;">
-                <i class="bi bi-lightning-charge me-2" style="color:var(--accent);"></i>Aksi Cepat
-            </h2>
-            <div style="display:flex;flex-direction:column;gap:.5rem;">
-                @php
-                    $actions = [
-                        ['icon'=>'bi-search',       'color'=>'var(--accent)',  'bg'=>'var(--accent-dim)',          'border'=>'rgba(163,177,75,.15)', 'label'=>'Cari Lawan Tanding'],
-                        ['icon'=>'bi-geo-alt',       'color'=>'#22d3ee',        'bg'=>'rgba(34,211,238,.05)',        'border'=>'rgba(34,211,238,.1)',  'label'=>'Rekomendasi Venue'],
-                        ['icon'=>'bi-calendar-plus', 'color'=>'#a78bfa',        'bg'=>'rgba(167,139,250,.05)',       'border'=>'rgba(167,139,250,.1)', 'label'=>'Atur Jadwal Bermain'],
-                        ['icon'=>'bi-calculator',    'color'=>'#fb923c',        'bg'=>'rgba(251,146,60,.05)',        'border'=>'rgba(251,146,60,.1)',  'label'=>'Smart Cost Split'],
-                        ['icon'=>'bi-people',        'color'=>'var(--txt-muted)', 'bg'=>'rgba(255,255,255,.02)', 'border'=>'var(--border-subtle)',   'label'=>'Kelola Anggota Tim'],
-                        ['icon'=>'bi-person-circle', 'color'=>'var(--txt-muted)', 'bg'=>'rgba(255,255,255,.02)', 'border'=>'var(--border-subtle)',   'label'=>'Edit Profil Tim'],
-                    ];
-                @endphp
-                @foreach($actions as $a)
-                    <a href="#" style="display:flex;align-items:center;gap:.85rem;padding:.8rem 1rem;background:{{ $a['bg'] }};border:1px solid {{ $a['border'] }};border-radius:10px;text-decoration:none;transition:opacity .15s;"
-                       onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
-                        <i class="bi {{ $a['icon'] }}" style="color:{{ $a['color'] }};font-size:1rem;width:18px;text-align:center;"></i>
-                        <span style="font-size:.855rem;font-weight:500;color:var(--txt-primary);">{{ $a['label'] }}</span>
-                        <i class="bi bi-chevron-right ms-auto" style="color:var(--txt-faint);font-size:.72rem;"></i>
-                    </a>
-                @endforeach
-            </div>
+        <h2 class="quick-title">
+            Aksi Cepat
+        </h2>
+
+        <div class="quick-actions">
+
+            {{-- BUAT TIM --}}
+            <a href="{{ route('team.create') }}" class="quick-card">
+
+                <div class="quick-icon quick-green">
+                    🛡
+                </div>
+
+                <div>
+                    <div class="quick-heading">
+                        Buat Tim
+                    </div>
+
+                    <div class="quick-sub">
+                        Profil tim baru
+                    </div>
+                </div>
+
+            </a>
+
+            {{-- JADWAL BARU --}}
+            <a href="{{ route('schedule.create') }}" class="quick-card">
+
+                <div class="quick-icon quick-blue">
+                    📅
+                </div>
+
+                <div>
+                    <div class="quick-heading">
+                        Jadwal Baru
+                    </div>
+
+                    <div class="quick-sub">
+                        Input jadwal
+                    </div>
+                </div>
+
+            </a>
+
+            {{-- ATUR LOKASI --}}
+            <a href="{{ route('location.index') }}" class="quick-card">
+
+                <div class="quick-icon quick-orange">
+                    📍
+                </div>
+
+                <div>
+                    <div class="quick-heading">
+                        Atur Lokasi
+                    </div>
+
+                    <div class="quick-sub">
+                        Lokasi pertandingan
+                    </div>
+                </div>
+
+            </a>
+
+            {{-- CARI LAWAN --}}
+            <a href="{{ route('opponent.search') }}" class="quick-card">
+
+                <div class="quick-icon quick-purple">
+                    👥
+                </div>
+
+                <div>
+                    <div class="quick-heading">
+                        Cari Lawan
+                    </div>
+
+                    <div class="quick-sub">
+                        Temukan lawan tanding
+                    </div>
+                </div>
+
+            </a>
+
+            {{-- RIWAYAT --}}
+            <a href="{{ route('match.history') }}" class="quick-card">
+
+                <div class="quick-icon quick-emerald">
+                    ☰
+                </div>
+
+                <div>
+                    <div class="quick-heading">
+                        Riwayat
+                    </div>
+
+                    <div class="quick-sub">
+                        Semua pertandingan
+                    </div>
+                </div>
+
+            </a>
+
+            {{-- HITUNG BIAYA --}}
+            <a href="{{ route('cost.calculator') }}" class="quick-card">
+
+                <div class="quick-icon quick-yellow">
+                    🧮
+                </div>
+
+                <div>
+                    <div class="quick-heading">
+                        Hitung Biaya
+                    </div>
+
+                    <div class="quick-sub">
+                        Kalkulasi biaya main
+                    </div>
+                </div>
+
+            </a>
+
         </div>
     </div>
 
