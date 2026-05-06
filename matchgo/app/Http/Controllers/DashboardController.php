@@ -40,7 +40,7 @@ class DashboardController extends Controller
             : 0;
 
         // rating sederhana
-        $teamRating = ($totalWin * 3) + $totalDraw;
+        $teamRating = number_format((($totalWin * 3) + $totalDraw), 1);
 
         return view('user.dashboard.index', compact(
             'totalMatch',

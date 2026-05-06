@@ -6,16 +6,59 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\User;
+use App\Models\Team;
+use App\Models\Matches;
 
 class ProfileController extends Controller
 {
     public function index()
     {
         $user = Auth::user();
+        $team = Team::where('user_id', auth()->id())
+            ->with('members')
+            ->first();
+
+        $rating = '0.0';
+
+        if ($team) {
+
+            $teamId = $team->id;
+
+            $wins = Matches::where('status', 'completed')
+                ->where(function ($query) use ($teamId) {
+
+                    $query->where(function ($q) use ($teamId) {
+
+                        $q->where('home_team_id', $teamId)
+                            ->whereColumn('home_score', '>', 'away_score');
+
+                    })->orWhere(function ($q) use ($teamId) {
+
+                        $q->where('away_team_id', $teamId)
+                            ->whereColumn('away_score', '>', 'home_score');
+
+                    });
+
+                })
+                ->count();
+
+            $draws = Matches::where('status', 'completed')
+                ->where(function ($query) use ($teamId) {
+
+                    $query->where('home_team_id', $teamId)
+                        ->orWhere('away_team_id', $teamId);
+
+                })
+                ->whereColumn('home_score', '=', 'away_score')
+                ->count();
+
+            $rating = number_format(($wins * 3) + $draws, 1);
+        }
 
         return view('user.profile.index', [
             'user' => $user,
-            'team' => $user->team // ← ini yang kurang
+            'team' => $user->team,
+            'rating' => $rating
         ]);
     }
 
