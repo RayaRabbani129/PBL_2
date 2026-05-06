@@ -337,13 +337,13 @@
                     </div>
 
                     <div class="badge-green">
-                        +0
+                        {{ $totalWin }}W
                     </div>
 
                 </div>
 
                 <div class="stat-number">
-                    0
+                    {{ $totalMatch }}
                 </div>
 
                 <div class="stat-text">
@@ -362,13 +362,13 @@
                     </div>
 
                     <div class="badge-green">
-                        0%
+                        {{ $winRate }}%
                     </div>
 
                 </div>
 
                 <div class="stat-number">
-                    0
+                    {{ $totalWin }}
                     <span>Win</span>
                 </div>
 
@@ -388,13 +388,13 @@
                     </div>
 
                     <div class="badge-red">
-                        0%
+                        {{ $lossRate }}%
                     </div>
 
                 </div>
 
                 <div class="stat-number">
-                    0
+                    {{ $totalLoss }}
                     <span>Loss</span>
                 </div>
 
@@ -416,7 +416,7 @@
                 </div>
 
                 <div class="stat-number">
-                    0
+                    {{ $teamRating }}
                 </div>
 
                 <div class="stat-text">
