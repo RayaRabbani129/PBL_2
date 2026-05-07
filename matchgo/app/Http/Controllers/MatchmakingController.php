@@ -7,14 +7,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Team;
 use App\Models\TeamSchedule;
+use App\Models\Booking;
+use App\Models\MatchCost;
 use App\Models\MatchRequest;
 use App\Models\Matches;
 use App\Models\Notification;
 use App\Services\MatchmakingService;
+use App\Services\VenueRecommendationService;
 
 class MatchmakingController extends Controller
 {
-    public function __construct(protected MatchmakingService $matchmaking) {}
+    public function __construct(
+        protected MatchmakingService $matchmaking,
+        protected VenueRecommendationService $venueRecommendation
+    ) {}
 
     /**
      * Halaman utama matchmaking.
@@ -154,14 +160,14 @@ class MatchmakingController extends Controller
                     'matched_with'   => $opponent->id,
                 ]);
 
-                Matches::create([
-                    'match_code'       => 'MCH-' . strtoupper(uniqid()),
-                    'home_team_id'     => $opponent->id,
-                    'away_team_id'     => $myTeam->id,
-                    'match_datetime'   => $validated['preferred_date'] . ' ' . $validated['start_time'],
-                    'duration_minutes' => $this->calcDuration($validated['start_time'], $validated['end_time']),
-                    'status'           => 'scheduled',
-                ]);
+                $match = $this->createAutoMatch(
+                    $opponent,
+                    $myTeam,
+                    $validated['preferred_date'],
+                    $validated['start_time'],
+                    $validated['end_time'],
+                    'scheduled'
+                );
 
                 $this->notify($opponent->user_id, 'match_confirmed',
                     "Pertandingan melawan {$myTeam->name} dikonfirmasi pada {$validated['preferred_date']} pukul {$validated['start_time']}! ⚽");
@@ -269,14 +275,14 @@ class MatchmakingController extends Controller
                 'matched_with'   => $matchRequest->team_id,
             ]);
 
-            $match = Matches::create([
-                'match_code'       => 'MCH-' . strtoupper(uniqid()),
-                'home_team_id'     => $matchRequest->team_id,
-                'away_team_id'     => $myTeam->id,
-                'match_datetime'   => $matchRequest->preferred_date . ' ' . $matchRequest->start_time,
-                'duration_minutes' => $this->calcDuration($matchRequest->start_time, $matchRequest->end_time),
-                'status'           => 'scheduled',
-            ]);
+            $match = $this->createAutoMatch(
+                $matchRequest->team,
+                $myTeam,
+                $matchRequest->preferred_date,
+                $matchRequest->start_time,
+                $matchRequest->end_time,
+                'scheduled'
+            );
 
             $challenger = $matchRequest->team;
 
@@ -397,6 +403,68 @@ class MatchmakingController extends Controller
     {
         return \Carbon\Carbon::createFromFormat('H:i', $start)
             ->diffInMinutes(\Carbon\Carbon::createFromFormat('H:i', $end));
+    }
+
+    private function createAutoMatch(
+        Team   $homeTeam,
+        Team   $awayTeam,
+        string $date,
+        string $startTime,
+        string $endTime,
+        string $status = 'scheduled'
+    ): Matches {
+        $duration = $this->calcDuration($startTime, $endTime);
+        $venue    = $this->venueRecommendation->findBestVenueForMatch(
+            $homeTeam,
+            $awayTeam,
+            $date,
+            $startTime,
+            $endTime
+        );
+
+        $totalCost = $venue ? round($venue->price_per_hour * ($duration / 60), 2) : 0;
+
+        $match = Matches::create([
+            'match_code'       => 'MCH-' . strtoupper(uniqid()),
+            'home_team_id'     => $homeTeam->id,
+            'away_team_id'     => $awayTeam->id,
+            'venue_id'         => $venue?->id,
+            'match_datetime'   => "$date $startTime",
+            'duration_minutes' => $duration,
+            'status'           => $status,
+            'total_cost'       => $totalCost,
+        ]);
+
+        if ($venue) {
+            Booking::create([
+                'match_id'     => $match->id,
+                'venue_id'     => $venue->id,
+                'booking_date' => $date,
+                'start_time'   => $startTime,
+                'end_time'     => $endTime,
+                'status'       => 'booked',
+                'created_by'   => auth()->id(),
+            ]);
+
+            $homeCount = max(1, $homeTeam->members()->count());
+            $awayCount = max(1, $awayTeam->members()->count());
+            $teamShare = round($totalCost / 2, 2);
+
+            MatchCost::create([
+                'match_id'             => $match->id,
+                'total_venue_cost'     => $totalCost,
+                'home_team_cost'       => $teamShare,
+                'away_team_cost'       => $teamShare,
+                'home_team_players'    => $homeCount,
+                'away_team_players'    => $awayCount,
+                'home_cost_per_player' => round($teamShare / $homeCount, 2),
+                'away_cost_per_player' => round($teamShare / $awayCount, 2),
+                'is_finalized'         => false,
+                'notes'                => 'Auto split bill 50:50 berdasarkan jumlah anggota tim.',
+            ]);
+        }
+
+        return $match;
     }
 
     /**

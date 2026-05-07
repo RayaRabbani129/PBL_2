@@ -8,8 +8,10 @@
 
 {{-- Breadcrumb --}}
 <ul class="breadcrumb-matchgo">
+    <li><a href="{{ route('dashboard') }}"><i class="bi bi-house me-1"></i>Dashboard</a></li>
+    <li class="separator"><i class="bi bi-chevron-right"></i></li>
     <li><a href="{{ route('team.index') }}">Tim Saya</a></li>
-    <li><span class="separator"><i class="bi bi-chevron-right"></i></span></li>
+    <li class="separator"><i class="bi bi-chevron-right"></i></li>
     <li class="active">Tambah Anggota</li>
 </ul>
 

@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="MATCHGO - Platform matchmaking futsal terbaik.">
-    <title>@yield('title', 'MATCHGO — Futsal Matchmaking Platform')</title>
+    <title>@yield('title', 'MATCHGO')</title>
+
+    {{-- Logo --}}
+    <link rel="icon" type="image/x-icon" href="{{ asset('img/logo/logo.png') }}">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1066,75 +1069,9 @@
 
     {{-- ============ TOPBAR ============ --}}
     {{-- Render topbar inline or via include --}}
-    <header class="mg-topbar">
-        {{-- Left: Mobile toggle + Page title --}}
-        <div class="d-flex align-items-center gap-3">
-            <button
-                id="sidebarToggle"
-                class="mg-icon-btn"
-                aria-label="Toggle sidebar"
-                style="display:none;"
-            >
-                <i class="bi bi-list"></i>
-            </button>
-            <span class="mg-topbar-title">@yield('page-title', 'Dashboard')</span>
-        </div>
 
-        {{-- Right: Search · Notif · Theme · User --}}
-        <div class="mg-topbar-right">
-            {{-- Search --}}
-            <div class="mg-search-wrap hide-mobile">
-                <i class="bi bi-search"></i>
-                <input class="mg-search" type="text" placeholder="Cari sesuatu...">
-            </div>
 
-            {{-- Notification --}}
-            <a href="#" class="mg-icon-btn" aria-label="Notifikasi">
-                <i class="bi bi-bell"></i>
-                <span class="mg-notif-dot"></span>
-            </a>
-
-            {{-- Theme Toggle --}}
-            <button
-                id="themeToggle"
-                class="mg-theme-toggle"
-                aria-label="Toggle tema"
-                title="Ganti tema"
-            >
-                <i class="bi bi-moon-fill icon-moon"></i>
-                <i class="bi bi-sun-fill icon-sun"></i>
-            </button>
-
-            <div class="mg-divider-v hide-mobile"></div>
-
-            {{-- User dropdown --}}
-            <div id="topbarUserBtn" class="mg-topbar-user">
-                <div class="mg-topbar-avatar">
-                    {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 2)) }}
-                </div>
-                <span class="mg-topbar-username hide-mobile">
-                    {{ auth()->user()->name ?? 'User' }}
-                </span>
-                <i class="bi bi-chevron-down" style="font-size:0.65rem; color:var(--txt-muted);"></i>
-
-                <div id="topbarDropdown" class="mg-dropdown">
-                    <a href="#" class="mg-dropdown-item">
-                        <i class="bi bi-person"></i> Profil Saya
-                    </a>
-                    <a href="#" class="mg-dropdown-item">
-                        <i class="bi bi-gear"></i> Pengaturan
-                    </a>
-                    <div class="mg-dropdown-sep"></div>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="mg-dropdown-item danger">
-                            <i class="bi bi-box-arrow-right"></i> Keluar
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </header>
+    @include('user.layouts.navbar')
 
     {{-- ============ MAIN ============ --}}
     <main class="mg-main">

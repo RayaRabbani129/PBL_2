@@ -15,7 +15,7 @@ class ProfileController extends Controller
 
         return view('user.profile.index', [
             'user' => $user,
-            'team' => $user->team // ← ini yang kurang
+            'team' => $user->team
         ]);
     }
 
@@ -34,26 +34,58 @@ class ProfileController extends Controller
 
         // ambil data text
         $data = collect($validated)->except('photo')->toArray();
+        $user->update($data);
 
-        // upload foto kalau ada
+        return back()->with('success', 'Profile updated successfully');
+    }
+
+    public function updatePhoto(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'photo' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
         if ($request->hasFile('photo')) {
 
-            // hapus foto lama (opsional tapi disarankan)
-            if ($user->photo && Storage::exists('public/' . $user->photo)) {
-                Storage::delete('public/' . $user->photo);
+            // Hapus foto lama
+            if ($user->photo && Storage::disk('public')->exists($user->photo)) {
+                Storage::disk('public')->delete($user->photo);
             }
 
             $file = $request->file('photo');
             $filename = time() . '.' . $file->getClientOriginalExtension();
 
-            $file->storeAs('public/profile', $filename);
+            // Simpan ke storage/app/public/profile
+            $file->storeAs('profile', $filename, 'public');
 
-            $data['photo'] = 'profile/' . $filename;
+            // Simpan path ke DB
+            $user->update([
+                'photo' => 'profile/' . $filename
+            ]);
         }
 
-        $user->update($data);
+        return back()->with('success', 'Profile photo updated successfully');
+    }
 
-        return back()->with('success', 'Profile updated successfully');
+    public function updatePassword(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'current_password' => 'required',
+            'password'     => 'required|string|min:8|confirmed',
+            'password_confirmation' => 'required|string|min:8',
+        ]);
+
+        if (!password_verify($validated['current_password'], $user->password)) {
+            return back()->withErrors(['current_password' => 'Current password is incorrect']);
+        }
+
+        $user->update(['password' => bcrypt($validated['password'])]);
+
+        return back()->with('success', 'Password updated successfully');
     }
 
     public function updateTeam(Request $request)

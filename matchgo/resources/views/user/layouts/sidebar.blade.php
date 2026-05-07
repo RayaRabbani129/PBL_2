@@ -47,7 +47,7 @@
             Match
         </a>
 
-        <a href="{{ url('/venues') }}"
+        {{-- <a href="{{ url('/venues') }}"
            class="mg-nav-item {{ request()->is('venues*') ? 'active' : '' }}">
             <i class="bi bi-geo-alt"></i>
             Lapangan
@@ -57,11 +57,11 @@
            class="mg-nav-item {{ request()->is('split-bill*') ? 'active' : '' }}">
             <i class="bi bi-cash-stack"></i>
             Split Bill
-        </a>
+        </a> --}}
 
         <div class="mg-nav-section" style="margin-top: 8px;">Akun</div>
 
-        <a href="{{ url('/profile') }}"
+        <a href="{{ url('profile') }}"
            class="mg-nav-item {{ request()->is('profile*') ? 'active' : '' }}">
             <i class="bi bi-person-circle"></i>
             Profil
@@ -83,7 +83,11 @@
     <div class="mg-sidebar-user">
         <div class="mg-user-row">
             <div class="mg-user-avatar">
-                {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+                @if(Auth::user()->photo)
+                    <img src="{{ asset('storage/' . Auth::user()->photo) }}" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                @else
+                    {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+                @endif
             </div>
             <div style="flex:1;min-width:0;">
                 <p class="mg-user-name">{{ Auth::user()->name }}</p>

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="MATCHGO - Platform matchmaking futsal terbaik. Temukan lawan tanding, booking lapangan otomatis, dan split biaya cerdas.">
-  <title>MATCHGO — Futsal Matchmaking Platform</title>
+  <title>MATCHGO</title>
 
   <!-- Bootstrap 5.3 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -12,6 +12,8 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <!-- Custom CSS -->
   <link href="{{ asset('css/landing_page/style.css') }}" rel="stylesheet">
+  {{-- Logo --}}
+  <link rel="icon" type="image/x-icon" href="{{ asset('img/logo/logo.png') }}">
 
   <script data-design-ignore="true">
   (function() {

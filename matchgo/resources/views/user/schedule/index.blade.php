@@ -9,9 +9,84 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 
 @push('styles')
 <style>
-/* ══════════════════════════════════════════
-   MINI STAT CARDS
-══════════════════════════════════════════ */
+.sched-hero {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    padding: 2rem 2rem 1.75rem;
+    margin-bottom: 1.5rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+}
+
+.sched-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at top left, var(--accent-dim) 0%, transparent 65%);
+    pointer-events: none;
+}
+
+.sched-hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(var(--border-subtle) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+    opacity: 0.35;
+}
+
+.sched-hero-content {
+    position: relative;
+    z-index: 1;
+}
+
+.sched-hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid rgba(163,177,75,0.20);
+    border-radius: 99px;
+    padding: 4px 12px;
+    margin-bottom: 14px;
+}
+
+.sched-hero h2 {
+    font-family: 'Manrope', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--txt-primary);
+    line-height: 1.2;
+    margin-bottom: 8px;
+}
+
+.sched-hero h2 span { color: var(--accent); }
+
+.sched-hero p {
+    font-size: 0.875rem;
+    color: var(--txt-muted);
+    max-width: 500px;
+    margin-bottom: 0;
+}
+
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 991px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 575px)  { .stats-row { grid-template-columns: 1fr 1fr; } }
+
 .mini-stat {
     display: flex;
     align-items: center;
@@ -23,9 +98,7 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
     transition: border-color 0.2s, background 0.3s;
 }
 
-.mini-stat:hover {
-    border-color: rgba(163,177,75,0.25);
-}
+.mini-stat:hover { border-color: rgba(163,177,75,0.25); }
 
 .mini-stat-icon {
     width: 42px;
@@ -58,9 +131,15 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
     transition: color 0.3s;
 }
 
-/* ══════════════════════════════════════════
-   CALENDAR
-══════════════════════════════════════════ */
+.content-row {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+@media (max-width: 1199px) { .content-row { grid-template-columns: 1fr; } }
+
 .cal-header {
     display: flex;
     align-items: center;
@@ -92,7 +171,6 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
     font-size: 0.75rem;
     transition: background 0.15s, color 0.15s, border-color 0.3s;
     font-family: 'Inter', sans-serif;
-    font-size: 0.75rem;
     font-weight: 500;
     padding: 0 8px;
     white-space: nowrap;
@@ -104,7 +182,6 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
     border-color: rgba(163,177,75,0.3);
 }
 
-/* Day of week header */
 .cal-dow {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -122,7 +199,6 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
     padding: 4px 0;
 }
 
-/* Calendar grid */
 .cal-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -143,9 +219,7 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
     position: relative;
 }
 
-.cal-day.other-month {
-    color: var(--txt-faint);
-}
+.cal-day.other-month { color: var(--txt-faint); }
 
 .cal-day.today {
     background: var(--accent);
@@ -173,13 +247,67 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
     border-radius: 50%;
 }
 
-.cal-day.today.has-event::after {
-    background: var(--btn-primary-txt);
+.cal-day.today.has-event::after { background: var(--btn-primary-txt); }
+
+.cal-legend {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-subtle);
 }
 
-/* ══════════════════════════════════════════
-   FILTER TABS
-══════════════════════════════════════════ */
+.cal-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    color: var(--txt-muted);
+}
+
+.cal-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.sched-results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-subtle);
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.sched-results-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--txt-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sched-count-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    border-radius: 99px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(163,177,75,0.20);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent);
+    padding: 0 7px;
+}
 .filter-tabs {
     display: flex;
     gap: 6px;
@@ -212,30 +340,45 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
     font-weight: 600;
 }
 
-/* ══════════════════════════════════════════
-   SCHEDULE ITEMS
-══════════════════════════════════════════ */
 #scheduleList {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
 }
 
 .schedule-item {
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    padding: 1rem 1.15rem;
     display: flex;
     align-items: center;
     gap: 14px;
-    background: var(--surface-2);
-    border: 1px solid var(--border-subtle);
-    border-radius: 14px;
-    padding: 14px 16px;
-    transition: border-color 0.2s, background 0.3s, transform 0.15s;
+    transition: border-color 0.2s, background 0.15s, transform 0.15s;
+    position: relative;
+    overflow: hidden;
+}
+
+.schedule-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 3px 0 0 3px;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 0.2s;
 }
 
 .schedule-item:hover {
-    border-color: var(--border-medium);
+    border-color: rgba(163,177,75,0.28);
+    background: var(--surface-3);
     transform: translateY(-1px);
 }
+
+.schedule-item:hover::before { opacity: 1; }
 
 .schedule-time-badge {
     display: flex;
@@ -299,10 +442,18 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 600;
-    padding: 3px 10px;
+    padding: 2px 9px;
     border-radius: 99px;
+}
+
+.status-pill::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    background: currentColor;
+    border-radius: 50%;
 }
 
 .status-pill.available {
@@ -311,26 +462,10 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
     border: 1px solid var(--alert-success-bdr);
 }
 
-.status-pill.available::before {
-    content: '';
-    width: 5px;
-    height: 5px;
-    background: currentColor;
-    border-radius: 50%;
-}
-
 .status-pill.pending {
     background: var(--alert-warning-bg);
     color: var(--alert-warning-txt);
     border: 1px solid var(--alert-warning-bdr);
-}
-
-.status-pill.pending::before {
-    content: '';
-    width: 5px;
-    height: 5px;
-    background: currentColor;
-    border-radius: 50%;
 }
 
 /* Action buttons */
@@ -375,18 +510,27 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
     padding: 3.5rem 1rem;
     background: var(--surface-2);
     border: 1px dashed var(--border-medium);
-    border-radius: 14px;
+    border-radius: 16px;
 }
 
 .schedule-empty-icon {
-    font-size: 2.5rem;
+    width: 68px;
+    height: 68px;
+    border-radius: 18px;
+    background: var(--surface-4);
+    border: 1px solid var(--border-medium);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.65rem;
     color: var(--txt-faint);
-    margin-bottom: 14px;
+    margin: 0 auto 1.25rem;
 }
 
 .schedule-empty h5 {
     font-family: 'Manrope', sans-serif;
     font-size: 1rem;
+    font-weight: 700;
     color: var(--txt-secondary);
     margin-bottom: 6px;
 }
@@ -394,7 +538,8 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 .schedule-empty p {
     font-size: 0.825rem;
     color: var(--txt-muted);
-    margin-bottom: 16px;
+    max-width: 300px;
+    margin: 0 auto 1.25rem;
 }
 
 /* ══════════════════════════════════════════
@@ -422,7 +567,7 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 .mg-modal {
     background: var(--surface-2);
     border: 1px solid var(--border-medium);
-    border-radius: 18px;
+    border-radius: 20px;
     padding: 2rem;
     width: 360px;
     max-width: 90vw;
@@ -454,86 +599,33 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
     gap: 8px;
     justify-content: flex-end;
 }
-
-/* ══════════════════════════════════════════
-   CALENDAR LEGEND
-══════════════════════════════════════════ */
-.cal-legend {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid var(--border-subtle);
-}
-
-.cal-legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.7rem;
-    color: var(--txt-muted);
-}
-
-.cal-legend-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 3px;
-    flex-shrink: 0;
-}
-
-/* ══════════════════════════════════════════
-   STATS ROW — force 4 columns
-══════════════════════════════════════════ */
-.stats-row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
-    margin-bottom: 2rem;
-}
-
-@media (max-width: 991px) {
-    .stats-row { grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (max-width: 575px) {
-    .stats-row { grid-template-columns: 1fr 1fr; }
-}
-
-/* ══════════════════════════════════════════
-   LAYOUT ROW — calendar + list
-══════════════════════════════════════════ */
-.content-row {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 20px;
-    align-items: start;
-}
-
-@media (max-width: 1199px) {
-    .content-row {
-        grid-template-columns: 1fr;
-    }
-}
 </style>
 @endpush
 
 @section('content')
 
+{{-- Breadcrumb --}}
 <ol class="breadcrumb-matchgo">
-    <li><a href="{{ route('dashboard') }}">Dashboard</a></li>
+    <li><a href="{{ route('dashboard') }}"><i class="bi bi-house me-1"></i>Dashboard</a></li>
     <li class="separator"><i class="bi bi-chevron-right"></i></li>
     <li class="active">Jadwal Saya</li>
 </ol>
 
-<div class="page-header d-flex align-items-center justify-content-between">
-    <div>
-        <h1>Jadwal Saya</h1>
-        <p>Kelola ketersediaan jadwal kamu untuk matchmaking futsal</p>
+{{-- HERO --}}
+<div class="sched-hero">
+    <div class="sched-hero-grid"></div>
+    <div class="sched-hero-content d-flex align-items-start justify-content-between flex-wrap gap-3">
+        <div>
+            <div class="sched-hero-eyebrow">
+                <i class="bi bi-calendar3"></i> Ketersediaan
+            </div>
+            <h2>Jadwal <span>Saya</span></h2>
+            <p>Kelola ketersediaan jadwal kamu untuk matchmaking futsal</p>
+        </div>
+        <a href="{{ route('schedule.create') }}" class="btn-lime" style="margin-top: 4px; flex-shrink: 0;">
+            <i class="bi bi-plus-lg"></i> Tambah Jadwal
+        </a>
     </div>
-    <a href="{{ route('schedule.create') }}" class="btn-lime">
-        <i class="bi bi-plus-lg"></i> Tambah Jadwal
-    </a>
 </div>
 
 {{-- STATS --}}
@@ -549,7 +641,7 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
     </div>
 
     <div class="mini-stat">
-        <div class="mini-stat-icon">
+        <div class="mini-stat-icon" style="background: var(--alert-success-bg); color: var(--alert-success-txt);">
             <i class="bi bi-calendar2-event"></i>
         </div>
         <div>
@@ -559,7 +651,7 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
     </div>
 
     <div class="mini-stat">
-        <div class="mini-stat-icon" style="background:rgba(59,130,246,0.10); color:#60a5fa;">
+        <div class="mini-stat-icon" style="background: rgba(59,130,246,0.10); color: #60a5fa;">
             <i class="bi bi-people"></i>
         </div>
         <div>
@@ -569,7 +661,7 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
     </div>
 
     <div class="mini-stat">
-        <div class="mini-stat-icon" style="background:var(--alert-warning-bg); color:var(--alert-warning-txt);">
+        <div class="mini-stat-icon" style="background: var(--alert-warning-bg); color: var(--alert-warning-txt);">
             <i class="bi bi-clock-history"></i>
         </div>
         <div>
@@ -579,6 +671,7 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
     </div>
 </div>
 
+{{-- CONTENT ROW --}}
 <div class="content-row">
 
     {{-- CALENDAR --}}
@@ -606,11 +699,11 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 
         <div class="cal-legend">
             <div class="cal-legend-item">
-                <div class="cal-legend-dot" style="background:var(--accent-dim); border:1px solid rgba(163,177,75,0.3);"></div>
+                <div class="cal-legend-dot" style="background: var(--accent-dim); border: 1px solid rgba(163,177,75,0.3);"></div>
                 Ada jadwal
             </div>
             <div class="cal-legend-item">
-                <div class="cal-legend-dot" style="background:var(--accent); border-radius:50%;"></div>
+                <div class="cal-legend-dot" style="background: var(--accent); border-radius: 50%;"></div>
                 Hari ini
             </div>
         </div>
@@ -618,10 +711,17 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 
     {{-- LIST --}}
     <div>
-        <div class="filter-tabs mb-3">
-            <button class="filter-tab active" data-filter="all">Semua</button>
-            <button class="filter-tab" data-filter="available">Tersedia</button>
-            <button class="filter-tab" data-filter="inactive">Tidak Tersedia</button>
+        {{-- Results header — pola identik mm-results-header --}}
+        <div class="sched-results-header">
+            <div class="sched-results-title">
+                Daftar Jadwal
+                <span class="sched-count-pill">{{ $schedules->count() }}</span>
+            </div>
+            <div class="filter-tabs">
+                <button class="filter-tab active" data-filter="all">Semua</button>
+                <button class="filter-tab" data-filter="available">Tersedia</button>
+                <button class="filter-tab" data-filter="inactive">Tidak Tersedia</button>
+            </div>
         </div>
 
         <div id="scheduleList">
@@ -642,7 +742,10 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
                         {{ $daysMap[$jadwal->day_of_week] }}
                     </div>
                     <div class="schedule-meta">
-                        <span><i class="bi bi-arrow-repeat" style="font-size:0.7rem;"></i> Setiap {{ $daysMap[$jadwal->day_of_week] }}</span>
+                        <span>
+                            <i class="bi bi-arrow-repeat" style="font-size: 0.7rem;"></i>
+                            Setiap {{ $daysMap[$jadwal->day_of_week] }}
+                        </span>
                         <span class="status-pill {{ $jadwal->is_available ? 'available' : 'pending' }}">
                             {{ $jadwal->is_available ? 'Tersedia' : 'Tidak tersedia' }}
                         </span>
@@ -665,7 +768,9 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 
             @empty
             <div class="schedule-empty">
-                <div class="schedule-empty-icon"><i class="bi bi-calendar-x"></i></div>
+                <div class="schedule-empty-icon">
+                    <i class="bi bi-calendar-x"></i>
+                </div>
                 <h5>Belum ada jadwal</h5>
                 <p>Tambahkan jadwal ketersediaanmu untuk mulai matchmaking</p>
                 <a href="{{ route('schedule.create') }}" class="btn-lime btn-sm">
@@ -681,11 +786,14 @@ $daysMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 {{-- DELETE MODAL --}}
 <div class="mg-modal-backdrop" id="deleteModal">
     <div class="mg-modal">
-        <h4><i class="bi bi-exclamation-triangle" style="color:#f87171; margin-right:8px;"></i>Hapus Jadwal?</h4>
+        <h4>
+            <i class="bi bi-exclamation-triangle" style="color: #f87171; margin-right: 8px;"></i>
+            Hapus Jadwal?
+        </h4>
         <p id="deleteModalDesc">Jadwal ini akan dihapus permanen dan tidak bisa dikembalikan.</p>
         <div class="mg-modal-actions">
             <button class="btn-outline-lime" onclick="closeDeleteModal()">Batal</button>
-            <form id="deleteForm" method="POST" style="display:inline;">
+            <form id="deleteForm" method="POST" style="display: inline;">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn-matchgo-danger">
@@ -720,14 +828,16 @@ function renderCalendar() {
     const label = document.getElementById('calMonthLabel');
     grid.innerHTML = '';
 
-    const monthNames = ['Januari','Februari','Maret','April','Mei','Juni',
-                        'Juli','Agustus','September','Oktober','November','Desember'];
+    const monthNames = [
+        'Januari','Februari','Maret','April','Mei','Juni',
+        'Juli','Agustus','September','Oktober','November','Desember'
+    ];
     label.textContent = monthNames[calMonth] + ' ' + calYear;
 
-    const today      = new Date();
-    const firstDay   = new Date(calYear, calMonth, 1).getDay();   // 0-6
+    const today       = new Date();
+    const firstDay    = new Date(calYear, calMonth, 1).getDay();
     const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-    const prevDays   = new Date(calYear, calMonth, 0).getDate();
+    const prevDays    = new Date(calYear, calMonth, 0).getDate();
 
     // Prev month fillers
     for (let i = firstDay - 1; i >= 0; i--) {
@@ -760,7 +870,7 @@ function renderCalendar() {
     }
 
     // Next month fillers
-    const total   = firstDay + daysInMonth;
+    const total     = firstDay + daysInMonth;
     const remainder = total % 7 === 0 ? 0 : 7 - (total % 7);
     for (let d = 1; d <= remainder; d++) {
         const el = document.createElement('div');
@@ -792,13 +902,15 @@ document.getElementById('calToday').addEventListener('click', function () {
 initCal();
 
 // ── Filter tabs
-document.querySelectorAll('.filter-tab').forEach(function(btn) {
+document.querySelectorAll('.filter-tab').forEach(function (btn) {
     btn.addEventListener('click', function () {
-        document.querySelectorAll('.filter-tab').forEach(function(b) { b.classList.remove('active'); });
+        document.querySelectorAll('.filter-tab').forEach(function (b) {
+            b.classList.remove('active');
+        });
         btn.classList.add('active');
 
         const filter = btn.getAttribute('data-filter');
-        document.querySelectorAll('.schedule-item').forEach(function(item) {
+        document.querySelectorAll('.schedule-item').forEach(function (item) {
             if (filter === 'all' || item.getAttribute('data-status') === filter) {
                 item.style.display = '';
             } else {
@@ -820,7 +932,7 @@ function closeDeleteModal() {
     document.getElementById('deleteModal').classList.remove('show');
 }
 
-document.getElementById('deleteModal').addEventListener('click', function(e) {
+document.getElementById('deleteModal').addEventListener('click', function (e) {
     if (e.target === this) closeDeleteModal();
 });
 </script>
