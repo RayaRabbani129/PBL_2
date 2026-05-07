@@ -5,16 +5,84 @@ namespace App\Http\Controllers;
 use App\Models\Team;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Matches;
 
 class TeamController extends Controller
 {
     public function index()
     {
-        $team    = Team::where('user_id', auth()->id())->with('members')->first();
-        $members = $team?->members ?? collect();
-        $stats   = null; // ganti dengan query statistik match jika sudah ada
+        $team = Team::where('user_id', auth()->id())
+            ->with('members')
+            ->first();
 
-        return view('user.team.index', compact('team', 'members', 'stats'));
+        $members = $team?->members ?? collect();
+
+        $stats = (object) [
+            'wins' => 0,
+            'losses' => 0,
+            'total_matches' => 0,
+        ];
+
+        if ($team) {
+
+            $teamId = $team->id;
+
+            // total win
+            $wins = Matches::where('status', 'completed')
+                ->where(function ($query) use ($teamId) {
+
+                    $query->where(function ($q) use ($teamId) {
+                        $q->where('home_team_id', $teamId)
+                            ->whereColumn('home_score', '>', 'away_score');
+                    })
+
+                    ->orWhere(function ($q) use ($teamId) {
+                        $q->where('away_team_id', $teamId)
+                            ->whereColumn('away_score', '>', 'home_score');
+                    });
+
+                })
+                ->count();
+
+            // total loss
+            $losses = Matches::where('status', 'completed')
+                ->where(function ($query) use ($teamId) {
+
+                    $query->where(function ($q) use ($teamId) {
+                        $q->where('home_team_id', $teamId)
+                            ->whereColumn('home_score', '<', 'away_score');
+                    })
+
+                    ->orWhere(function ($q) use ($teamId) {
+                        $q->where('away_team_id', $teamId)
+                            ->whereColumn('away_score', '<', 'home_score');
+                    });
+
+                })
+                ->count();
+
+            // total match
+            $totalMatches = Matches::where('status', 'completed')
+                ->where(function ($query) use ($teamId) {
+
+                    $query->where('home_team_id', $teamId)
+                        ->orWhere('away_team_id', $teamId);
+
+                })
+                ->count();
+
+            $stats = (object) [
+                'wins' => $wins,
+                'losses' => $losses,
+                'total_matches' => $totalMatches,
+            ];
+        }
+
+        return view('user.team.index', compact(
+            'team',
+            'members',
+            'stats'
+        ));
     }
 
     public function create()

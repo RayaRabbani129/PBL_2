@@ -254,6 +254,35 @@ class MatchController extends Controller
             ->with('success', 'Skor berhasil diinput, menunggu verifikasi admin.');
     }
 
+    public function history()
+    {
+        $myTeam = Team::where('user_id', auth()->id())->first();
+
+        if (!$myTeam) {
+            return redirect()->route('team.create')
+                ->with('warning', 'Buat tim terlebih dahulu.');
+        }
+
+        $matches = Matches::with([
+                'homeTeam',
+                'awayTeam',
+                'venue',
+                'verification'
+            ])
+            ->where(function ($q) use ($myTeam) {
+                $q->where('home_team_id', $myTeam->id)
+                ->orWhere('away_team_id', $myTeam->id);
+            })
+            ->where('status', 'completed')
+            ->orderByDesc('match_datetime')
+            ->get();
+
+        return view('user.match.history', compact(
+            'matches',
+            'myTeam'
+        ));
+    }
+
     // ─────────────────────────────────────────────
     private function authorizeMatch(Matches $match, Team $myTeam): void
     {
