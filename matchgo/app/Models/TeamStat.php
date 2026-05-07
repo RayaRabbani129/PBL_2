@@ -12,7 +12,7 @@ class TeamStat extends Model
         'wins',
         'losses',
         'goals_scored',
-        'goals_conceded'
+        'goals_conceded',
     ];
 
     public function team()

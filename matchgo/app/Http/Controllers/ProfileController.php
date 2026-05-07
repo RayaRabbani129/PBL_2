@@ -16,9 +16,9 @@ class ProfileController extends Controller
         $user = Auth::user();
         $team = Team::where('user_id', auth()->id())
             ->with('members')
+            ->with('stats')
+            ->withCount('members')
             ->first();
-
-        $rating = '0.0';
 
         if ($team) {
 
@@ -57,8 +57,8 @@ class ProfileController extends Controller
 
         return view('user.profile.index', [
             'user' => $user,
-            'team' => $user->team,
-            'rating' => $rating
+            'team' => $team,
+            'rating' => $rating ?? '0.0'
         ]);
     }
 

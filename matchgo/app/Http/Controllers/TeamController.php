@@ -6,6 +6,7 @@ use App\Models\Team;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Matches;
+use App\Models\TeamStat;
 
 class TeamController extends Controller
 {
@@ -104,12 +105,22 @@ class TeamController extends Controller
             'logo_path'   => 'nullable|image|max:2048',
         ]);
 
+        // insert team stats
+        $teamStats = [
+            'total_matches' => 0,
+            'wins' => 0,
+            'losses' => 0,
+            'goals_scored' => 0,
+            'goals_conceded' => 0
+        ];
+
         if ($request->hasFile('logo_path')) {
             $data['logo_path'] = $request->file('logo_path')->store('teams', 'public');
         }
 
         $data['user_id'] = auth()->id();
-        Team::create($data);
+        $team = Team::create($data);
+        TeamStat::create(array_merge($teamStats, ['team_id' => $team->id]));
 
         return redirect()->route('team.index')->with('success', 'Tim berhasil dibuat!');
     }

@@ -43,7 +43,7 @@
                         {{ $team->name }}
                     </div>
                     <div style="font-size:0.7rem; color:var(--txt-muted); margin-top:2px;">
-                        {{ ucfirst(str_replace('_', ' ', $team->position ?? '-')) }}
+                        {{ ucfirst(str_replace('_', ' ', $team->level ?? '-')) }}
                     </div>
                 </div>
             </div>
@@ -59,7 +59,7 @@
                     <div style="font-family:'Manrope',sans-serif; font-size:1.1rem; font-weight:800;
                                 color:var(--txt-primary); display:flex; align-items:center; gap:5px;">
                         <i class="bi bi-person" style="font-size:0.85rem; color:var(--accent);"></i>
-                        {{ $team->member_count ?? '—' }}
+                        {{ $team->members_count ?? 0 }}
                     </div>
                 </div>
                 <div style="padding:10px 12px; background:var(--surface-3);
@@ -71,7 +71,7 @@
                     <div style="font-family:'Manrope',sans-serif; font-size:1.1rem; font-weight:800;
                                 color:var(--txt-primary); display:flex; align-items:center; gap:5px;">
                         <i class="bi bi-star-fill" style="font-size:0.8rem; color:#fcd34d;"></i>
-                        {{ $team->rating ?? '0.0' }}
+                        {{ $rating }}
                     </div>
                 </div>
             </div>
