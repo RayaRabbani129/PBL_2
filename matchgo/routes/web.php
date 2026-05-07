@@ -62,14 +62,13 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{schedule}', [TeamScheduleController::class, 'destroy'])->name('destroy');
     });
 
-    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
-    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
-
-    Route::put('/profile/team', [ProfileController::class, 'updateTeam'])
-    ->name('profile.updateTeam');
-
-    Route::put('/profile/update', [ProfileController::class, 'update'])
-    ->name('profile.update');
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [ProfileController::class, 'index'])->name('index');
+        Route::post('/update', [ProfileController::class, 'update'])->name('update');
+        Route::put('/team', [ProfileController::class, 'updateTeam'])->name('updateTeam');
+        Route::put('/photo', [ProfileController::class, 'updatePhoto'])->name('photo');
+        Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password');
+    });
 
     Route::prefix('matchmaking')->name('matchmaking.')->group(function () {
         Route::match(['get', 'post'], '/', [MatchmakingController::class, 'index'])->name('index');
@@ -111,25 +110,4 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/{matchCost}/finalize',  [MatchCostController::class, 'finalize'])->name('finalize');
         Route::delete('/{matchCost}', [MatchCostController::class, 'destroy'])->name('destroy');
     });
-
-
-    // 1. BUAT TIM (Create Team)
-    Route::get('/team/create', [TeamController::class, 'create'])->name('team.create');
-    Route::post('/team', [TeamController::class, 'store'])->name('team.store');
-    // 2. JADWAL BARU (Create Schedule)
-    Route::get('/schedule/create', [ScheduleController::class, 'create'])->name('schedule.create');
-    Route::post('/schedule', [ScheduleController::class, 'store'])->name('schedule.store');
-    // 3. ATUR LOKASI (Location Management)
-    Route::get('/location', [LocationController::class, 'index'])->name('location.index');
-    Route::get('/location/create', [LocationController::class, 'create'])->name('location.create');
-    Route::post('/location', [LocationController::class, 'store'])->name('location.store');
-    // 4. CARI LAWAN (Search Opponent)
-    Route::get('/opponent/search', [OpponentController::class, 'search'])->name('opponent.search');
-    Route::get('/opponent', [OpponentController::class, 'index'])->name('opponent.index');
-    // 5. RIWAYAT (Match History)
-    Route::get('/match/history', [MatchController::class, 'index'])
-    ->name('match.history');
-    // 6. HITUNG BIAYA (Cost Calculator)
-    Route::get('/cost/calculator', [CostController::class, 'calculator'])->name('cost.calculator');
-    Route::post('/cost/calculate', [CostController::class, 'calculate'])->name('cost.calculate');
 });
