@@ -132,4 +132,14 @@ Route::middleware(['auth'])->group(function () {
     // 6. HITUNG BIAYA (Cost Calculator)
     Route::get('/cost/calculator', [CostController::class, 'calculator'])->name('cost.calculator');
     Route::post('/cost/calculate', [CostController::class, 'calculate'])->name('cost.calculate');
+
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo'); // ← tambah ini
+
+    Route::put('/profile/team', [ProfileController::class, 'updateTeam'])
+    ->name('profile.updateTeam');
+
+    Route::put('/profile/update', [ProfileController::class, 'update'])
+    ->name('profile.update');
 });
