@@ -922,7 +922,7 @@ document.querySelectorAll('.filter-tab').forEach(function (btn) {
 
 // ── Delete modal
 function confirmDelete(id, name) {
-    document.getElementById('deleteForm').action = '/user/schedule/' + id;
+    document.getElementById('deleteForm').action = '/schedule/' + id;
     document.getElementById('deleteModalDesc').textContent =
         'Jadwal hari ' + name + ' akan dihapus permanen dan tidak bisa dikembalikan.';
     document.getElementById('deleteModal').classList.add('show');

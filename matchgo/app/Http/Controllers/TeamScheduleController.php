@@ -66,8 +66,7 @@ class TeamScheduleController extends Controller
 
         $schedule->update($request->all());
 
-        return redirect()->route('schedule.index')
-            ->with('success', 'Jadwal diupdate');
+        return redirect()->route('schedule.index')->with('success', 'Jadwal diupdate');
     }
 
     public function destroy(TeamSchedule $schedule)

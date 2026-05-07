@@ -541,6 +541,64 @@
     .team-info-bar { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
     .team-hints    { flex-direction: column; align-items: center; }
 }
+
+/* ══════════════════════════════════════════
+   DELETE MODAL
+══════════════════════════════════════════ */
+.mg-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+
+.mg-modal-backdrop.show {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.mg-modal {
+    background: var(--surface-2);
+    border: 1px solid var(--border-medium);
+    border-radius: 20px;
+    padding: 2rem;
+    width: 360px;
+    max-width: 90vw;
+    box-shadow: var(--shadow-md);
+    transform: scale(0.95) translateY(8px);
+    transition: transform 0.2s;
+}
+
+.mg-modal-backdrop.show .mg-modal {
+    transform: scale(1) translateY(0);
+}
+
+.mg-modal h4 {
+    font-family: 'Manrope', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--txt-primary);
+    margin-bottom: 8px;
+}
+
+.mg-modal p {
+    font-size: 0.875rem;
+    color: var(--txt-muted);
+    margin-bottom: 1.5rem;
+}
+
+.mg-modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
 </style>
 @endpush
 
@@ -773,17 +831,17 @@
                    class="member-action-btn" title="Edit">
                     <i class="bi bi-pencil"></i>
                 </a>
-                <form action="{{ route('team.members.destroy', $member) }}"
-                      method="POST" style="display:inline;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit"
-                            class="member-action-btn delete"
-                            title="Hapus"
-                            onclick="return confirm('Hapus anggota {{ $name }}?')">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </form>
+                <button
+                    type="button"
+                    class="member-action-btn delete"
+                    title="Hapus"
+                    onclick="confirmDeleteMember(
+                        '{{ route('team.members.destroy', $member) }}',
+                        '{{ $name }}'
+                    )"
+                >
+                    <i class="bi bi-trash"></i>
+                </button>
             </div>
 
         </div>
@@ -794,5 +852,63 @@
 </div>
 
 @endif
+{{-- DELETE MODAL --}}
+<div class="mg-modal-backdrop" id="deleteMemberModal">
+    <div class="mg-modal">
+        <h4>
+            <i class="bi bi-exclamation-triangle"
+               style="color: #f87171; margin-right: 8px;"></i>
+            Hapus Anggota?
+        </h4>
 
+        <p id="deleteMemberModalDesc">
+            Anggota ini akan dihapus permanen dan tidak bisa dikembalikan.
+        </p>
+
+        <div class="mg-modal-actions">
+            <button
+                type="button"
+                class="btn-outline-lime"
+                onclick="closeDeleteMemberModal()"
+            >
+                Batal
+            </button>
+
+            <form id="deleteMemberForm" method="POST" style="display:inline;">
+                @csrf
+                @method('DELETE')
+
+                <button type="submit" class="btn-matchgo-danger">
+                    <i class="bi bi-trash"></i> Hapus
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+function confirmDeleteMember(url, name) {
+    document.getElementById('deleteMemberForm').action = url;
+
+    document.getElementById('deleteMemberModalDesc').textContent =
+        'Anggota ' + name + ' akan dihapus permanen dan tidak bisa dikembalikan.';
+
+    document.getElementById('deleteMemberModal')
+        .classList.add('show');
+}
+
+function closeDeleteMemberModal() {
+    document.getElementById('deleteMemberModal')
+        .classList.remove('show');
+}
+
+document.getElementById('deleteMemberModal')
+    .addEventListener('click', function (e) {
+        if (e.target === this) {
+            closeDeleteMemberModal();
+        }
+    });
+</script>
+@endpush
