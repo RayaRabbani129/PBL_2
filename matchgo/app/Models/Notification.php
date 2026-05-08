@@ -1,8 +1,9 @@
 <?php
 
 namespace App\Models;
+
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Notification;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Notification extends Model
 {
@@ -15,19 +16,31 @@ class Notification extends Model
         'status',
     ];
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
     protected $casts = [
         'data' => 'array',
     ];
 
-    // Helper untuk cek sudah dibaca
+    /**
+     * Relasi ke user
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Cek apakah notifikasi sudah dibaca
+     */
     public function getIsReadAttribute(): bool
     {
         return $this->status === 'read';
     }
 
+    /**
+     * Cek apakah belum dibaca
+     */
+    public function getIsUnreadAttribute(): bool
+    {
+        return $this->status === 'unread';
+    }
 }

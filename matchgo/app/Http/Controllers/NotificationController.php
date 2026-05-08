@@ -2,54 +2,85 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Notification;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class NotificationController extends Controller
 {
+    /**
+     * Tampilkan semua notifikasi user
+     */
     public function index()
     {
-        $notifications = DB::table('notifications')
-            ->where('user_id', Auth::id())
-            ->orderBy('created_at', 'desc')
+        $notifications = Notification::where(
+                'user_id',
+                Auth::id()
+            )
+            ->latest()
             ->paginate(15);
 
-        $unreadCount = DB::table('notifications')
-                ->where('user_id', Auth::id())
-                ->whereIn('status', ['unread', 'sent'])
-                ->count();
+        $unreadCount = Notification::where(
+                'user_id',
+                Auth::id()
+            )
+            ->where('status', 'unread')
+            ->count();
 
-            return view('user.notifications.index', compact('notifications', 'unreadCount'));
-        }
-
-    public function readAll()
-    {
-        DB::table('notifications')
-            ->where('user_id', Auth::id())
-            ->whereIn('status', ['unread', 'sent'])
-            ->update(['status' => 'read']);
-
-        return back()->with('success', 'Semua notifikasi telah dibaca.');
+        return view(
+            'user.notifications.index',
+            compact(
+                'notifications',
+                'unreadCount'
+            )
+        );
     }
 
+    /**
+     * Tandai semua dibaca
+     */
+    public function readAll()
+    {
+        Notification::where(
+                'user_id',
+                Auth::id()
+            )
+            ->where('status', 'unread')
+            ->update([
+                'status' => 'read'
+            ]);
+
+        return back()->with(
+            'success',
+            'Semua notifikasi telah dibaca.'
+        );
+    }
+
+    /**
+     * Tandai 1 notifikasi dibaca
+     */
     public function markAsRead($id)
     {
-        DB::table('notifications')
-            ->where('id', $id)
+        Notification::where('id', $id)
             ->where('user_id', Auth::id())
-            ->update(['status' => 'read']);
+            ->update([
+                'status' => 'read'
+            ]);
 
         return back();
     }
 
+    /**
+     * Hapus notifikasi
+     */
     public function destroy($id)
     {
-        DB::table('notifications')
-            ->where('id', $id)
+        Notification::where('id', $id)
             ->where('user_id', Auth::id())
             ->delete();
 
-        return back()->with('success', 'Notifikasi dihapus.');
+        return back()->with(
+            'success',
+            'Notifikasi berhasil dihapus.'
+        );
     }
 }
