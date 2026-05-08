@@ -10,6 +10,7 @@ use App\Http\Controllers\TeamMemberController;
 use App\Http\Controllers\TeamScheduleController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\MatchCostController;
 use App\Http\Controllers\VenueRecommendationController;
 
@@ -109,5 +110,12 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{matchCost}', [MatchCostController::class, 'update'])->name('update');
         Route::patch('/{matchCost}/finalize',  [MatchCostController::class, 'finalize'])->name('finalize');
         Route::delete('/{matchCost}', [MatchCostController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::post('/read-all', [NotificationController::class, 'readAll'])->name('readAll');
+        Route::patch('/{id}/read', [NotificationController::class, 'markAsRead'])->name('read');
+        Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
     });
 });
