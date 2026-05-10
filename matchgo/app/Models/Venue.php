@@ -40,26 +40,31 @@ class Venue extends Model
 
     public function schedules(): HasMany
     {
-        return $this->hasMany(VenueSchedule::class);
+        return $this->hasMany(VenueSchedule::class, 'venue_id');
     }
 
     public function fields(): HasMany
     {
-        return $this->hasMany(Field::class);
+        return $this->hasMany(Field::class, 'venue_id');
     }
 
     public function matches(): HasMany
     {
-        return $this->hasMany(Matches::class);
+        return $this->hasMany(Matches::class, 'venue_id');
     }
 
     public function bookings(): HasMany
     {
-        return $this->hasMany(Booking::class);
+        return $this->hasMany(Booking::class, 'venue_id');
     }
 
     public function fieldAdmins(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'field_admin_venues');
+    }
+
+    public function fieldAdminVenue()
+    {
+        return $this->hasOne(FieldAdminVenue::class);
     }
 }

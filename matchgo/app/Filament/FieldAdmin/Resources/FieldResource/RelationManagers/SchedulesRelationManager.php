@@ -2,10 +2,23 @@
 
 namespace App\Filament\FieldAdmin\Resources\FieldResource\RelationManagers;
 
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms;
+use Filament\Forms\Components\DatePicker;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\TimePicker;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class SchedulesRelationManager extends RelationManager
@@ -16,76 +29,125 @@ class SchedulesRelationManager extends RelationManager
 
     protected static ?string $modelLabel = 'Jadwal';
 
+    protected static ?string $pluralModelLabel = 'Jadwal Lapangan';
+
     public function form(Schema $form): Schema
     {
-        return $form->schema([
-            Forms\Components\DatePicker::make('date')
-                ->label('Tanggal')
-                ->required()
-                ->minDate(now())
-                ->native(false),
+        return $form
+            ->components([
 
-            Forms\Components\TimePicker::make('start_time')
-                ->label('Jam Mulai')
-                ->required()
-                ->seconds(false),
+                Section::make('Informasi Jadwal')
+                    ->icon('heroicon-o-calendar-days')
+                    ->schema([
 
-            Forms\Components\TimePicker::make('end_time')
-                ->label('Jam Selesai')
-                ->required()
-                ->seconds(false)
-                ->after('start_time'),
+                        Grid::make(2)
+                            ->schema([
 
-            Forms\Components\Toggle::make('is_available')
-                ->label('Tersedia')
-                ->default(true),
-        ])->columns(2);
+                                DatePicker::make('date')
+                                    ->label('Tanggal Bermain')
+                                    ->required()
+                                    ->native(false)
+                                    ->minDate(now())
+                                    ->displayFormat('d M Y'),
+
+                                Toggle::make('is_available')
+                                    ->label('Tersedia')
+                                    ->default(true)
+                                    ->inline(false),
+
+                            ]),
+
+                        Grid::make(2)
+                            ->schema([
+
+                                TimePicker::make('start_time')
+                                    ->label('Jam Mulai')
+                                    ->required()
+                                    ->seconds(false),
+
+                                TimePicker::make('end_time')
+                                    ->label('Jam Selesai')
+                                    ->required()
+                                    ->seconds(false)
+                                    ->after('start_time'),
+
+                            ]),
+
+                    ]),
+            ]);
     }
 
     public function table(Table $table): Table
     {
         return $table
             ->recordTitleAttribute('date')
+
             ->columns([
-                Tables\Columns\TextColumn::make('date')
+
+                TextColumn::make('date')
                     ->label('Tanggal')
                     ->date('d M Y')
-                    ->sortable(),
+                    ->sortable()
+                    ->badge(),
 
-                Tables\Columns\TextColumn::make('start_time')
-                    ->label('Jam Mulai')
-                    ->time('H:i'),
+                TextColumn::make('start_time')
+                    ->label('Mulai')
+                    ->time('H:i')
+                    ->badge()
+                    ->color('success'),
 
-                Tables\Columns\TextColumn::make('end_time')
-                    ->label('Jam Selesai')
-                    ->time('H:i'),
+                TextColumn::make('end_time')
+                    ->label('Selesai')
+                    ->time('H:i')
+                    ->badge()
+                    ->color('danger'),
 
-                Tables\Columns\IconColumn::make('is_available')
+                IconColumn::make('is_available')
                     ->label('Tersedia')
                     ->boolean(),
+
             ])
+
             ->filters([
-                Tables\Filters\TernaryFilter::make('is_available')
+                TernaryFilter::make('is_available')
                     ->label('Ketersediaan'),
             ])
+
             ->headerActions([
-                Tables\Actions\CreateAction::make()
+
+                CreateAction::make()
                     ->label('Tambah Jadwal')
+
                     ->mutateFormDataUsing(function (array $data): array {
-                        // Pastikan venue_id terisi otomatis dari parent (field → venue)
-                        $data['venue_id'] = $this->getOwnerRecord()->venue_id;
+
+                        $field = $this->getOwnerRecord();
+
+                        // otomatis isi venue_id
+                        $data['venue_id'] = $field->venue_id;
+
                         return $data;
                     }),
+
             ])
+
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+
+                EditAction::make(),
+
+                DeleteAction::make(),
+
             ])
+
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+
+                BulkActionGroup::make([
+
+                    DeleteBulkAction::make(),
+
                 ]),
+
             ])
+
             ->defaultSort('date', 'asc');
     }
 }

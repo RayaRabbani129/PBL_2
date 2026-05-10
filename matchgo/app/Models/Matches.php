@@ -17,7 +17,13 @@ class Matches extends Model
         'away_score',
         'status',
         'total_cost',
-        'notes'
+        'notes',
+        'stats_processed',
+    ];
+
+    protected $casts = [
+        'match_datetime' => 'datetime',
+        'stats_processed' => 'boolean',
     ];
 
     public function homeTeam()
@@ -48,5 +54,24 @@ class Matches extends Model
     public function verification()
     {
         return $this->hasOne(MatchVerification::class, 'match_id');
+    }
+
+    public function audits()
+    {
+        return $this->hasMany(MatchAudit::class, 'match_id');
+    }
+
+    public function latestAudit()
+    {
+        return $this->hasOne(MatchAudit::class, 'match_id')
+            ->latestOfMany();
+    }
+
+    public function audit()
+    {
+        return $this->hasOne(
+            MatchAudit::class,
+            'match_id'
+        )->latestOfMany();
     }
 }

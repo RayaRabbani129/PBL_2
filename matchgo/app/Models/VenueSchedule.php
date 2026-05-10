@@ -23,11 +23,11 @@ class VenueSchedule extends Model
 
     public function venue(): BelongsTo
     {
-        return $this->belongsTo(Venue::class);
+        return $this->belongsTo(Venue::class, 'venue_id');
     }
 
     public function field(): BelongsTo
     {
-        return $this->belongsTo(Field::class);
+        return $this->belongsTo(Field::class, 'field_id');
     }
 }

@@ -16,7 +16,14 @@ class Team extends Model
         'level',
         'description',
         'logo_path',
-        'status'
+        'status',
+        'warning_points',
+        'banned_at',
+    ];
+
+    protected $casts = [
+        'banned_at' => 'datetime',
+        'warning_points' => 'integer',
     ];
 
     public function owner()
@@ -37,6 +44,11 @@ class Team extends Model
     public function stats()
     {
         return $this->hasOne(TeamStat::class);
+    }
+
+    public function statusLogs()
+    {
+        return $this->hasMany(TeamStatusLog::class);
     }
 
     public function matchRequests()

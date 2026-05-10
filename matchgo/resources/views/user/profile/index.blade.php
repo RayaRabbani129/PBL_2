@@ -671,7 +671,7 @@ textarea.form-control-mg {
             <div class="mg-section-body">
                 <form action="{{ route('profile.update') }}" method="POST">
                     @csrf
-                    @method('PUT')
+                    @method('POST')
 
                     <div class="row g-3">
 

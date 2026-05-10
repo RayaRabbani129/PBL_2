@@ -429,7 +429,7 @@
         </div>
 
         {{-- Admin link --}}
-        {{-- <a href="{{ url('/admin/login') }}" class="admin-link-box">
+        <a href="{{ url('/admin/login') }}" class="admin-link-box">
           <div class="admin-link-icon">
             <i class="bi bi-shield-lock-fill"></i>
           </div>
@@ -437,7 +437,7 @@
             <small>Login sebagai</small>
             <span>Admin Panel <i class="bi bi-arrow-right ms-1" style="font-size: 0.75rem;"></i></span>
           </div>
-        </a> --}}
+        </a>
 
         {{-- Register --}}
         <p class="register-text">

@@ -24,7 +24,7 @@
             {{-- Kamera badge --}}
             <form id="photoForm" action="{{ route('profile.photo') }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                @method('POST')
+                @method('PUT')
                 <input type="file" name="photo" id="photoInputAvatar" accept="image/*" hidden>
                 <button type="button"
                         onclick="document.getElementById('photoInputAvatar').click()"

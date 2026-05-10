@@ -20,37 +20,18 @@ class ProfileController extends Controller
             ->withCount('members')
             ->first();
 
-        if ($team) {
+        $rating = '0.0';
 
-            $teamId = $team->id;
+        if ($team && $team->stats) {
 
-            $wins = Matches::where('status', 'completed')
-                ->where(function ($query) use ($teamId) {
+            $wins = $team->stats->wins ?? 0;
 
-                    $query->where(function ($q) use ($teamId) {
-
-                        $q->where('home_team_id', $teamId)
-                            ->whereColumn('home_score', '>', 'away_score');
-
-                    })->orWhere(function ($q) use ($teamId) {
-
-                        $q->where('away_team_id', $teamId)
-                            ->whereColumn('away_score', '>', 'home_score');
-
-                    });
-
-                })
-                ->count();
-
-            $draws = Matches::where('status', 'completed')
-                ->where(function ($query) use ($teamId) {
-
-                    $query->where('home_team_id', $teamId)
-                        ->orWhere('away_team_id', $teamId);
-
-                })
-                ->whereColumn('home_score', '=', 'away_score')
-                ->count();
+            $draws = max(
+                0,
+                ($team->stats->total_matches ?? 0)
+                - ($team->stats->wins ?? 0)
+                - ($team->stats->losses ?? 0)
+            );
 
             $rating = number_format(($wins * 3) + $draws, 1);
         }
@@ -58,7 +39,7 @@ class ProfileController extends Controller
         return view('user.profile.index', [
             'user' => $user,
             'team' => $team,
-            'rating' => $rating ?? '0.0'
+            'rating' => $rating
         ]);
     }
 

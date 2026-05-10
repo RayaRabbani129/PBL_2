@@ -4,181 +4,277 @@ namespace App\Filament\FieldAdmin\Resources;
 
 use App\Filament\FieldAdmin\Resources\VenueScheduleResource\Pages;
 use App\Models\Field;
-use App\Models\Venue;
 use App\Models\VenueSchedule;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
+use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TimePicker;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Columns\BadgeColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\ValidationException;
 
 class VenueScheduleResource extends Resource
 {
     protected static ?string $model = VenueSchedule::class;
 
-    protected static ?string $navigationLabel = 'Jadwal';
+    protected static ?string $navigationLabel = 'Jadwal Booking';
+
+    protected static ?string $modelLabel = 'Jadwal';
+
+    protected static ?string $pluralModelLabel = 'Jadwal Booking';
+
+    protected static ?int $navigationSort = 2;
 
     public static function getNavigationIcon(): string|\BackedEnum|null
     {
         return 'heroicon-o-calendar-days';
     }
 
-    protected static ?string $modelLabel = 'Jadwal';
-
-    protected static ?string $pluralModelLabel = 'Jadwal';
-
-    protected static ?int $navigationSort = 2;
-
-    // Hanya tampilkan jadwal milik lapangan di venue yang dikelola admin ini
+    /**
+     * Hanya tampilkan jadwal venue milik admin login
+     */
     public static function getEloquentQuery(): Builder
     {
-        $venueIds = auth()->user()
-            ->venues()
-            ->pluck('venues.id');
-
         return parent::getEloquentQuery()
-            ->whereIn('venue_id', $venueIds);
+            ->whereHas('venue.fieldAdmins', function ($query) {
+                $query->where('user_id', auth()->id());
+            });
     }
 
     public static function form(Schema $form): Schema
     {
-        // Venue milik field admin yang login
-        $venueOptions = Venue::whereHas('fieldAdmins', function (Builder $q) {
-            $q->where('users.id', auth()->id());
-        })->pluck('name', 'id');
+        $user = auth()->user();
+
+        $venue = $user
+            ? $user->managedVenues()->first()
+            : null;
 
         return $form->schema([
-            Forms\Components\Section::make('Pilih Venue & Lapangan')
-                ->schema([
-                    Forms\Components\Select::make('venue_id')
-                        ->label('Venue')
-                        ->options($venueOptions)
-                        ->required()
-                        ->searchable()
-                        ->reactive()               // update dropdown lapangan saat berubah
-                        ->afterStateUpdated(fn (callable $set) => $set('field_id', null)),
 
-                    Forms\Components\Select::make('field_id')
-                        ->label('Lapangan')
-                        ->options(function (Get $get) {
-                            $venueId = $get('venue_id');
-                            if (! $venueId) {
-                                return [];
-                            }
-                            return Field::where('venue_id', $venueId)
-                                ->where('status', 'active')
-                                ->pluck('name', 'id');
-                        })
-                        ->required()
-                        ->searchable()
-                        ->preload()
-                        ->disabled(fn (Get $get): bool => ! $get('venue_id')),
+            Section::make('Informasi Venue')
+                ->icon('heroicon-o-building-office-2')
+                ->description('Venue yang Anda kelola')
+                ->schema([
+
+                    Placeholder::make('venue_name')
+                        ->label('Nama Venue')
+                        ->content(
+                            $venue?->name ?? 'Belum ada venue'
+                        ),
+
+                    Placeholder::make('venue_city')
+                        ->label('Kota')
+                        ->content(
+                            $venue?->city ?? '-'
+                        ),
+
+                    Placeholder::make('venue_address')
+                        ->label('Alamat')
+                        ->content(
+                            $venue?->address ?? '-'
+                        )
+                        ->columnSpanFull(),
+
                 ])
                 ->columns(2),
 
-            Forms\Components\Section::make('Slot Waktu')
+            Section::make('Pengaturan Jadwal')
+                ->icon('heroicon-o-calendar')
+                ->description('Atur jadwal lapangan venue')
                 ->schema([
-                    Forms\Components\DatePicker::make('date')
+
+                    Select::make('field_id')
+                        ->label('Lapangan')
+                        ->options(function () use ($venue) {
+
+                            if (! $venue) {
+                                return [];
+                            }
+
+                            return Field::query()
+                                ->where('venue_id', $venue->id)
+                                ->where('status', 'active')
+                                ->pluck('name', 'id');
+
+                        })
+                        ->searchable()
+                        ->preload()
+                        ->native(false)
+                        ->required()
+                        ->placeholder('Pilih lapangan'),
+
+                    DatePicker::make('date')
                         ->label('Tanggal')
                         ->required()
-                        ->minDate(now())
-                        ->native(false),
+                        ->native(false)
+                        ->minDate(now()),
 
-                    Forms\Components\TimePicker::make('start_time')
+                    TimePicker::make('start_time')
                         ->label('Jam Mulai')
                         ->required()
                         ->seconds(false),
 
-                    Forms\Components\TimePicker::make('end_time')
+                    TimePicker::make('end_time')
                         ->label('Jam Selesai')
                         ->required()
                         ->seconds(false)
                         ->after('start_time'),
 
-                    Forms\Components\Toggle::make('is_available')
-                        ->label('Tersedia untuk Booking')
+                    Toggle::make('is_available')
+                        ->label('Tersedia untuk booking')
                         ->default(true),
+
                 ])
                 ->columns(2),
+
         ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('venue.name')
-                    ->label('Venue')
-                    ->sortable()
-                    ->searchable(),
+            ->striped()
+            ->defaultSort('date', 'asc')
 
-                Tables\Columns\TextColumn::make('field.name')
+            ->columns([
+
+                TextColumn::make('field.name')
                     ->label('Lapangan')
-                    ->sortable()
                     ->searchable()
+                    ->sortable()
+                    ->weight('bold')
                     ->badge()
                     ->color('primary'),
 
-                Tables\Columns\TextColumn::make('date')
+                TextColumn::make('date')
                     ->label('Tanggal')
-                    ->date('d M Y')
-                    ->sortable(),
+                    ->date('d F Y')
+                    ->sortable()
+                    ->badge()
+                    ->color('gray'),
 
-                Tables\Columns\TextColumn::make('start_time')
-                    ->label('Jam Mulai')
-                    ->time('H:i'),
+                TextColumn::make('start_time')
+                    ->label('Mulai')
+                    ->time('H:i')
+                    ->badge()
+                    ->color('success'),
 
-                Tables\Columns\TextColumn::make('end_time')
-                    ->label('Jam Selesai')
-                    ->time('H:i'),
+                TextColumn::make('end_time')
+                    ->label('Selesai')
+                    ->time('H:i')
+                    ->badge()
+                    ->color('warning'),
 
-                Tables\Columns\IconColumn::make('is_available')
-                    ->label('Tersedia')
+                IconColumn::make('is_available')
+                    ->label('Status')
                     ->boolean(),
-            ])
-            ->filters([
-                Tables\Filters\SelectFilter::make('venue_id')
-                    ->label('Venue')
-                    ->relationship('venue', 'name')
-                    ->searchable()
-                    ->preload(),
 
-                Tables\Filters\SelectFilter::make('field_id')
+                BadgeColumn::make('status_badge')
+                    ->label('Kondisi')
+                    ->getStateUsing(function ($record) {
+                        return $record->is_available
+                            ? 'Tersedia'
+                            : 'Tidak Tersedia';
+                    })
+                    ->colors([
+                        'success' => 'Tersedia',
+                        'danger' => 'Tidak Tersedia',
+                    ]),
+
+            ])
+
+            ->filters([
+
+                SelectFilter::make('field_id')
                     ->label('Lapangan')
                     ->relationship('field', 'name')
                     ->searchable()
                     ->preload(),
 
-                Tables\Filters\Filter::make('date')
-                    ->form([
-                        Forms\Components\DatePicker::make('date_from')->label('Dari Tanggal')->native(false),
-                        Forms\Components\DatePicker::make('date_until')->label('Sampai Tanggal')->native(false),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when($data['date_from'], fn (Builder $q, $date) => $q->whereDate('date', '>=', $date))
-                            ->when($data['date_until'], fn (Builder $q, $date) => $q->whereDate('date', '<=', $date));
-                    }),
+                TernaryFilter::make('is_available')
+                    ->label('Status Ketersediaan'),
 
-                Tables\Filters\TernaryFilter::make('is_available')
-                    ->label('Ketersediaan'),
             ])
+
             ->actions([
-                EditAction::make(),
+
+                EditAction::make()
+                    ->modalWidth('2xl'),
+
                 DeleteAction::make(),
+
             ])
+
             ->bulkActions([
+
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-            ])
-            ->defaultSort('date', 'asc');
+
+            ]);
+    }
+
+    /**
+     * VALIDASI BENTROK JADWAL
+     */
+    public static function mutateFormDataBeforeCreate(array $data): array
+    {
+        static::validateSchedule($data);
+
+        $venue = auth()->user()?->managedVenues()?->first();
+
+        $data['venue_id'] = $venue->id;
+
+        return $data;
+    }
+
+    public static function mutateFormDataBeforeSave(array $data): array
+    {
+        static::validateSchedule($data);
+
+        return $data;
+    }
+
+    protected static function validateSchedule(array $data): void
+    {
+        $exists = VenueSchedule::query()
+            ->where('field_id', $data['field_id'])
+            ->where('date', $data['date'])
+
+            ->where(function ($query) use ($data) {
+                $query
+                    ->whereBetween('start_time', [
+                        $data['start_time'],
+                        $data['end_time'],
+                    ])
+                    ->orWhereBetween('end_time', [
+                        $data['start_time'],
+                        $data['end_time'],
+                    ]);
+            })
+            ->exists();
+
+        if ($exists) {
+            throw ValidationException::withMessages([
+                'start_time' => 'Jadwal bentrok dengan jadwal lain.',
+            ]);
+        }
     }
 
     public static function getPages(): array

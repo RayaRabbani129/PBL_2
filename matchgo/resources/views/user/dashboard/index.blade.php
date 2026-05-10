@@ -413,7 +413,7 @@
             <div class="dash-hero-eyebrow">
                 <i class="bi bi-stars"></i> Overview
             </div>
-            <h2>Halo, <span>{{ Auth::user()->name }}</span>! 👋</h2>
+            <h2>Halo, <span>{{ Auth::user()->name }}</span>!</h2>
             <p>Kelola tim, cari lawan, dan atur pertandingan futsalmu di sini.</p>
         </div>
         <div class="dash-hero-actions">
