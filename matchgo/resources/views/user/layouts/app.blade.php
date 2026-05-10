@@ -1064,6 +1064,18 @@
 </head>
 <body>
 
+    {{-- app.blade.php --}}
+    @php
+        $unreadCount = 0;
+        if (auth()->check()) {
+            $unreadCount = \Illuminate\Support\Facades\DB::table('notifications')
+                ->where('user_id', auth()->id())
+                ->whereIn('status', ['unread', 'sent'])
+                ->count();
+        }
+    @endphp
+    @include('user.layouts.sidebar')
+
     {{-- ============ SIDEBAR ============ --}}
     @include('user.layouts.sidebar')
 

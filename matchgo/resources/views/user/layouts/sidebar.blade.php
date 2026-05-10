@@ -1,8 +1,7 @@
 ﻿<aside class="mg-sidebar" id="mgSidebar">
-
+    
     {{-- Logo --}}
     <a href="{{ url('/') }}" class="mg-sidebar-logo">
-        {{-- <div class="mg-sidebar-logo-icon">M</div> --}}
         <div class="mg-sidebar-logo-icon">
             <img src="{{ asset('img/logo/logo.png') }}" alt="MatchGo Logo" style="width:100%;height:100%;object-fit:contain;">
         </div>
@@ -47,18 +46,6 @@
             Match
         </a>
 
-        {{-- <a href="{{ url('/venues') }}"
-           class="mg-nav-item {{ request()->is('venues*') ? 'active' : '' }}">
-            <i class="bi bi-geo-alt"></i>
-            Lapangan
-        </a>
-
-        <a href="{{ url('/split-bill') }}"
-           class="mg-nav-item {{ request()->is('split-bill*') ? 'active' : '' }}">
-            <i class="bi bi-cash-stack"></i>
-            Split Bill
-        </a> --}}
-
         <div class="mg-nav-section" style="margin-top: 8px;">Akun</div>
 
         <a href="{{ url('profile') }}"
@@ -67,13 +54,16 @@
             Profil
         </a>
 
-        <a href="#"
-           class="mg-nav-item"
-           style="position: relative;">
+        {{-- Notifikasi --}}
+        <a href="{{ route('notifications.index') }}"
+           class="mg-nav-item {{ request()->is('notifications*') ? 'active' : '' }}">
             <i class="bi bi-bell"></i>
             Notifikasi
-            {{-- Uncomment jika ada unread notif: --}}
-            {{-- <span style="position:absolute;top:8px;left:28px;width:16px;height:16px;background:#EF4444;border-radius:50%;font-size:9px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;border:2px solid var(--surface-1);">3</span> --}}
+            @if($unreadCount > 0)
+                <span class="mg-nav-badge">
+                    {{ $unreadCount > 99 ? '99+' : $unreadCount }}
+                </span>
+            @endif
         </a>
 
     </nav>
@@ -84,14 +74,22 @@
         <div class="mg-user-row">
             <div class="mg-user-avatar">
                 @if(Auth::user()->photo)
-                    <img src="{{ asset('storage/' . Auth::user()->photo) }}" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                    <img src="{{ asset('storage/' . Auth::user()->photo) }}"
+                         alt="Avatar"
+                         style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
                 @else
                     {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
                 @endif
             </div>
             <div style="flex:1;min-width:0;">
                 <p class="mg-user-name">{{ Auth::user()->name }}</p>
-                <p class="mg-user-team">Player</p>
+                <p class="mg-user-team">
+                    @if(Auth::user()->team)
+                        {{ Auth::user()->team->name }}
+                    @else
+                        Player
+                    @endif
+                </p>
             </div>
             <form method="POST" action="{{ route('logout') }}" style="flex-shrink:0;">
                 @csrf
