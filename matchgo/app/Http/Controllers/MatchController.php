@@ -11,7 +11,9 @@ use App\Models\MatchRequest;
 use App\Models\MatchVerification;
 use App\Models\Notification;
 use App\Models\Team;
+use App\Models\VenueSchedule;
 use App\Services\VenueRecommendationService;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 
 class MatchController extends Controller
@@ -50,14 +52,12 @@ class MatchController extends Controller
             ->orderByDesc('match_datetime')
             ->get();
 
-        // Tantangan masuk ke tim saya
         $incoming = MatchRequest::with(['team', 'team.stats'])
             ->where('matched_with', $myTeam->id)
             ->where('status', 'searching')
             ->orderByDesc('created_at')
             ->get();
 
-        // Tantangan yang saya kirim, masih menunggu
         $outgoing = MatchRequest::with(['matchedTeam', 'matchedTeam.stats'])
             ->where('team_id', $myTeam->id)
             ->whereNotNull('matched_with')
@@ -85,7 +85,7 @@ class MatchController extends Controller
         $myTeam = Team::where('user_id', auth()->id())->firstOrFail();
         $this->authorizeMatch($match, $myTeam);
 
-        $match->load(['homeTeam', 'awayTeam', 'venue', 'verification.auditor', 'booking', 'cost']);
+        $match->load(['homeTeam', 'awayTeam', 'venue', 'field', 'verification.auditor', 'booking', 'cost']);
 
         $isHome         = $match->home_team_id === $myTeam->id;
         $myTeamInMatch  = $isHome ? $match->homeTeam : $match->awayTeam;
@@ -97,10 +97,55 @@ class MatchController extends Controller
         ));
     }
 
-    /**
-     * POST /matches/challenge/{matchRequest}/accept
-     * Mendukung request biasa maupun AJAX (Accept: application/json).
-     */
+    public function poll()
+    {
+        $myTeam = Team::where('user_id', auth()->id())->first();
+
+        if (!$myTeam) {
+            return response()->json(['error' => 'No team'], 403);
+        }
+
+        $incoming = MatchRequest::with(['team'])
+            ->where('matched_with', $myTeam->id)
+            ->where('status', 'searching')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn($req) => [
+                'id'             => $req->id,
+                'team_name'      => $req->team->name,
+                'team_initials'  => strtoupper(substr($req->team->name, 0, 2)),
+                'team_city'      => $req->team->city ?? null,
+                'team_level'     => $req->team->level
+                                        ? ucfirst(str_replace('_', ' ', $req->team->level))
+                                        : null,
+                'preferred_date' => Carbon::parse($req->preferred_date)
+                                        ->translatedFormat('l, d M Y'),
+                'start_time'     => Carbon::parse($req->start_time)->format('H:i'),
+                'end_time'       => Carbon::parse($req->end_time)->format('H:i'),
+                'accept_url'     => route('matches.challenge.accept', $req),
+                'reject_url'     => route('matches.challenge.reject', $req),
+            ]);
+
+        $upcomingCount = Matches::where(function ($q) use ($myTeam) {
+                $q->where('home_team_id', $myTeam->id)
+                  ->orWhere('away_team_id', $myTeam->id);
+            })
+            ->whereIn('status', ['matched', 'confirmed', 'ongoing'])
+            ->count();
+
+        $outgoingCount = MatchRequest::where('team_id', $myTeam->id)
+            ->whereNotNull('matched_with')
+            ->where('status', 'searching')
+            ->count();
+
+        return response()->json([
+            'incoming'       => $incoming,
+            'incoming_count' => $incoming->count(),
+            'upcoming_count' => $upcomingCount,
+            'outgoing_count' => $outgoingCount,
+        ]);
+    }
+
     public function acceptChallenge(Request $request, MatchRequest $matchRequest)
     {
         $myTeam = Team::where('user_id', auth()->id())->firstOrFail();
@@ -127,7 +172,6 @@ class MatchController extends Controller
 
             $matchRequest->update(['status' => 'matched']);
 
-            // Notifikasi ke penantang
             Notification::create([
                 'user_id' => $matchRequest->team->user_id,
                 'type'    => 'match_confirmed',
@@ -141,7 +185,7 @@ class MatchController extends Controller
                 return response()->json([
                     'success'   => true,
                     'message'   => '✅ Tantangan diterima! Match telah terjadwal.',
-                    'match_url' => route('match.show', $match),
+                    'match_url' => route('matches.show', $match),
                 ]);
             }
 
@@ -154,19 +198,14 @@ class MatchController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Terjadi kesalahan. Silakan coba lagi.',
-                    'error'   => $e->getMessage(),
-                ], 500);
+                    'message' => $e->getMessage(),
+                ], 422);
             }
 
-            return back()->with('error', 'Terjadi kesalahan. Silakan coba lagi.');
+            return back()->with('error', $e->getMessage());
         }
     }
 
-    /**
-     * POST /matches/challenge/{matchRequest}/reject
-     * Mendukung request biasa maupun AJAX (Accept: application/json).
-     */
     public function rejectChallenge(Request $request, MatchRequest $matchRequest)
     {
         $myTeam = Team::where('user_id', auth()->id())->firstOrFail();
@@ -263,12 +302,7 @@ class MatchController extends Controller
                 ->with('warning', 'Buat tim terlebih dahulu.');
         }
 
-        $matches = Matches::with([
-                'homeTeam',
-                'awayTeam',
-                'venue',
-                'verification'
-            ])
+        $matches = Matches::with(['homeTeam', 'awayTeam', 'venue', 'verification'])
             ->where(function ($q) use ($myTeam) {
                 $q->where('home_team_id', $myTeam->id)
                 ->orWhere('away_team_id', $myTeam->id);
@@ -277,13 +311,11 @@ class MatchController extends Controller
             ->orderByDesc('match_datetime')
             ->get();
 
-        return view('user.match.history', compact(
-            'matches',
-            'myTeam'
-        ));
+        return view('user.match.history', compact('matches', 'myTeam'));
     }
 
     // ─────────────────────────────────────────────
+
     private function authorizeMatch(Matches $match, Team $myTeam): void
     {
         if ($match->home_team_id !== $myTeam->id && $match->away_team_id !== $myTeam->id) {
@@ -308,7 +340,8 @@ class MatchController extends Controller
         string $status = 'confirmed'
     ): Matches {
         $duration = $this->calcDuration($startTime, $endTime) ?? 0;
-        $venue    = $this->venueRecommendation->findBestVenueForMatch(
+
+        $result = $this->venueRecommendation->findBestVenueForMatch(
             $homeTeam,
             $awayTeam,
             $date,
@@ -316,32 +349,63 @@ class MatchController extends Controller
             $endTime
         );
 
-        $totalCost = $venue ? round($venue->price_per_hour * ($duration / 60), 2) : 0;
+        /** @var \App\Models\Venue|null $venue */
+        $venue = $result['venue'] ?? null;
+
+        /** @var \App\Models\Field|null $field */
+        $field = $result['field'] ?? null;
+
+        $totalCost = ($field && $duration > 0)
+            ? round((float) $field->price_per_hour * ($duration / 60), 2)
+            : 0;
 
         $match = Matches::create([
             'match_code'       => 'MG-' . strtoupper(Str::random(8)),
             'home_team_id'     => $homeTeam->id,
             'away_team_id'     => $awayTeam->id,
             'venue_id'         => $venue?->id,
+            'field_id'         => $field?->id,
             'match_datetime'   => "$date $startTime",
             'duration_minutes' => $duration,
             'status'           => $status,
             'total_cost'       => $totalCost,
         ]);
 
-        if ($venue) {
+        if ($venue && $field) {
             Booking::create([
                 'match_id'     => $match->id,
                 'venue_id'     => $venue->id,
+                'field_id'     => $field->id,
                 'booking_date' => $date,
                 'start_time'   => $startTime,
                 'end_time'     => $endTime,
-                'status'       => 'booked',
+                'status'       => 'approved',
                 'created_by'   => auth()->id(),
             ]);
 
-            $homeCount  = max(1, $homeTeam->members()->count());
-            $awayCount  = max(1, $awayTeam->members()->count());
+            // ─────────────────────────────────────────────────────────
+            // Mark semua VenueSchedule yang overlap dengan slot ini
+            // menjadi tidak tersedia, agar tidak bisa dipesan lagi.
+            //
+            // Kondisi overlap:
+            //   schedule.start_time < request.end_time
+            //   AND schedule.end_time   > request.start_time
+            // ─────────────────────────────────────────────────────────
+            VenueSchedule::where('field_id', $field->id)
+                ->whereDate('date', Carbon::parse($date)->toDateString())
+                ->where('start_time', '<', $endTime)
+                ->where('end_time',   '>',  $startTime)
+                ->update(['is_available' => false]);
+
+            \Log::info('[Booking] Schedule dinonaktifkan', [
+                'field_id'   => $field->id,
+                'date'       => $date,
+                'start_time' => $startTime,
+                'end_time'   => $endTime,
+            ]);
+
+            $homeCount = max(1, $homeTeam->members()->count());
+            $awayCount = max(1, $awayTeam->members()->count());
             $teamShare  = round($totalCost / 2, 2);
 
             MatchCost::create([
@@ -361,9 +425,6 @@ class MatchController extends Controller
         return $match;
     }
 
-    /**
-     * Helper: abort dengan JSON jika request AJAX, abort biasa jika tidak.
-     */
     private function ajaxOrAbort(Request $request, int $code, string $message)
     {
         if ($request->expectsJson()) {
@@ -372,9 +433,6 @@ class MatchController extends Controller
         abort($code, $message);
     }
 
-    /**
-     * Helper: kembalikan JSON error atau redirect back dengan flash message.
-     */
     private function ajaxOrBack(Request $request, string $type, string $message)
     {
         if ($request->expectsJson()) {

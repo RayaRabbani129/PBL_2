@@ -11,6 +11,7 @@ class Matches extends Model
         'home_team_id',
         'away_team_id',
         'venue_id',
+        'field_id',
         'match_datetime',
         'duration_minutes',
         'home_score',
@@ -73,5 +74,10 @@ class Matches extends Model
             MatchAudit::class,
             'match_id'
         )->latestOfMany();
+    }
+
+    public function field()
+    {
+        return $this->belongsTo(Field::class);
     }
 }

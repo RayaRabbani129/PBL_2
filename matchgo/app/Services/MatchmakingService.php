@@ -3,116 +3,292 @@
 namespace App\Services;
 
 use App\Models\Team;
-use App\Models\TeamSchedule;
+use App\Models\Matches;
+use App\Models\MatchRequest;
 use Illuminate\Support\Collection;
 
 class MatchmakingService
 {
     /**
      * Cari lawan yang cocok untuk tim tertentu.
-     *
-     * Skor kecocokan (0–100):
-     *   - Kesamaan level                → 35 poin
-     *   - Overlap jadwal (hari + waktu) → 35 poin  ← pakai jadwal nyata tim saya
-     *   - Jarak / kota / provinsi       → 20 poin
-     *   - Win-rate seimbang             → 10 poin
-     *
-     * Bisa diganti model ML (SVM / Decision Tree) dengan swap calculateScore().
      */
     public function findOpponents(Team $myTeam, array $filters = []): Collection
     {
-        // Pastikan jadwal myTeam sudah di-load
-        $myTeam->loadMissing('schedules');
+        // Load relation
+        $myTeam->loadMissing([
+            'schedules',
+            'stats',
+        ]);
 
-        $query = Team::with(['schedules', 'owner', 'stats'])
+        // =========================================================
+        // TEAM YANG SEDANG MATCH AKTIF
+        // =========================================================
+
+        /**
+         * HANYA BLOK:
+         * - pending
+         * - confirmed
+         * - ongoing
+         *
+         * completed => boleh muncul lagi
+         * cancelled => boleh muncul lagi
+         */
+
+        $busyMatchTeamIds = Matches::query()
+            ->whereIn('status', [
+                'pending',
+                'confirmed',
+                'ongoing',
+            ])
+            ->get()
+            ->flatMap(function ($match) {
+
+                return [
+                    $match->home_team_id,
+                    $match->away_team_id,
+                ];
+            })
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        // =========================================================
+        // TEAM YANG SEDANG SEARCHING MATCH REQUEST
+        // =========================================================
+
+        /**
+         * Team yang sedang mencari lawan
+         * tidak boleh muncul di matchmaking
+         */
+
+        $searchingRequestTeamIds = MatchRequest::query()
+            ->where('status', 'searching')
+            ->pluck('matched_with')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        // =========================================================
+        // GABUNGKAN SEMUA TEAM YANG HARUS DIBLOK
+        // =========================================================
+
+        $blockedTeamIds = array_unique(array_merge(
+            $busyMatchTeamIds,
+            $searchingRequestTeamIds
+        ));
+
+        /**
+         * Jangan blok tim sendiri
+         */
+        $blockedTeamIds = array_filter(
+            $blockedTeamIds,
+            fn ($id) => $id != $myTeam->id
+        );
+
+        // =========================================================
+        // STATUS TEAM YANG MASIH BOLEH MATCHMAKING
+        // =========================================================
+
+        $allowedStatuses = [
+            'active',
+            'warning',
+            'under_review',
+        ];
+
+        // =========================================================
+        // QUERY TEAM
+        // =========================================================
+
+        $query = Team::with([
+                'schedules',
+                'owner',
+                'stats',
+            ])
             ->where('id', '!=', $myTeam->id)
-            ->where('status', 'active');
 
-        // ── Filter level ──────────────────────────────────────────
+            // Status team aman
+            ->whereIn('status', $allowedStatuses)
+
+            // Exclude team sibuk
+            ->whereNotIn('id', $blockedTeamIds);
+
+        // =========================================================
+        // FILTER LEVEL
+        // =========================================================
+
         if (!empty($filters['level'])) {
+
             $query->where('level', $filters['level']);
         }
 
-        // ── Filter hari — hanya tampilkan tim yang tersedia di hari tsb ──
-        if (isset($filters['day_of_week']) && $filters['day_of_week'] !== '') {
+        // =========================================================
+        // FILTER HARI
+        // =========================================================
+
+        if (
+            isset($filters['day_of_week']) &&
+            $filters['day_of_week'] !== ''
+        ) {
+
             $query->whereHas('schedules', function ($q) use ($filters) {
+
                 $q->where('day_of_week', $filters['day_of_week'])
-                  ->where('is_available', true);
+                    ->where('is_available', true);
             });
         }
 
-        // ── Filter berdasarkan jadwal SAYA — hanya hari saya tersedia ──
-        // Kalau tidak ada filter hari spesifik, auto-filter ke hari yg saya bisa
-        if ((!isset($filters['day_of_week']) || $filters['day_of_week'] === '') && $filters['use_my_schedule'] ?? false) {
+        // =========================================================
+        // FILTER BERDASARKAN JADWAL SAYA
+        // =========================================================
+
+        if (
+            (!isset($filters['day_of_week']) ||
+            $filters['day_of_week'] === '')
+            &&
+            isset($filters['use_my_schedule'])
+            &&
+            $filters['use_my_schedule'] === true
+        ) {
+
             $myAvailableDays = $myTeam->schedules
                 ->where('is_available', true)
                 ->pluck('day_of_week')
+                ->unique()
+                ->values()
                 ->toArray();
 
             if (!empty($myAvailableDays)) {
+
                 $query->whereHas('schedules', function ($q) use ($myAvailableDays) {
+
                     $q->whereIn('day_of_week', $myAvailableDays)
-                      ->where('is_available', true);
+                        ->where('is_available', true);
                 });
             }
         }
 
+        // =========================================================
+        // AMBIL TEAM
+        // =========================================================
+
         $candidates = $query->get();
 
-        // ── Hitung skor kecocokan ─────────────────────────────────
+        // =========================================================
+        // HITUNG SKOR
+        // =========================================================
+
         $scored = $candidates->map(function (Team $opponent) use ($myTeam, $filters) {
-            $score          = $this->calculateScore($myTeam, $opponent, $filters);
-            $overlapDays    = $this->getOverlapDays($myTeam, $opponent);
-            $overlapSlots   = $this->getOverlapTimeSlots($myTeam, $opponent);
+
+            $score = $this->calculateScore(
+                $myTeam,
+                $opponent,
+                $filters
+            );
 
             return [
-                'team'          => $opponent,
-                'score'         => $score,
-                'score_label'   => $this->scoreLabel($score),
-                'score_color'   => $this->scoreColor($score),
-                'match_reasons' => $this->matchReasons($myTeam, $opponent),
-                'overlap_days'  => $overlapDays,
-                'overlap_slots' => $overlapSlots,
+                'team' => $opponent,
+
+                'score' => $score,
+
+                'score_label' => $this->scoreLabel($score),
+
+                'score_color' => $this->scoreColor($score),
+
+                'match_reasons' => $this->matchReasons(
+                    $myTeam,
+                    $opponent
+                ),
+
+                'overlap_days' => $this->getOverlapDays(
+                    $myTeam,
+                    $opponent
+                ),
+
+                'overlap_slots' => $this->getOverlapTimeSlots(
+                    $myTeam,
+                    $opponent
+                ),
             ];
         });
 
-        return $scored->sortByDesc('score')->values();
+        return $scored
+            ->sortByDesc('score')
+            ->values();
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  SCORING ENGINE
-    // ─────────────────────────────────────────────────────────────
+    // =============================================================
+    // SCORING ENGINE
+    // =============================================================
 
-    private function calculateScore(Team $mine, Team $opponent, array $filters): int
-    {
+    private function calculateScore(
+        Team $mine,
+        Team $opponent,
+        array $filters
+    ): int {
+
         $score = 0;
 
-        // 1. Kesamaan level (35 poin)
+        // =========================================================
+        // 1. LEVEL
+        // =========================================================
+
         if ($mine->level === $opponent->level) {
+
             $score += 35;
-        } elseif ($this->levelDistance($mine->level, $opponent->level) === 1) {
-            $score += 17; // level berdekatan
+
+        } elseif (
+            $this->levelDistance(
+                $mine->level,
+                $opponent->level
+            ) === 1
+        ) {
+
+            $score += 17;
         }
 
-        // 2. Overlap jadwal (35 poin) — berdasarkan jadwal nyata myTeam
-        $mySchedules       = $mine->schedules->where('is_available', true);
-        $opponentSchedules = $opponent->schedules->where('is_available', true);
+        // =========================================================
+        // 2. OVERLAP JADWAL
+        // =========================================================
 
-        $myDays       = $mySchedules->pluck('day_of_week')->unique();
-        $opponentDays = $opponentSchedules->pluck('day_of_week')->unique();
-        $dayOverlap   = $myDays->intersect($opponentDays)->count();
+        $mySchedules = $mine->schedules
+            ->where('is_available', true);
+
+        $opponentSchedules = $opponent->schedules
+            ->where('is_available', true);
+
+        $myDays = $mySchedules
+            ->pluck('day_of_week')
+            ->unique();
+
+        $opponentDays = $opponentSchedules
+            ->pluck('day_of_week')
+            ->unique();
+
+        $dayOverlap = $myDays
+            ->intersect($opponentDays)
+            ->count();
 
         if ($dayOverlap > 0) {
-            // Setiap hari overlap = 7 poin, max 35
+
             $dayPoints = min(35, $dayOverlap * 7);
 
-            // Bonus: waktu juga overlap dalam hari yang sama
             $timeBonus = 0;
-            foreach ($myDays->intersect($opponentDays) as $day) {
-                $mySlot  = $mySchedules->firstWhere('day_of_week', $day);
-                $oppSlot = $opponentSchedules->firstWhere('day_of_week', $day);
 
-                if ($mySlot && $oppSlot && $this->timeSlotsOverlap($mySlot, $oppSlot)) {
+            foreach ($myDays->intersect($opponentDays) as $day) {
+
+                $mySlot = $mySchedules
+                    ->firstWhere('day_of_week', $day);
+
+                $oppSlot = $opponentSchedules
+                    ->firstWhere('day_of_week', $day);
+
+                if (
+                    $mySlot &&
+                    $oppSlot &&
+                    $this->timeSlotsOverlap($mySlot, $oppSlot)
+                ) {
                     $timeBonus += 2;
                 }
             }
@@ -120,67 +296,133 @@ class MatchmakingService
             $score += min(35, $dayPoints + $timeBonus);
         }
 
-        // 3. Lokasi (20 poin)
-        if ($mine->city && $opponent->city && strtolower($mine->city) === strtolower($opponent->city)) {
+        // =========================================================
+        // 3. LOKASI
+        // =========================================================
+
+        if (
+            $mine->city &&
+            $opponent->city &&
+            strtolower($mine->city) === strtolower($opponent->city)
+        ) {
+
             $score += 20;
-        } elseif ($mine->province && $opponent->province && strtolower($mine->province) === strtolower($opponent->province)) {
+
+        } elseif (
+            $mine->province &&
+            $opponent->province &&
+            strtolower($mine->province) === strtolower($opponent->province)
+        ) {
+
             $score += 10;
         }
 
-        // 4. Win-rate seimbang (10 poin) — pakai stats relation
-        $myWr  = $mine->stats->win_rate   ?? 50;
+        // =========================================================
+        // 4. WIN RATE
+        // =========================================================
+
+        $myWr  = $mine->stats->win_rate ?? 50;
         $oppWr = $opponent->stats->win_rate ?? 50;
-        $diff  = abs($myWr - $oppWr);
+
+        $diff = abs($myWr - $oppWr);
+
         $score += max(0, 10 - (int) ($diff / 10));
 
         return min(100, $score);
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  SCHEDULE HELPERS
-    // ─────────────────────────────────────────────────────────────
+    // =============================================================
+    // OVERLAP HELPERS
+    // =============================================================
 
-    /**
-     * Kembalikan daftar hari yang overlap antara dua tim (nama hari).
-     */
-    public function getOverlapDays(Team $mine, Team $opponent): array
-    {
-        $dayNames = [0 => 'Minggu', 1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu'];
+    public function getOverlapDays(
+        Team $mine,
+        Team $opponent
+    ): array {
 
-        $myDays       = $mine->schedules->where('is_available', true)->pluck('day_of_week')->unique();
-        $opponentDays = $opponent->schedules->where('is_available', true)->pluck('day_of_week')->unique();
+        $dayNames = [
+            0 => 'Minggu',
+            1 => 'Senin',
+            2 => 'Selasa',
+            3 => 'Rabu',
+            4 => 'Kamis',
+            5 => 'Jumat',
+            6 => 'Sabtu',
+        ];
 
-        return $myDays->intersect($opponentDays)
+        $myDays = $mine->schedules
+            ->where('is_available', true)
+            ->pluck('day_of_week')
+            ->unique();
+
+        $opponentDays = $opponent->schedules
+            ->where('is_available', true)
+            ->pluck('day_of_week')
+            ->unique();
+
+        return $myDays
+            ->intersect($opponentDays)
             ->map(fn ($d) => $dayNames[$d] ?? '?')
             ->values()
             ->toArray();
     }
 
-    /**
-     * Kembalikan slot waktu yang benar-benar overlap (hari + jam).
-     * Format: ['Senin 08:00–10:00', ...]
-     */
-    public function getOverlapTimeSlots(Team $mine, Team $opponent): array
-    {
-        $dayNames = [0 => 'Minggu', 1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu'];
+    public function getOverlapTimeSlots(
+        Team $mine,
+        Team $opponent
+    ): array {
 
-        $mySchedules       = $mine->schedules->where('is_available', true);
-        $opponentSchedules = $opponent->schedules->where('is_available', true);
+        $dayNames = [
+            0 => 'Minggu',
+            1 => 'Senin',
+            2 => 'Selasa',
+            3 => 'Rabu',
+            4 => 'Kamis',
+            5 => 'Jumat',
+            6 => 'Sabtu',
+        ];
 
-        $myDays       = $mySchedules->pluck('day_of_week')->unique();
-        $opponentDays = $opponentSchedules->pluck('day_of_week')->unique();
-        $commonDays   = $myDays->intersect($opponentDays);
+        $mySchedules = $mine->schedules
+            ->where('is_available', true);
+
+        $opponentSchedules = $opponent->schedules
+            ->where('is_available', true);
+
+        $myDays = $mySchedules
+            ->pluck('day_of_week')
+            ->unique();
+
+        $opponentDays = $opponentSchedules
+            ->pluck('day_of_week')
+            ->unique();
+
+        $commonDays = $myDays->intersect($opponentDays);
 
         $slots = [];
+
         foreach ($commonDays as $day) {
-            $mySlot  = $mySchedules->firstWhere('day_of_week', $day);
-            $oppSlot = $opponentSchedules->firstWhere('day_of_week', $day);
+
+            $mySlot = $mySchedules
+                ->firstWhere('day_of_week', $day);
+
+            $oppSlot = $opponentSchedules
+                ->firstWhere('day_of_week', $day);
 
             if ($mySlot && $oppSlot) {
-                [$overlapStart, $overlapEnd] = $this->timeOverlapRange($mySlot, $oppSlot);
 
-                if ($overlapStart && $overlapEnd) {
-                    $slots[] = ($dayNames[$day] ?? '?') . ' ' . $overlapStart . '–' . $overlapEnd;
+                [$start, $end] = $this->timeOverlapRange(
+                    $mySlot,
+                    $oppSlot
+                );
+
+                if ($start && $end) {
+
+                    $slots[] =
+                        ($dayNames[$day] ?? '?')
+                        . ' '
+                        . $start
+                        . '–'
+                        . $end;
                 }
             }
         }
@@ -188,40 +430,47 @@ class MatchmakingService
         return $slots;
     }
 
-    /**
-     * Apakah dua slot waktu pada hari yang sama saling overlap?
-     */
-    private function timeSlotsOverlap(object $a, object $b): bool
-    {
+    private function timeSlotsOverlap(
+        object $a,
+        object $b
+    ): bool {
+
         $aStart = strtotime($a->start_time);
         $aEnd   = strtotime($a->end_time);
+
         $bStart = strtotime($b->start_time);
         $bEnd   = strtotime($b->end_time);
 
         return $aStart < $bEnd && $bStart < $aEnd;
     }
 
-    /**
-     * Hitung range overlap waktu dua slot. Return [start, end] atau [null, null].
-     */
-    private function timeOverlapRange(object $a, object $b): array
-    {
+    private function timeOverlapRange(
+        object $a,
+        object $b
+    ): array {
+
         $aStart = strtotime($a->start_time);
         $aEnd   = strtotime($a->end_time);
+
         $bStart = strtotime($b->start_time);
         $bEnd   = strtotime($b->end_time);
 
         $start = max($aStart, $bStart);
         $end   = min($aEnd, $bEnd);
 
-        if ($start >= $end) return [null, null];
+        if ($start >= $end) {
+            return [null, null];
+        }
 
-        return [date('H:i', $start), date('H:i', $end)];
+        return [
+            date('H:i', $start),
+            date('H:i', $end),
+        ];
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  LABEL HELPERS
-    // ─────────────────────────────────────────────────────────────
+    // =============================================================
+    // LABELS
+    // =============================================================
 
     private function scoreLabel(int $score): string
     {
@@ -243,48 +492,80 @@ class MatchmakingService
         };
     }
 
-    private function matchReasons(Team $mine, Team $opponent): array
-    {
+    private function matchReasons(
+        Team $mine,
+        Team $opponent
+    ): array {
+
         $reasons = [];
 
         if ($mine->level === $opponent->level) {
-            $reasons[] = ['icon' => 'bi-trophy', 'text' => 'Level sama: ' . $this->levelLabel($mine->level)];
+
+            $reasons[] = [
+                'icon' => 'bi-trophy',
+                'text' => 'Level sama: '
+                    . $this->levelLabel($mine->level),
+            ];
         }
 
-        $overlapSlots = $this->getOverlapTimeSlots($mine, $opponent);
+        $overlapSlots = $this->getOverlapTimeSlots(
+            $mine,
+            $opponent
+        );
+
         if (!empty($overlapSlots)) {
-            $count = count($overlapSlots);
-            $reasons[] = ['icon' => 'bi-calendar-check', 'text' => "{$count} slot waktu cocok"];
-        } else {
-            $overlapDays = $this->getOverlapDays($mine, $opponent);
-            if (!empty($overlapDays)) {
-                $reasons[] = ['icon' => 'bi-calendar2', 'text' => count($overlapDays) . ' hari jadwal sama'];
-            }
+
+            $reasons[] = [
+                'icon' => 'bi-calendar-check',
+                'text' => count($overlapSlots)
+                    . ' slot waktu cocok',
+            ];
         }
 
-        if ($mine->city && $opponent->city && strtolower($mine->city) === strtolower($opponent->city)) {
-            $reasons[] = ['icon' => 'bi-geo-alt', 'text' => 'Kota sama: ' . $mine->city];
-        } elseif ($mine->province && $opponent->province && strtolower($mine->province) === strtolower($opponent->province)) {
-            $reasons[] = ['icon' => 'bi-map', 'text' => 'Provinsi sama: ' . $mine->province];
+        if (
+            $mine->city &&
+            $opponent->city &&
+            strtolower($mine->city) === strtolower($opponent->city)
+        ) {
+
+            $reasons[] = [
+                'icon' => 'bi-geo-alt',
+                'text' => 'Kota sama: ' . $mine->city,
+            ];
         }
 
         return $reasons;
     }
 
-    private function levelDistance(?string $a, ?string $b): int
-    {
-        $order = ['casual' => 0, 'semi_pro' => 1, 'pro' => 2];
-        if (!isset($order[$a], $order[$b])) return 99;
+    // =============================================================
+    // LEVEL HELPERS
+    // =============================================================
+
+    private function levelDistance(
+        ?string $a,
+        ?string $b
+    ): int {
+
+        $order = [
+            'casual' => 0,
+            'semi_pro' => 1,
+            'competitive' => 2,
+        ];
+
+        if (!isset($order[$a], $order[$b])) {
+            return 99;
+        }
+
         return abs($order[$a] - $order[$b]);
     }
 
     public function levelLabel(?string $level): string
     {
         return match ($level) {
-            'casual'   => 'Casual',
+            'casual' => 'Casual',
             'semi_pro' => 'Semi Pro',
-            'pro'      => 'Pro',
-            default    => ucfirst(str_replace('_', ' ', $level ?? '-')),
+            'competitive' => 'Competitive',
+            default => ucfirst(str_replace('_', ' ', $level ?? '-')),
         };
     }
 }

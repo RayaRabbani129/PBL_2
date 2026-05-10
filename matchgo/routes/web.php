@@ -84,11 +84,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('matches')->name('matches.')->group(function () {
         Route::get('/', [MatchController::class, 'index'])->name('index');
-
-        // Harus di atas /{match} agar "challenge" tidak ditangkap sebagai {match}
+        Route::get('/poll', [MatchController::class, 'poll'])->name('poll');
         Route::post('/challenge/{matchRequest}/accept', [MatchController::class, 'acceptChallenge'])->name('challenge.accept');
         Route::post('/challenge/{matchRequest}/reject', [MatchController::class, 'rejectChallenge'])->name('challenge.reject');
-
         Route::get('/{match}', [MatchController::class, 'show'])->name('show');
         Route::post('/{match}/cancel', [MatchController::class, 'cancel'])->name('cancel');
         Route::post('/{match}/score', [MatchController::class, 'inputScore'])->name('score');

@@ -62,6 +62,14 @@
     }
     .matches-stat-label { font-size: 0.72rem; color: var(--txt-muted); font-weight: 500; margin-top: 2px; }
 
+    /* ── Stat pulse animation saat angka berubah ── */
+    @keyframes stat-pop {
+        0%   { transform: scale(1); }
+        40%  { transform: scale(1.25); color: var(--accent); }
+        100% { transform: scale(1); }
+    }
+    .stat-pop { animation: stat-pop 0.4s ease; }
+
     /* ── Tabs ── */
     .matches-tabs {
         display: flex; gap: 2px;
@@ -89,6 +97,7 @@
         background: var(--accent-dim); color: var(--accent);
         font-size: 0.62rem; font-weight: 700; padding: 0 5px;
         border: 1px solid rgba(163,177,75,0.20);
+        transition: transform 0.2s;
     }
     .matches-tab.active .tab-badge { background: var(--accent); color: var(--btn-primary-txt); border-color: transparent; }
     .tab-badge.danger { background: rgba(239,68,68,0.12); color: #f87171; border-color: rgba(239,68,68,0.20); }
@@ -210,6 +219,17 @@
     .challenge-card.is-processing { opacity: 0.5; pointer-events: none; }
     .challenge-card.is-removing   { opacity: 0; transform: translateX(30px); }
 
+    /* ── Card baru dari polling: slide-in dari atas ── */
+    .challenge-card--new {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+    /* Transisi aktif setelah class --new dihapus */
+    .challenge-card:not(.challenge-card--new):not(.is-removing) {
+        transition: border-color 0.2s, background 0.15s,
+                    opacity 0.35s ease, transform 0.35s ease;
+    }
+
     .challenge-card-body { flex: 1; min-width: 0; }
     .challenge-team-name {
         font-family: 'Manrope', sans-serif; font-size: 0.925rem;
@@ -261,13 +281,41 @@
         border: 1px solid rgba(251,191,36,0.20);
     }
 
-    /* ── Card avatar (reuse dari matchmaking) ── */
+    /* ── Card avatar ── */
     .mm-card-avatar {
         width: 46px; height: 46px; border-radius: 12px;
         background: var(--accent-dim); border: 1.5px solid rgba(163,177,75,0.22);
         display: flex; align-items: center; justify-content: center;
         font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 1rem;
         color: var(--accent); flex-shrink: 0;
+    }
+
+    /* ── Indikator polling aktif (titik hijau kecil di pojok kanan atas) ── */
+    .poll-indicator {
+        position: fixed; bottom: 1.5rem; left: 1.5rem; z-index: 9000;
+        display: flex; align-items: center; gap: 6px;
+        font-size: 0.7rem; font-weight: 600; color: var(--txt-faint);
+        font-family: 'Inter', sans-serif;
+        opacity: 0; transition: opacity 0.3s;
+        pointer-events: none;
+    }
+    .poll-indicator.visible { opacity: 1; }
+    .poll-dot {
+        width: 7px; height: 7px; border-radius: 50%;
+        background: var(--accent);
+    }
+    @keyframes poll-ping {
+        0%   { transform: scale(1); opacity: 1; }
+        70%  { transform: scale(2.2); opacity: 0; }
+        100% { transform: scale(2.2); opacity: 0; }
+    }
+    .poll-dot-wrap {
+        position: relative; width: 7px; height: 7px;
+    }
+    .poll-dot-wrap::before {
+        content: ''; position: absolute; inset: 0;
+        border-radius: 50%; background: var(--accent);
+        animation: poll-ping 1.2s ease-out;
     }
 
     /* ── Toast notifikasi AJAX ── */
@@ -420,7 +468,7 @@
             <i class="bi bi-send"></i>
         </div>
         <div>
-            <div class="matches-stat-val">{{ $counts['outgoing'] }}</div>
+            <div class="matches-stat-val" id="stat-outgoing">{{ $counts['outgoing'] }}</div>
             <div class="matches-stat-label">Tantangan Terkirim</div>
         </div>
     </div>
@@ -684,6 +732,12 @@
     </div>
 </div>
 
+{{-- ── Polling indicator ── --}}
+<div class="poll-indicator" id="poll-indicator">
+    <div class="poll-dot-wrap"><div class="poll-dot"></div></div>
+    Live
+</div>
+
 {{-- ── Toast AJAX ── --}}
 <div id="ajax-toast"></div>
 
@@ -694,8 +748,9 @@
 (function () {
     'use strict';
 
-    const CSRF = document.querySelector('meta[name="csrf-token"]')?.content
-               ?? '{{ csrf_token() }}';
+    const CSRF     = document.querySelector('meta[name="csrf-token"]')?.content ?? '{{ csrf_token() }}';
+    const POLL_URL = '{{ route("matches.poll") }}';
+    const POLL_MS  = 8000; // interval polling (ms)
 
     // ─────────────────────────────────────────────────────────
     // Toast helper
@@ -705,49 +760,75 @@
 
     function showToast(message, type = 'success') {
         const icons = {
-            success: 'bi-check-circle-fill',
-            error:   'bi-exclamation-triangle-fill',
-            info:    'bi-info-circle-fill',
+            success : 'bi-check-circle-fill',
+            error   : 'bi-exclamation-triangle-fill',
+            info    : 'bi-info-circle-fill',
         };
         toastEl.className = `toast-${type}`;
         toastEl.innerHTML = `<i class="bi ${icons[type] ?? icons.info}"></i> ${message}`;
         toastEl.classList.remove('show');
-        void toastEl.offsetWidth;
+        void toastEl.offsetWidth; // reflow
         toastEl.classList.add('show');
         clearTimeout(toastTimer);
         toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3500);
     }
 
     // ─────────────────────────────────────────────────────────
-    // Animasi hapus card
+    // Polling indicator (titik hijau "Live")
     // ─────────────────────────────────────────────────────────
-    function removeCard(challengeId, onDone) {
-        const card = document.querySelector(
-            `.challenge-card[data-challenge-id="${challengeId}"]`
-        );
-        if (!card) { onDone?.(); return; }
-        card.classList.add('is-removing');
-        card.addEventListener('transitionend', () => {
-            card.remove();
-            onDone?.();
-        }, { once: true });
+    const pollIndicator = document.getElementById('poll-indicator');
+    let indicatorTimer;
+
+    function flashIndicator() {
+        // Rebuild inner agar animasi ping re-trigger
+        pollIndicator.innerHTML = `
+            <div class="poll-dot-wrap"><div class="poll-dot"></div></div>
+            Live`;
+        pollIndicator.classList.add('visible');
+        clearTimeout(indicatorTimer);
+        indicatorTimer = setTimeout(() => pollIndicator.classList.remove('visible'), 1500);
     }
 
     // ─────────────────────────────────────────────────────────
-    // Update counter setelah accept / reject
+    // Animasi hapus card
     // ─────────────────────────────────────────────────────────
-    function decrementIncoming() {
-        const statEl = document.getElementById('stat-incoming');
+    function removeCard(challengeId, onDone) {
+        const card = document.querySelector(`.challenge-card[data-challenge-id="${challengeId}"]`);
+        if (!card) { onDone?.(); return; }
+        card.classList.add('is-removing');
+        card.addEventListener('transitionend', () => { card.remove(); onDone?.(); }, { once: true });
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Update counter helpers
+    // ─────────────────────────────────────────────────────────
+    function setCount(statId, badgeId, n, isDanger = false) {
+        const statEl = document.getElementById(statId);
         if (statEl) {
-            const n = Math.max(0, parseInt(statEl.textContent, 10) - 1);
-            statEl.textContent = n;
+            const prev = parseInt(statEl.textContent, 10);
+            if (prev !== n) {
+                statEl.textContent = n;
+                // Animasi pop hanya jika angka naik
+                if (n > prev) {
+                    statEl.classList.remove('stat-pop');
+                    void statEl.offsetWidth;
+                    statEl.classList.add('stat-pop');
+                    statEl.addEventListener('animationend', () => statEl.classList.remove('stat-pop'), { once: true });
+                }
+            }
         }
-        const badge = document.getElementById('tab-badge-incoming');
+        const badge = document.getElementById(badgeId);
         if (badge) {
-            const n = Math.max(0, parseInt(badge.textContent, 10) - 1);
             badge.textContent   = n;
             badge.style.display = n > 0 ? '' : 'none';
         }
+    }
+
+    function decrementIncoming() {
+        const statEl  = document.getElementById('stat-incoming');
+        const current = statEl ? Math.max(0, parseInt(statEl.textContent, 10) - 1) : 0;
+        setCount('stat-incoming', 'tab-badge-incoming', current, true);
+
         const remaining = document.querySelectorAll('#incoming-cards .challenge-card');
         if (remaining.length === 0) {
             const list = document.getElementById('incoming-list');
@@ -770,17 +851,165 @@
     // ─────────────────────────────────────────────────────────
     async function ajaxPost(url, payload = {}) {
         const res = await fetch(url, {
-            method:  'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept':       'application/json',
-                'X-CSRF-TOKEN': CSRF,
+            method  : 'POST',
+            headers : {
+                'Content-Type' : 'application/json',
+                'Accept'       : 'application/json',
+                'X-CSRF-TOKEN' : CSRF,
             },
             body: JSON.stringify(payload),
         });
         const data = await res.json();
         return { ok: res.ok, data };
     }
+
+    // ─────────────────────────────────────────────────────────
+    // Render card tantangan baru (dari polling)
+    // ─────────────────────────────────────────────────────────
+    function renderChallengeCard(req) {
+        const div = document.createElement('div');
+        div.className = 'challenge-card challenge-card--new';
+        div.dataset.challengeId = req.id;
+        div.innerHTML = `
+            <div class="mm-card-avatar">${escHtml(req.team_initials)}</div>
+            <div class="challenge-card-body">
+                <div class="challenge-team-name">${escHtml(req.team_name)}</div>
+                <div class="challenge-meta">
+                    <span><i class="bi bi-calendar-event"></i> ${escHtml(req.preferred_date)}</span>
+                    <span><i class="bi bi-clock"></i> ${escHtml(req.start_time)} – ${escHtml(req.end_time)}</span>
+                    ${req.team_city  ? `<span><i class="bi bi-geo-alt"></i> ${escHtml(req.team_city)}</span>` : ''}
+                    ${req.team_level ? `<span><i class="bi bi-trophy"></i> ${escHtml(req.team_level)}</span>` : ''}
+                </div>
+                <div class="challenge-actions">
+                    <button type="button"
+                            class="btn-accept js-accept-challenge"
+                            data-accept-url="${escHtml(req.accept_url)}"
+                            data-challenge-id="${req.id}">
+                        <i class="bi bi-check-lg"></i> Terima
+                    </button>
+                    <button type="button"
+                            class="btn-reject js-open-reject"
+                            data-reject-url="${escHtml(req.reject_url)}"
+                            data-challenge-id="${req.id}"
+                            data-name="${escHtml(req.team_name)}">
+                        <i class="bi bi-x-lg"></i> Tolak
+                    </button>
+                </div>
+            </div>`;
+        return div;
+    }
+
+    function escHtml(str) {
+        return String(str ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Polling — rekonsiliasi DOM
+    // ─────────────────────────────────────────────────────────
+    // Catat ID yang sudah ada saat page load (tidak akan di-toast)
+    const seenIds = new Set(
+        [...document.querySelectorAll('.challenge-card[data-challenge-id]')]
+            .map(el => el.dataset.challengeId)
+    );
+
+    async function pollIncoming() {
+        try {
+            const res = await fetch(POLL_URL, {
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF }
+            });
+            if (!res.ok) return;
+
+            const { incoming, incoming_count, upcoming_count, outgoing_count } = await res.json();
+
+            flashIndicator();
+
+            // Update semua badge/stat
+            setCount('stat-incoming', 'tab-badge-incoming', incoming_count, true);
+            setCount('stat-upcoming', 'tab-badge-upcoming', upcoming_count, false);
+            setCount('stat-outgoing', 'tab-badge-outgoing', outgoing_count, false);
+
+            // DOM reconciliation hanya kalau tab incoming sedang aktif
+            const isIncomingTab = !!document.getElementById('incoming-list');
+            if (!isIncomingTab) return;
+
+            const serverIds = new Set(incoming.map(r => String(r.id)));
+            let addedCount  = 0;
+
+            // ── Tambah kartu baru ──
+            for (const req of incoming) {
+                const sid = String(req.id);
+                if (!document.querySelector(`.challenge-card[data-challenge-id="${sid}"]`)) {
+                    // Pastikan container ada; jika sebelumnya empty-state, rebuild struktur
+                    let cards = document.getElementById('incoming-cards');
+                    if (!cards) {
+                        const list = document.getElementById('incoming-list');
+                        list.innerHTML = `
+                            <div class="matches-section-heading" id="incoming-heading">
+                                0 tantangan menunggu respons
+                            </div>
+                            <div style="display:flex;flex-direction:column;gap:10px;"
+                                 id="incoming-cards"></div>`;
+                        cards = document.getElementById('incoming-cards');
+                    }
+
+                    const card = renderChallengeCard(req);
+                    cards.prepend(card);
+
+                    // Trigger slide-in: hapus class --new di frame berikutnya
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => card.classList.remove('challenge-card--new'));
+                    });
+                    addedCount++;
+                }
+                seenIds.add(sid);
+            }
+
+            // ── Hapus kartu yang tidak ada lagi di server
+            //    (sudah accepted/rejected oleh pihak lain atau expired)
+            document.querySelectorAll('.challenge-card[data-challenge-id]').forEach(el => {
+                if (!serverIds.has(el.dataset.challengeId) && !el.classList.contains('is-processing')) {
+                    el.classList.add('is-removing');
+                    el.addEventListener('transitionend', () => el.remove(), { once: true });
+                }
+            });
+
+            // Update heading
+            const heading = document.getElementById('incoming-heading');
+            if (heading && incoming_count > 0) {
+                heading.firstChild.textContent = `${incoming_count} tantangan menunggu respons `;
+            }
+
+            // Toast & notifikasi browser hanya untuk tantangan benar-benar baru
+            if (addedCount > 0) {
+                showToast(`⚡ ${addedCount} tantangan baru masuk!`, 'info');
+
+                if (Notification.permission === 'granted') {
+                    new Notification('MATCHGO – Tantangan Baru! ⚡', {
+                        body : `${addedCount} tantangan baru menunggu responsmu.`,
+                        icon : '/favicon.ico',
+                    });
+                }
+            }
+
+        } catch {
+            // Silent fail — jangan ganggu UX saat offline / server error
+        }
+    }
+
+    // Minta izin notifikasi browser sekali
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+
+    // Mulai polling setelah 2 detik (beri waktu halaman selesai render)
+    setTimeout(() => {
+        pollIncoming();                        // langsung sekali
+        setInterval(pollIncoming, POLL_MS);    // lalu setiap 8 detik
+    }, 2000);
 
     // ─────────────────────────────────────────────────────────
     // Accept challenge (AJAX)
@@ -843,20 +1072,15 @@
         rjName.textContent = btn.dataset.name;
         rjReason.value     = '';
 
-        rjConfirm.disabled = false;
+        rjConfirm.disabled  = false;
         rjConfirm.innerHTML = '<i class="bi bi-x-circle"></i> Konfirmasi Penolakan';
 
         backdrop.classList.add('is-open');
         setTimeout(() => rjReason.focus(), 200);
     });
 
-    window.rejectClose = function () {
-        backdrop.classList.remove('is-open');
-    };
-
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') rejectClose();
-    });
+    window.rejectClose = function () { backdrop.classList.remove('is-open'); };
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') rejectClose(); });
 
     // ─────────────────────────────────────────────────────────
     // Reject challenge — konfirmasi via AJAX
@@ -864,12 +1088,10 @@
     rjConfirm?.addEventListener('click', async function () {
         if (!pendingRejectUrl) return;
 
-        rjConfirm.disabled = true;
+        rjConfirm.disabled  = true;
         rjConfirm.innerHTML = '<span class="btn-spinner"></span> Menolak...';
 
-        const card = document.querySelector(
-            `.challenge-card[data-challenge-id="${pendingRejectId}"]`
-        );
+        const card = document.querySelector(`.challenge-card[data-challenge-id="${pendingRejectId}"]`);
         card?.querySelectorAll('button').forEach(b => b.disabled = true);
         card?.classList.add('is-processing');
 
@@ -884,14 +1106,14 @@
                 removeCard(pendingRejectId, () => decrementIncoming());
             } else {
                 showToast(data.message ?? 'Terjadi kesalahan.', 'error');
-                rjConfirm.disabled = false;
+                rjConfirm.disabled  = false;
                 rjConfirm.innerHTML = '<i class="bi bi-x-circle"></i> Konfirmasi Penolakan';
                 card?.classList.remove('is-processing');
                 card?.querySelectorAll('button').forEach(b => b.disabled = false);
             }
         } catch {
             showToast('Gagal terhubung ke server.', 'error');
-            rjConfirm.disabled = false;
+            rjConfirm.disabled  = false;
             rjConfirm.innerHTML = '<i class="bi bi-x-circle"></i> Konfirmasi Penolakan';
             card?.classList.remove('is-processing');
             card?.querySelectorAll('button').forEach(b => b.disabled = false);

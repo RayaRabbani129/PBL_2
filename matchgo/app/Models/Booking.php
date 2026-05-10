@@ -9,6 +9,7 @@ class Booking extends Model
     protected $fillable = [
         'match_id',
         'venue_id',
+        'field_id',
         'booking_date',
         'start_time',
         'end_time',
@@ -29,5 +30,10 @@ class Booking extends Model
     public function team()
     {
         return $this->belongsTo(Team::class, 'created_by');
+    }
+
+    public function field()
+    {
+        return $this->belongsTo(Field::class);
     }
 }
