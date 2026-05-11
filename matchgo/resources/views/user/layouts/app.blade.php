@@ -156,7 +156,6 @@
             transition: background 0.3s ease, border-color 0.3s ease, transform 0.25s ease;
         }
 
-        /* Logo */
         .mg-sidebar-logo {
             display: flex;
             align-items: center;
@@ -197,7 +196,6 @@
             transition: color 0.3s;
         }
 
-        /* Nav */
         .mg-sidebar-nav {
             flex: 1;
             padding: 16px 0;
@@ -250,7 +248,6 @@
 
         .mg-nav-item.active i { color: var(--accent); }
 
-        /* Nav badge */
         .mg-nav-badge {
             margin-left: auto;
             background: var(--accent);
@@ -262,7 +259,6 @@
             line-height: 1.6;
         }
 
-        /* Sidebar user */
         .mg-sidebar-user {
             padding: 12px 16px;
             border-top: 1px solid var(--border-subtle);
@@ -348,7 +344,6 @@
             gap: 10px;
         }
 
-        /* Search */
         .mg-search-wrap { position: relative; }
         .mg-search-wrap i {
             position: absolute;
@@ -376,7 +371,6 @@
         .mg-search::placeholder { color: var(--txt-faint); }
         .mg-search:focus { border-color: rgba(163,177,75,0.5); }
 
-        /* Icon buttons */
         .mg-icon-btn {
             width: 36px; height: 36px;
             border-radius: 10px;
@@ -407,13 +401,32 @@
             border: 2px solid var(--surface-1);
         }
 
+        /* Topbar notification badge */
+        .mg-topbar-notif-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            min-width: 16px;
+            height: 16px;
+            background: #EF4444;
+            border-radius: 99px;
+            font-size: 9px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--surface-1);
+            padding: 0 3px;
+            line-height: 1;
+        }
+
         .mg-divider-v {
             width: 1px;
             height: 28px;
             background: var(--border-subtle);
         }
 
-        /* ── Theme Toggle ── */
         .mg-theme-toggle {
             width: 36px; height: 36px;
             border-radius: 10px;
@@ -438,7 +451,6 @@
         [data-theme="light"] .mg-theme-toggle .icon-sun  { display: block; }
         [data-theme="light"] .mg-theme-toggle .icon-moon { display: none; }
 
-        /* ── Topbar user dropdown ── */
         .mg-topbar-user {
             display: flex;
             align-items: center;
@@ -470,7 +482,6 @@
             transition: color 0.3s;
         }
 
-        /* Dropdown */
         .mg-dropdown {
             position: absolute;
             top: calc(100% + 8px);
@@ -547,7 +558,6 @@
 
         .card-matchgo:hover { border-color: var(--border-medium); }
 
-        /* Accent card */
         .card-matchgo-accent {
             background: var(--accent-dim);
             border: 1px solid rgba(163,177,75,0.20);
@@ -720,7 +730,6 @@
             border-radius: 8px;
         }
 
-        /* Danger button */
         .btn-matchgo-danger {
             background: rgba(239,68,68,0.10);
             color: #f87171;
@@ -916,11 +925,7 @@
             transition: border-color 0.3s, color 0.3s;
         }
 
-        .mg-footer a {
-            color: var(--accent);
-            text-decoration: none;
-        }
-
+        .mg-footer a { color: var(--accent); text-decoration: none; }
         .mg-footer a:hover { text-decoration: underline; }
 
         /* ══════════════════════════════════════════
@@ -983,14 +988,8 @@
         .position-relative { position: relative; }
         .border-bottom-subtle { border-bottom: 1px solid var(--border-subtle); }
 
-        /* ── Divider ── */
-        .mg-divider {
-            height: 1px;
-            background: var(--border-subtle);
-            margin: 1.5rem 0;
-        }
+        .mg-divider { height: 1px; background: var(--border-subtle); margin: 1.5rem 0; }
 
-        /* ── Separator text ── */
         .mg-section-label {
             font-size: 0.7rem;
             font-weight: 700;
@@ -1000,7 +999,6 @@
             margin-bottom: 12px;
         }
 
-        /* ── Spinner ── */
         .mg-spinner {
             width: 20px; height: 20px;
             border: 2px solid var(--border-medium);
@@ -1011,29 +1009,10 @@
 
         @keyframes mg-spin { to { transform: rotate(360deg); } }
 
-        /* ── Empty state ── */
-        .mg-empty {
-            text-align: center;
-            padding: 3rem 1rem;
-        }
-
-        .mg-empty-icon {
-            font-size: 2.5rem;
-            color: var(--txt-faint);
-            margin-bottom: 12px;
-        }
-
-        .mg-empty h4 {
-            font-family: 'Manrope', sans-serif;
-            font-size: 1rem;
-            color: var(--txt-secondary);
-            margin-bottom: 6px;
-        }
-
-        .mg-empty p {
-            font-size: 0.85rem;
-            color: var(--txt-muted);
-        }
+        .mg-empty { text-align: center; padding: 3rem 1rem; }
+        .mg-empty-icon { font-size: 2.5rem; color: var(--txt-faint); margin-bottom: 12px; }
+        .mg-empty h4 { font-family: 'Manrope', sans-serif; font-size: 1rem; color: var(--txt-secondary); margin-bottom: 6px; }
+        .mg-empty p { font-size: 0.85rem; color: var(--txt-muted); }
 
         /* ══════════════════════════════════════════
            RESPONSIVE
@@ -1071,9 +1050,7 @@
             overflow: hidden;
         }
 
-        .mg-tutorial-overlay.open {
-            display: block;
-        }
+        .mg-tutorial-overlay.open { display: block; }
 
         .mg-tutorial-spotlight {
             position: absolute;
@@ -1126,8 +1103,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 34px;
-            height: 34px;
+            width: 34px; height: 34px;
             border-radius: 999px;
             background: var(--accent);
             color: var(--btn-primary-txt);
@@ -1154,26 +1130,14 @@
             transition: transform 0.18s ease, background 0.18s ease;
         }
 
-        .mg-tutorial-card button:hover {
-            transform: translateY(-1px);
-        }
-
-        .mg-tutorial-card .btn-secondary {
-            background: rgba(163, 177, 75, 0.08);
-            color: var(--txt-primary);
-        }
-
-        .mg-tutorial-card .btn-primary {
-            background: var(--accent);
-            color: var(--btn-primary-txt);
-        }
+        .mg-tutorial-card button:hover { transform: translateY(-1px); }
+        .mg-tutorial-card .btn-secondary { background: rgba(163, 177, 75, 0.08); color: var(--txt-primary); }
+        .mg-tutorial-card .btn-primary { background: var(--accent); color: var(--btn-primary-txt); }
 
         .mg-tutorial-close {
             position: absolute;
-            top: 14px;
-            right: 14px;
-            width: 38px;
-            height: 38px;
+            top: 14px; right: 14px;
+            width: 38px; height: 38px;
             display: grid;
             place-items: center;
             border-radius: 50%;
@@ -1183,9 +1147,7 @@
             cursor: pointer;
         }
 
-        .mg-tutorial-close:hover {
-            background: rgba(255,255,255,0.18);
-        }
+        .mg-tutorial-close:hover { background: rgba(255,255,255,0.18); }
 
         @keyframes mg-fade-in {
             from { opacity: 0; transform: translateY(10px); }
@@ -1197,507 +1159,398 @@
 </head>
 <body>
 
-    {{-- app.blade.php --}}
-    @php
-        $unreadCount = 0;
-        if (auth()->check()) {
-            $unreadCount = \Illuminate\Support\Facades\DB::table('notifications')
-                ->where('user_id', auth()->id())
-                ->whereIn('status', ['unread', 'sent'])
-                ->count();
-        }
-    @endphp
-    @include('user.layouts.sidebar')
+{{-- ── Hitung unread count untuk sidebar & topbar ── --}}
+@php
+    $unreadCount = 0;
+    if (auth()->check()) {
+        $unreadCount = \Illuminate\Support\Facades\DB::table('notifications')
+            ->where('user_id', auth()->id())
+            ->whereIn('status', ['unread', 'sent'])
+            ->count();
+    }
+@endphp
 
-    {{-- ============ SIDEBAR ============ --}}
-    @include('user.layouts.sidebar')
+{{-- ============ SIDEBAR ============ --}}
+@include('user.layouts.sidebar')
 
-    {{-- ============ TOPBAR ============ --}}
-    {{-- Render topbar inline or via include --}}
+{{-- ============ NAVBAR / TOPBAR ============ --}}
+@include('user.layouts.navbar')
 
+{{-- ============ MAIN ============ --}}
+<main class="mg-main">
+    <div class="mg-content">
 
-    @include('user.layouts.navbar')
+        {{-- Flash Messages --}}
+        @if (session('success'))
+            <div class="alert-matchgo-success">
+                <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+            </div>
+        @endif
 
-    {{-- ============ MAIN ============ --}}
-    <main class="mg-main">
-        <div class="mg-content">
+        @if (session('error'))
+            <div class="alert-matchgo-danger">
+                <i class="bi bi-exclamation-circle me-2"></i>{{ session('error') }}
+            </div>
+        @endif
 
-            {{-- Flash Messages --}}
-            @if (session('success'))
-                <div class="alert-matchgo-success">
-                    <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
-                </div>
-            @endif
+        @if (session('warning'))
+            <div class="alert-matchgo-warning">
+                <i class="bi bi-exclamation-triangle me-2"></i>{{ session('warning') }}
+            </div>
+        @endif
 
-            @if (session('error'))
-                <div class="alert-matchgo-danger">
-                    <i class="bi bi-exclamation-circle me-2"></i>{{ session('error') }}
-                </div>
-            @endif
+        @if (session('info'))
+            <div class="alert-matchgo-info">
+                <i class="bi bi-info-circle me-2"></i>{{ session('info') }}
+            </div>
+        @endif
 
-            @if (session('warning'))
-                <div class="alert-matchgo-warning">
-                    <i class="bi bi-exclamation-triangle me-2"></i>{{ session('warning') }}
-                </div>
-            @endif
+        @if ($errors->any())
+            <div class="alert-matchgo-danger">
+                <i class="bi bi-exclamation-circle me-2"></i>
+                <strong>Terdapat beberapa kesalahan:</strong>
+                <ul class="mt-2">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-            @if (session('info'))
-                <div class="alert-matchgo-info">
-                    <i class="bi bi-info-circle me-2"></i>{{ session('info') }}
-                </div>
-            @endif
+        {{-- Page Content --}}
+        @yield('content')
 
-            @if ($errors->any())
-                <div class="alert-matchgo-danger">
-                    <i class="bi bi-exclamation-circle me-2"></i>
-                    <strong>Terdapat beberapa kesalahan:</strong>
-                    <ul class="mt-2">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
-            {{-- Page Content --}}
-            @yield('content')
-
-        </div>
-
-        {{-- Footer --}}
-        <footer class="mg-footer">
-            &copy; {{ date('Y') }} <a href="#">MATCHGO</a>. All rights reserved. &mdash; Futsal Matchmaking Platform
-        </footer>
-    </main>
-
-    <div id="mgTutorialOverlay" class="mg-tutorial-overlay" role="dialog" aria-modal="true" aria-label="Tutorial MATCHGO">
-        <div id="mgTutorialSpotlight" class="mg-tutorial-spotlight"></div>
-        <div id="mgTutorialCard" class="mg-tutorial-card">
-            <button type="button" id="mgTutorialClose" class="mg-tutorial-close" aria-label="Tutup tutorial">
-                <i class="bi bi-x"></i>
-            </button>
-            <span class="step-badge" id="mgTutorialStepNumber">1</span>
-            <h3 id="mgTutorialTitle">Selamat datang di MATCHGO</h3>
-            <p id="mgTutorialDescription">Ikuti petunjuk singkat untuk mengenal fungsi utama menu dan kartu informasi.</p>
-            <footer>
-                <button id="mgTutorialBack" class="btn-secondary">Kembali</button>
-                <button id="mgTutorialNext" class="btn-primary">Lanjut</button>
-            </footer>
-        </div>
     </div>
 
-    <script>
-        /* ── Theme system ── */
-        (function () {
-            const html      = document.documentElement;
-            const toggleBtn = document.getElementById('themeToggle');
-            const STORAGE   = 'matchgo-theme';
+    <footer class="mg-footer">
+        &copy; {{ date('Y') }} <a href="#">MATCHGO</a>. All rights reserved. &mdash; Futsal Matchmaking Platform
+    </footer>
+</main>
 
-            // Apply saved or system preference
-            const saved = localStorage.getItem(STORAGE);
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const initial = saved || (prefersDark ? 'dark' : 'light');
-            html.setAttribute('data-theme', initial);
+{{-- ============ TUTORIAL ============ --}}
+<div id="mgTutorialOverlay" class="mg-tutorial-overlay" role="dialog" aria-modal="true" aria-label="Tutorial MATCHGO">
+    <div id="mgTutorialSpotlight" class="mg-tutorial-spotlight"></div>
+    <div id="mgTutorialCard" class="mg-tutorial-card">
+        <button type="button" id="mgTutorialClose" class="mg-tutorial-close" aria-label="Tutup tutorial">
+            <i class="bi bi-x"></i>
+        </button>
+        <span class="step-badge" id="mgTutorialStepNumber">1</span>
+        <h3 id="mgTutorialTitle">Selamat datang di MATCHGO</h3>
+        <p id="mgTutorialDescription">Ikuti petunjuk singkat untuk mengenal fungsi utama menu dan kartu informasi.</p>
+        <footer>
+            <button id="mgTutorialBack" class="btn-secondary">Kembali</button>
+            <button id="mgTutorialNext" class="btn-primary">Lanjut</button>
+        </footer>
+    </div>
+</div>
 
-            // Toggle on click
-            if (toggleBtn) {
-                toggleBtn.addEventListener('click', function () {
-                    const current = html.getAttribute('data-theme');
-                    const next    = current === 'dark' ? 'light' : 'dark';
-                    html.setAttribute('data-theme', next);
-                    localStorage.setItem(STORAGE, next);
-                });
+<script>
+    /* ── Theme system ── */
+    (function () {
+        const html      = document.documentElement;
+        const toggleBtn = document.getElementById('themeToggle');
+        const STORAGE   = 'matchgo-theme';
+
+        const saved       = localStorage.getItem(STORAGE);
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const initial     = saved || (prefersDark ? 'dark' : 'light');
+        html.setAttribute('data-theme', initial);
+
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function () {
+                const current = html.getAttribute('data-theme');
+                const next    = current === 'dark' ? 'light' : 'dark';
+                html.setAttribute('data-theme', next);
+                localStorage.setItem(STORAGE, next);
+            });
+        }
+    })();
+
+    /* ── Topbar dropdown ── */
+    const topbarUser = document.getElementById('topbarUserBtn');
+    const topbarDrop = document.getElementById('topbarDropdown');
+    if (topbarUser && topbarDrop) {
+        topbarUser.addEventListener('click', function (e) {
+            e.stopPropagation();
+            topbarDrop.classList.toggle('show');
+        });
+        document.addEventListener('click', function () {
+            topbarDrop.classList.remove('show');
+        });
+    }
+
+    /* ── Mobile sidebar toggle ── */
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar       = document.getElementById('mgSidebar');
+
+    function checkMobile() {
+        if (sidebarToggle) {
+            sidebarToggle.style.display = window.innerWidth < 1200 ? 'flex' : 'none';
+        }
+    }
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    if (sidebarToggle && sidebar) {
+        sidebarToggle.addEventListener('click', function () {
+            sidebar.classList.toggle('open');
+        });
+
+        document.addEventListener('click', function (e) {
+            if (
+                window.innerWidth < 1200 &&
+                sidebar.classList.contains('open') &&
+                !sidebar.contains(e.target) &&
+                !sidebarToggle.contains(e.target)
+            ) {
+                sidebar.classList.remove('open');
             }
-        })();
+        });
+    }
 
-        /* ── Topbar dropdown ── */
-        const topbarUser = document.getElementById('topbarUserBtn');
-        const topbarDrop = document.getElementById('topbarDropdown');
-        if (topbarUser && topbarDrop) {
-            topbarUser.addEventListener('click', function (e) {
-                e.stopPropagation();
-                topbarDrop.classList.toggle('show');
-            });
-            document.addEventListener('click', function () {
-                topbarDrop.classList.remove('show');
-            });
-        }
+    /* ── Tutorial walkthrough ── */
+    const tutorial = {
+        overlay:     document.getElementById('mgTutorialOverlay'),
+        spotlight:   document.getElementById('mgTutorialSpotlight'),
+        card:        document.getElementById('mgTutorialCard'),
+        title:       document.getElementById('mgTutorialTitle'),
+        description: document.getElementById('mgTutorialDescription'),
+        stepNumber:  document.getElementById('mgTutorialStepNumber'),
+        btnNext:     document.getElementById('mgTutorialNext'),
+        btnBack:     document.getElementById('mgTutorialBack'),
+        btnClose:    document.getElementById('mgTutorialClose'),
+        steps: [
+            { title: 'Dashboard cepat', description: 'Tempat utama untuk melihat statistik, jadwal, dan kondisi tim Anda secara cepat.', selector: '#mgSidebar .mg-nav-item[href*="/dashboard"]' },
+            { title: 'Tim Saya', description: 'Kelola anggota tim, lihat status pertandingan, dan atur formasi dalam satu tempat.', selector: '#mgSidebar .mg-nav-item[href*="/team"]' },
+            { title: 'Matchmaking', description: 'Cari pertandingan yang cocok, ajukan tantangan, dan temukan lawan terbaik.', selector: '#mgSidebar .mg-nav-item[href*="/matchmaking"]' },
+            { title: 'Pertandingan', description: 'Lihat semua jadwal dan hasil pertandingan yang telah Anda ikuti.', selector: '#mgSidebar .mg-nav-item[href*="/matches"]' },
+            { title: 'Notifikasi & Bantuan', description: 'Ikon ini memberi tahu update penting. Tekan tombol tutorial setiap kali butuh bantuan cepat.', selector: '#startTutorial' },
+            { title: 'Kartu fungsi', description: 'Di halaman ini, kartu-kartu menampilkan informasi penting dan jalur ke tindakan utama.', selector: 'main .dash-card, main .stat-card, main .card-matchgo, main .preview-card, main .mm-team-card' }
+        ],
+        currentStep: 0,
+        open()  { this.currentStep = 0; this.overlay.classList.add('open'); document.body.style.overflow = 'hidden'; this.showStep(); },
+        close() { this.overlay.classList.remove('open'); document.body.style.overflow = ''; this.resetSpotlight(); },
+        resetSpotlight() { this.spotlight.style.width = '0'; this.spotlight.style.height = '0'; this.spotlight.style.transform = 'translate(0, 0)'; },
+        showStep() {
+            const step   = this.steps[this.currentStep];
+            if (!step) return this.close();
 
-        /* ── Mobile sidebar toggle ── */
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const sidebar       = document.getElementById('mgSidebar');
+            const target  = document.querySelector(step.selector);
+            const rect    = target ? target.getBoundingClientRect() : null;
+            const padding = 8;
 
-        function checkMobile() {
-            if (sidebarToggle) {
-                sidebarToggle.style.display = window.innerWidth < 1200 ? 'flex' : 'none';
-            }
-        }
+            this.title.textContent       = step.title;
+            this.description.textContent = step.description;
+            this.stepNumber.textContent  = String(this.currentStep + 1);
+            this.btnBack.style.display   = this.currentStep === 0 ? 'none' : 'inline-flex';
+            this.btnNext.textContent     = this.currentStep === this.steps.length - 1 ? 'Selesai' : 'Lanjut';
 
-        checkMobile();
-        window.addEventListener('resize', checkMobile);
+            if (this.currentTarget) { this.currentTarget.classList.remove('mg-tutorial-active'); this.currentTarget = null; }
 
-        if (sidebarToggle && sidebar) {
-            sidebarToggle.addEventListener('click', function () {
-                sidebar.classList.toggle('open');
-            });
+            if (target && rect) {
+                this.currentTarget = target;
+                this.currentTarget.classList.add('mg-tutorial-active');
 
-            // Close sidebar when clicking outside on mobile
-            document.addEventListener('click', function (e) {
-                if (
-                    window.innerWidth < 1200 &&
-                    sidebar.classList.contains('open') &&
-                    !sidebar.contains(e.target) &&
-                    !sidebarToggle.contains(e.target)
-                ) {
-                    sidebar.classList.remove('open');
-                }
-            });
-        }
+                const top    = rect.top - padding;
+                const left   = rect.left - padding;
+                const width  = rect.width  + padding * 2;
+                const height = rect.height + padding * 2;
 
-        /* ── Tutorial walkthrough ── */
-        const tutorial = {
-            overlay: document.getElementById('mgTutorialOverlay'),
-            spotlight: document.getElementById('mgTutorialSpotlight'),
-            card: document.getElementById('mgTutorialCard'),
-            title: document.getElementById('mgTutorialTitle'),
-            description: document.getElementById('mgTutorialDescription'),
-            stepNumber: document.getElementById('mgTutorialStepNumber'),
-            btnNext: document.getElementById('mgTutorialNext'),
-            btnBack: document.getElementById('mgTutorialBack'),
-            btnClose: document.getElementById('mgTutorialClose'),
-            steps: [
-                {
-                    title: 'Dashboard cepat',
-                    description: 'Tempat utama untuk melihat statistik, jadwal, dan kondisi tim Anda secara cepat.',
-                    selector: '#mgSidebar .mg-nav-item[href*="/dashboard"]'
-                },
-                {
-                    title: 'Tim Saya',
-                    description: 'Kelola anggota tim, lihat status pertandingan, dan atur formasi dalam satu tempat.',
-                    selector: '#mgSidebar .mg-nav-item[href*="/team"]'
-                },
-                {
-                    title: 'Matchmaking',
-                    description: 'Cari pertandingan yang cocok, ajukan tantangan, dan temukan lawan terbaik.',
-                    selector: '#mgSidebar .mg-nav-item[href*="/matchmaking"]'
-                },
-                {
-                    title: 'Pertandingan',
-                    description: 'Lihat semua jadwal dan hasil pertandingan yang telah Anda ikuti.',
-                    selector: '#mgSidebar .mg-nav-item[href*="/matches"]'
-                },
-                {
-                    title: 'Notifikasi & Bantuan',
-                    description: 'Ikon ini memberi tahu update penting. Tekan tombol tutorial setiap kali butuh bantuan cepat.',
-                    selector: '#startTutorial'
-                },
-                {
-                    title: 'Kartu fungsi',
-                    description: 'Di halaman ini, kartu-kartu menampilkan informasi penting dan jalur ke tindakan utama.',
-                    selector: 'main .dash-card, main .stat-card, main .card-matchgo, main .preview-card, main .mm-team-card'
-                }
-            ],
-            currentStep: 0,
-            open() {
-                this.currentStep = 0;
-                this.overlay.classList.add('open');
-                document.body.style.overflow = 'hidden';
-                this.showStep();
-            },
-            close() {
-                this.overlay.classList.remove('open');
-                document.body.style.overflow = '';
+                const spotWidth  = Math.min(Math.max(width, 56),  window.innerWidth  - 32);
+                const spotHeight = Math.min(Math.max(height, 40), window.innerHeight - 32);
+                this.spotlight.style.width        = `${spotWidth}px`;
+                this.spotlight.style.height       = `${spotHeight}px`;
+                this.spotlight.style.borderRadius = `${Math.min(20, spotHeight / 2)}px`;
+                this.spotlight.style.transform    = `translate(${left}px, ${top}px)`;
+
+                const cardX      = left + width + 18;
+                const fallbackX  = Math.max(16, left - this.card.offsetWidth - 18);
+                const resolvedX  = cardX + this.card.offsetWidth < window.innerWidth ? cardX : fallbackX;
+                const resolvedY  = top + height + 18;
+                const finalY     = resolvedY + this.card.offsetHeight < window.innerHeight ? resolvedY : Math.max(16, top - this.card.offsetHeight - 18);
+
+                this.card.style.left = `${Math.min(Math.max(resolvedX, 16), window.innerWidth - this.card.offsetWidth - 16)}px`;
+                this.card.style.top  = `${finalY}px`;
+            } else {
+                if (this.currentTarget) { this.currentTarget.classList.remove('mg-tutorial-active'); this.currentTarget = null; }
                 this.resetSpotlight();
-            },
-            resetSpotlight() {
-                this.spotlight.style.width = '0';
-                this.spotlight.style.height = '0';
-                this.spotlight.style.transform = 'translate(0, 0)';
-            },
-            showStep() {
-                const step = this.steps[this.currentStep];
-                if (!step) {
-                    return this.close();
-                }
-
-                const target = document.querySelector(step.selector);
-                const rect = target ? target.getBoundingClientRect() : null;
-                const padding = 8;
-
-                this.title.textContent = step.title;
-                this.description.textContent = step.description;
-                this.stepNumber.textContent = String(this.currentStep + 1);
-                this.btnBack.style.display = this.currentStep === 0 ? 'none' : 'inline-flex';
-                this.btnNext.textContent = this.currentStep === this.steps.length - 1 ? 'Selesai' : 'Lanjut';
-
-                if (this.currentTarget) {
-                    this.currentTarget.classList.remove('mg-tutorial-active');
-                    this.currentTarget = null;
-                }
-
-                if (target && rect) {
-                    this.currentTarget = target;
-                    this.currentTarget.classList.add('mg-tutorial-active');
-
-                    const top = rect.top - padding;
-                    const left = rect.left - padding;
-                    const width = rect.width + padding * 2;
-                    const height = rect.height + padding * 2;
-
-                    const spotWidth = Math.min(Math.max(width, 56), window.innerWidth - 32);
-                    const spotHeight = Math.min(Math.max(height, 40), window.innerHeight - 32);
-                    this.spotlight.style.width = `${spotWidth}px`;
-                    this.spotlight.style.height = `${spotHeight}px`;
-                    this.spotlight.style.borderRadius = `${Math.min(20, spotHeight / 2)}px`;
-                    this.spotlight.style.transform = `translate(${left}px, ${top}px)`;
-
-                    const cardX = left + width + 18;
-                    const fallbackX = Math.max(16, left - this.card.offsetWidth - 18);
-                    const resolvedX = cardX + this.card.offsetWidth < window.innerWidth ? cardX : fallbackX;
-                    const resolvedY = top + height + 18;
-                    const finalY = resolvedY + this.card.offsetHeight < window.innerHeight ? resolvedY : Math.max(16, top - this.card.offsetHeight - 18);
-
-                    this.card.style.left = `${Math.min(Math.max(resolvedX, 16), window.innerWidth - this.card.offsetWidth - 16)}px`;
-                    this.card.style.top = `${finalY}px`;
-                } else {
-                    if (this.currentTarget) {
-                        this.currentTarget.classList.remove('mg-tutorial-active');
-                        this.currentTarget = null;
-                    }
-                    this.resetSpotlight();
-                    this.card.style.left = `${Math.max(16, (window.innerWidth - this.card.offsetWidth) / 2)}px`;
-                    this.card.style.top = '16vh';
-                }
-            },
-            next() {
-                if (this.currentStep >= this.steps.length - 1) {
-                    return this.close();
-                }
-                this.currentStep += 1;
-                this.showStep();
-            },
-            back() {
-                if (this.currentStep === 0) {
-                    return;
-                }
-                this.currentStep -= 1;
-                this.showStep();
+                this.card.style.left = `${Math.max(16, (window.innerWidth - this.card.offsetWidth) / 2)}px`;
+                this.card.style.top  = '16vh';
             }
+        },
+        next() { if (this.currentStep >= this.steps.length - 1) return this.close(); this.currentStep += 1; this.showStep(); },
+        back() { if (this.currentStep === 0) return; this.currentStep -= 1; this.showStep(); }
+    };
+
+    const tutorialButton = document.getElementById('startTutorial');
+    if (tutorialButton && tutorial.overlay && tutorial.btnNext && tutorial.btnBack && tutorial.btnClose) {
+        tutorialButton.addEventListener('click', function (e) { e.preventDefault(); tutorial.open(); });
+        tutorial.btnNext.addEventListener('click',  function () { tutorial.next(); });
+        tutorial.btnBack.addEventListener('click',  function () { tutorial.back(); });
+        tutorial.btnClose.addEventListener('click', function () { tutorial.close(); });
+        tutorial.overlay.addEventListener('click',  function (e) { if (e.target === tutorial.overlay) tutorial.close(); });
+        window.addEventListener('resize', function () { if (tutorial.overlay.classList.contains('open')) tutorial.showStep(); });
+        window.addEventListener('scroll', function () { if (tutorial.overlay.classList.contains('open')) tutorial.showStep(); }, { passive: true });
+    }
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════
+   REALTIME NOTIFICATION POLLING — 15 detik
+═══════════════════════════════════════════════ */
+@auth
+(function () {
+    const POLL_URL      = '{{ route("notifications.poll") }}';
+    const POLL_INTERVAL = 15000;
+    const CSRF          = '{{ csrf_token() }}';
+
+    let lastUnreadCount = {{ $unreadCount ?? 0 }};
+
+    /* ── Update badge sidebar + topbar ── */
+    function updateSidebarBadge(count) {
+        // Badge sidebar
+        const badge = document.getElementById('notif-sidebar-badge');
+        if (badge) {
+            badge.textContent   = count > 99 ? '99+' : count;
+            badge.style.display = count > 0 ? 'inline-flex' : 'none';
+        }
+
+        // Badge topbar ← tambahan baru
+        const topbarBadge = document.getElementById('notif-topbar-badge');
+        if (topbarBadge) {
+            topbarBadge.textContent   = count > 99 ? '99+' : count;
+            topbarBadge.style.display = count > 0 ? 'flex' : 'none';
+        }
+    }
+
+    /* ── Render list notifikasi (hanya di halaman /notifications) ── */
+    function renderNotifList(notifications, unreadCount) {
+        const list      = document.getElementById('notif-list-wrapper');
+        const emptyEl   = document.getElementById('notif-empty-state');
+        const countEl   = document.getElementById('notif-section-num');
+        const subEl     = document.getElementById('notif-section-sub');
+        const markAllEl = document.getElementById('notif-mark-all-form');
+
+        if (countEl) countEl.textContent = notifications.length > 0 ? notifications.length : '—';
+        if (subEl) {
+            subEl.textContent = unreadCount > 0
+                ? `${unreadCount} notifikasi belum dibaca.`
+                : 'Semua notifikasi sudah dibaca.';
+        }
+        if (markAllEl) markAllEl.style.display = unreadCount > 0 ? 'block' : 'none';
+
+        if (!list) return;
+
+        if (notifications.length === 0) {
+            list.innerHTML = '';
+            if (emptyEl) emptyEl.style.display = 'block';
+            return;
+        }
+
+        if (emptyEl) emptyEl.style.display = 'none';
+
+        const iconClassMap = {
+            'match_confirmed': 'type-match',
+            'match_challenge': 'type-challenge',
+            'match_reminder':  'type-reminder',
+            'match_result':    'type-result',
         };
 
-        const tutorialButton = document.getElementById('startTutorial');
-        if (tutorialButton && tutorial.overlay && tutorial.btnNext && tutorial.btnBack && tutorial.btnClose) {
-            tutorialButton.addEventListener('click', function (event) {
-                event.preventDefault();
-                tutorial.open();
-            });
+        const iconElMap = {
+            'match_confirmed': '<i class="bi bi-trophy-fill"></i>',
+            'match_challenge': '<i class="bi bi-send-fill"></i>',
+            'match_reminder':  '<i class="bi bi-calendar-event-fill"></i>',
+            'match_result':    '<i class="bi bi-check-circle-fill"></i>',
+        };
 
-            tutorial.btnNext.addEventListener('click', function () {
-                tutorial.next();
-            });
+        list.innerHTML = notifications.map(function (n) {
+            const iconClass = iconClassMap[n.type] || 'type-system';
+            const iconEl    = iconElMap[n.type]    || '<i class="bi bi-bell-fill"></i>';
 
-            tutorial.btnBack.addEventListener('click', function () {
-                tutorial.back();
-            });
-
-            tutorial.btnClose.addEventListener('click', function () {
-                tutorial.close();
-            });
-
-            tutorial.overlay.addEventListener('click', function (event) {
-                if (event.target === tutorial.overlay) {
-                    tutorial.close();
-                }
-            });
-
-            window.addEventListener('resize', function () {
-                if (tutorial.overlay.classList.contains('open')) {
-                    tutorial.showStep();
-                }
-            });
-
-            window.addEventListener('scroll', function () {
-                if (tutorial.overlay.classList.contains('open')) {
-                    tutorial.showStep();
-                }
-            }, { passive: true });
-        }
-    </script>
-
-    <script>
-    /* ═══════════════════════════════════════════════
-    REALTIME NOTIFICATION POLLING
-    Interval: setiap 15 detik
-    ═══════════════════════════════════════════════ */
-    @auth
-    (function () {
-        const POLL_URL      = '{{ route("notifications.poll") }}';
-        const POLL_INTERVAL = 15000; // 15 detik
-        const CSRF          = '{{ csrf_token() }}';
-
-        let lastUnreadCount = {{ $unreadCount ?? 0 }};
-
-        function updateSidebarBadge(count) {
-            const badge = document.getElementById('notif-sidebar-badge');
-            const dot   = document.getElementById('notif-topbar-dot');
-
-            if (count > 0) {
-                if (badge) {
-                    badge.textContent = count > 99 ? '99+' : count;
-                    badge.style.display = 'inline-flex';
-                }
-                if (dot) dot.style.display = 'block';
-            } else {
-                if (badge) badge.style.display = 'none';
-                if (dot)   dot.style.display   = 'none';
-            }
-        }
-
-        function renderNotifList(notifications, unreadCount) {
-            const list      = document.getElementById('notif-list-wrapper');
-            const emptyEl   = document.getElementById('notif-empty-state');
-            const countEl   = document.getElementById('notif-section-num');
-            const subEl     = document.getElementById('notif-section-sub');
-            const markAllEl = document.getElementById('notif-mark-all-form');
-
-            // Update section num & sub
-            if (countEl) countEl.textContent = notifications.length > 0 ? notifications.length : '—';
-            if (subEl) {
-                subEl.textContent = unreadCount > 0
-                    ? `${unreadCount} notifikasi belum dibaca.`
-                    : 'Semua notifikasi sudah dibaca.';
+            let actionBtns = '';
+            if (n.type === 'match_challenge' && n.is_unread && n.data && n.data.match_request_id) {
+                actionBtns = `
+                    <div class="mg-notif-actions">
+                        <form action="/matchmaking/accept/${n.data.match_request_id}" method="POST" style="display:inline;">
+                            <input type="hidden" name="_token" value="${CSRF}">
+                            <button type="submit" class="btn-notif-accept"><i class="bi bi-check-lg"></i> Terima</button>
+                        </form>
+                        <form action="/matchmaking/reject/${n.data.match_request_id}" method="POST" style="display:inline;">
+                            <input type="hidden" name="_token" value="${CSRF}">
+                            <button type="submit" class="btn-notif-reject"><i class="bi bi-x-lg"></i> Tolak</button>
+                        </form>
+                    </div>`;
             }
 
-            // Tampil/sembunyikan tombol mark all
-            if (markAllEl) {
-                markAllEl.style.display = unreadCount > 0 ? 'block' : 'none';
-            }
-
-            if (!list) return;
-
-            if (notifications.length === 0) {
-                list.innerHTML = '';
-                if (emptyEl) emptyEl.style.display = 'block';
-                return;
-            }
-
-            if (emptyEl) emptyEl.style.display = 'none';
-
-            list.innerHTML = notifications.map(function (n) {
-                const iconClass = {
-                    'match_confirmed': 'type-match',
-                    'match_challenge': 'type-challenge',
-                    'match_reminder':  'type-reminder',
-                    'match_result':    'type-result',
-                }[n.type] || 'type-system';
-
-                const iconEl = {
-                    'match_confirmed': '<i class="bi bi-trophy-fill"></i>',
-                    'match_challenge': '<i class="bi bi-send-fill"></i>',
-                    'match_reminder':  '<i class="bi bi-calendar-event-fill"></i>',
-                    'match_result':    '<i class="bi bi-check-circle-fill"></i>',
-                }[n.type] || '<i class="bi bi-bell-fill"></i>';
-
-                // Tombol terima/tolak untuk challenge
-                let actionBtns = '';
-                if (
-                    n.type === 'match_challenge' &&
-                    n.is_unread &&
-                    n.data &&
-                    n.data.match_request_id
-                ) {
-                    actionBtns = `
-                        <div class="mg-notif-actions">
-                            <form action="/matchmaking/accept/${n.data.match_request_id}" method="POST" style="display:inline;">
-                                <input type="hidden" name="_token" value="${CSRF}">
-                                <button type="submit" class="btn-notif-accept">
-                                    <i class="bi bi-check-lg"></i> Terima
-                                </button>
-                            </form>
-                            <form action="/matchmaking/reject/${n.data.match_request_id}" method="POST" style="display:inline;">
-                                <input type="hidden" name="_token" value="${CSRF}">
-                                <button type="submit" class="btn-notif-reject">
-                                    <i class="bi bi-x-lg"></i> Tolak
-                                </button>
-                            </form>
-                        </div>
-                    `;
-                }
-
-                return `
-                    <div class="mg-notif-item ${n.is_unread ? 'unread' : 'read'}" data-id="${n.id}">
-                        <div class="mg-notif-icon ${iconClass}">${iconEl}</div>
-                        <div class="mg-notif-body">
-                            <p class="mg-notif-body-title">${n.title}</p>
-                            <p class="mg-notif-body-desc">${n.message}</p>
-                            ${actionBtns}
-                            <p class="mg-notif-time">
-                                <i class="bi bi-clock me-1"></i>${n.time}
-                            </p>
-                        </div>
+            return `
+                <div class="mg-notif-item ${n.is_unread ? 'unread' : 'read'}" data-id="${n.id}">
+                    <div class="mg-notif-icon ${iconClass}">${iconEl}</div>
+                    <div class="mg-notif-body">
+                        <p class="mg-notif-body-title">${n.title}</p>
+                        <p class="mg-notif-body-desc">${n.message}</p>
+                        ${actionBtns}
+                        <p class="mg-notif-time"><i class="bi bi-clock me-1"></i>${n.time}</p>
                     </div>
-                `;
-            }).join('');
-        }
+                </div>`;
+        }).join('');
+    }
 
-        function poll() {
-            fetch(POLL_URL, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                }
-            })
-            .then(function (res) { return res.json(); })
-            .then(function (data) {
-                const newCount = data.unread_count;
+    /* ── Notif sound ── */
+    function playNotifSound() {
+        try {
+            const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+            const osc  = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.value = 880;
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.3);
+        } catch (e) {}
+    }
 
-                // Update badge sidebar & topbar dot
-                updateSidebarBadge(newCount);
+    /* ── Polling ── */
+    function poll() {
+        fetch(POLL_URL, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            }
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            const newCount = data.unread_count;
 
-                // Re-render list jika ada perubahan jumlah unread
-                if (newCount !== lastUnreadCount) {
-                    lastUnreadCount = newCount;
+            // Play sound jika ada notif baru
+            if (newCount > lastUnreadCount) {
+                playNotifSound();
+            }
 
-                    // Play sound jika ada notif baru masuk
-                    if (newCount > lastUnreadCount) {
-                        playNotifSound();
-                    }
-                }
+            lastUnreadCount = newCount;
 
-                // Selalu render ulang list jika berada di halaman notifikasi
-                if (window.location.pathname.includes('/notifications')) {
-                    renderNotifList(data.notifications, newCount);
-                }
-            })
-            .catch(function (err) {
-                console.warn('Polling error:', err);
-            });
-        }
+            // Update badge sidebar & topbar
+            updateSidebarBadge(newCount);
 
-        function playNotifSound() {
-            try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.frequency.value = 880;
-                gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-                osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.3);
-            } catch (e) {}
-        }
+            // Re-render list jika di halaman notifications
+            if (window.location.pathname.includes('/notifications')) {
+                renderNotifList(data.notifications, newCount);
+            }
+        })
+        .catch(function (err) {
+            console.warn('[Polling] Error:', err);
+        });
+    }
 
-        // Jalankan polling pertama kali dan set interval
-        poll();
-        setInterval(poll, POLL_INTERVAL);
-    })();
-    @endauth
-    </script>
+    poll();
+    setInterval(poll, POLL_INTERVAL);
+})();
+@endauth
+</script>
 
-    @stack('scripts')
+@stack('scripts')
 
-    @stack('scripts')
 </body>
 </html>

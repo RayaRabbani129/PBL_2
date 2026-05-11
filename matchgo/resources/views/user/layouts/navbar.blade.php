@@ -21,11 +21,43 @@
                 <span class="mg-notif-dot"></span>
             </button>
 
-            {{-- Notification --}}
-            <a href="#" class="mg-icon-btn" aria-label="Notifikasi">
-                <i class="bi bi-bell"></i>
-                <span class="mg-notif-dot"></span>
-            </a>
+        {{-- Notification --}}
+        <a href="{{ route('notifications.index') }}"
+        class="mg-icon-btn"
+        aria-label="Notifikasi"
+        style="position:relative;">
+
+            <i class="bi bi-bell"></i>
+
+            @if($unreadCount > 0)
+                <span class="mg-nav-badge"
+                    id="notif-topbar-badge"
+                    style="
+                        position:absolute;
+                        top:-6px;
+                        right:-6px;
+                        min-width:18px;
+                        height:18px;
+                        padding:0 5px;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                    ">
+                    {{ $unreadCount > 99 ? '99+' : $unreadCount }}
+                </span>
+            @else
+                <span class="mg-nav-badge"
+                    id="notif-topbar-badge"
+                    style="
+                        display:none;
+                        position:absolute;
+                        top:-6px;
+                        right:-6px;
+                    ">
+                    0
+                </span>
+            @endif
+        </a>
 
             {{-- Theme Toggle --}}
             <button
