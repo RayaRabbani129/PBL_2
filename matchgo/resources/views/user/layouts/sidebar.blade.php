@@ -60,9 +60,11 @@
             <i class="bi bi-bell"></i>
             Notifikasi
             @if($unreadCount > 0)
-                <span class="mg-nav-badge">
+                <span class="mg-nav-badge" id="notif-sidebar-badge">
                     {{ $unreadCount > 99 ? '99+' : $unreadCount }}
                 </span>
+            @else
+                <span class="mg-nav-badge" id="notif-sidebar-badge" style="display:none;">0</span>
             @endif
         </a>
 

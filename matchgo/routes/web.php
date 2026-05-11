@@ -115,5 +115,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/read-all', [NotificationController::class, 'readAll'])->name('readAll');
         Route::patch('/{id}/read', [NotificationController::class, 'markAsRead'])->name('read');
         Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
+        Route::get('/poll', [NotificationController::class, 'poll'])->name('poll');
     });
 });

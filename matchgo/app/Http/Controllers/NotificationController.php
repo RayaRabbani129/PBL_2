@@ -83,4 +83,37 @@ class NotificationController extends Controller
             'Notifikasi berhasil dihapus.'
         );
     }
+
+    /**
+     * Endpoint polling AJAX — return JSON notif terbaru
+     */
+    public function poll()
+    {
+        $notifications = Notification::where('user_id', Auth::id())
+            ->latest()
+            ->take(15)
+            ->get()
+            ->map(function ($n) {
+                return [
+                    'id'         => $n->id,
+                    'type'       => $n->type,
+                    'title'      => $n->title,
+                    'message'    => $n->message,
+                    'data'       => $n->data,
+                    'status'     => $n->status,
+                    'is_unread'  => $n->status === 'unread',
+                    'time'       => $n->created_at->diffForHumans(),
+                    'created_at' => $n->created_at->toISOString(),
+                ];
+            });
+
+        $unreadCount = Notification::where('user_id', Auth::id())
+            ->where('status', 'unread')
+            ->count();
+
+        return response()->json([
+            'notifications' => $notifications,
+            'unread_count'  => $unreadCount,
+        ]);
+    }
 }

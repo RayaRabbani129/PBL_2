@@ -210,15 +210,9 @@
     position: relative;
     border-bottom: 1px solid var(--border-subtle);
 }
-
 .mg-notif-item:last-child { border-bottom: none; }
-
 .mg-notif-item:hover { background: var(--accent-dim); }
-
-.mg-notif-item.unread {
-    border-left: 3px solid var(--accent);
-}
-
+.mg-notif-item.unread { border-left: 3px solid var(--accent); }
 .mg-notif-item.read { opacity: 0.55; }
 
 /* ═══════════════════════════════════════════════════════
@@ -235,7 +229,6 @@
     flex-shrink: 0;
     margin-top: 1px;
 }
-
 .mg-notif-icon.type-match     { background: rgba(163,177,75,0.14); color: var(--accent); }
 .mg-notif-icon.type-challenge { background: rgba(91,140,255,0.12);  color: #5b8cff; }
 .mg-notif-icon.type-reminder  { background: rgba(255,190,60,0.12);  color: #ffbe3c; }
@@ -255,14 +248,12 @@
     margin: 0 0 3px 0;
     line-height: 1.3;
 }
-
 .mg-notif-body-desc {
     font-size: 0.8rem;
     color: var(--txt-secondary);
     margin: 0 0 8px 0;
     line-height: 1.5;
 }
-
 .mg-notif-time {
     font-size: 0.68rem;
     color: var(--txt-faint);
@@ -281,7 +272,6 @@
     margin-bottom: 10px;
     flex-wrap: wrap;
 }
-
 .btn-notif-accept {
     display: inline-flex;
     align-items: center;
@@ -304,7 +294,6 @@
     color: var(--btn-primary-txt);
     text-decoration: none;
 }
-
 .btn-notif-reject {
     display: inline-flex;
     align-items: center;
@@ -371,7 +360,6 @@
     .mg-notif-body-desc   { font-size: 0.775rem; }
     .mg-section-header-row { flex-direction: column; gap: 0.5rem; }
 }
-
 @media (max-width: 480px) {
     .mg-hero              { border-radius: 14px; }
     .mg-section           { border-radius: 14px; }
@@ -421,14 +409,19 @@
 
     {{-- Section Header --}}
     <div class="mg-section-header">
-        <div class="mg-section-num">
+
+        {{-- Nomor / total -- diupdate oleh polling --}}
+        <div class="mg-section-num" id="notif-section-num">
             {{ $notifications->total() > 0 ? $notifications->total() : '—' }}
         </div>
+
         <div class="mg-section-header-meta">
             <div class="mg-section-header-row">
                 <div>
                     <h6 class="mg-section-title">Semua Notifikasi</h6>
-                    <p class="mg-section-sub">
+
+                    {{-- Sub -- diupdate oleh polling --}}
+                    <p class="mg-section-sub" id="notif-section-sub">
                         @if($unreadCount > 0)
                             {{ $unreadCount }} notifikasi belum dibaca.
                         @else
@@ -436,14 +429,17 @@
                         @endif
                     </p>
                 </div>
-                @if($unreadCount > 0)
+
+                {{-- Tombol mark all -- disembunyikan/ditampilkan oleh polling --}}
+                <div id="notif-mark-all-form" style="{{ $unreadCount > 0 ? '' : 'display:none;' }}">
                     <form action="{{ route('notifications.readAll') }}" method="POST">
                         @csrf
                         <button type="submit" class="mg-mark-all">
                             <i class="bi bi-check2-all"></i> Tandai semua dibaca
                         </button>
                     </form>
-                @endif
+                </div>
+
             </div>
         </div>
     </div>
@@ -451,6 +447,7 @@
     {{-- Section Body --}}
     <div class="mg-section-body" style="padding: 0;">
 
+        {{-- Flash success --}}
         @if(session('success'))
             <div style="
                 background: var(--alert-success-bg);
@@ -467,114 +464,295 @@
             </div>
         @endif
 
-        {{-- Empty state --}}
-        @if($notifications->isEmpty())
-            <div class="mg-notif-empty">
-                <div class="mg-notif-empty-icon">
-                    <i class="bi bi-bell-slash"></i>
-                </div>
-                <p class="mg-notif-empty-title">Belum ada notifikasi</p>
-                <p class="mg-notif-empty-sub">
-                    Notifikasi pertandingan dan aktivitas kamu akan muncul di sini.
-                </p>
+        {{-- Empty state -- dikontrol oleh polling --}}
+        <div id="notif-empty-state"
+             class="mg-notif-empty"
+             style="{{ $notifications->isEmpty() ? '' : 'display:none;' }}">
+            <div class="mg-notif-empty-icon">
+                <i class="bi bi-bell-slash"></i>
             </div>
+            <p class="mg-notif-empty-title">Belum ada notifikasi</p>
+            <p class="mg-notif-empty-sub">
+                Notifikasi pertandingan dan aktivitas kamu akan muncul di sini.
+            </p>
+        </div>
 
-        @else
+        {{-- List wrapper -- dirender ulang oleh polling --}}
+        <div id="notif-list-wrapper" class="mg-notif-list">
 
-            <div class="mg-notif-list">
+            @foreach($notifications as $notif)
 
-                @foreach($notifications as $notif)
+                @php
+                    $notifData = is_string($notif->data)
+                        ? json_decode($notif->data, true)
+                        : (array) $notif->data;
+                    $notifData = $notifData ?? [];
+                @endphp
 
-                    @php
-                        $notifData = is_string($notif->data)
-                            ? json_decode($notif->data, true)
-                            : (array) $notif->data;
-                        $notifData = $notifData ?? [];
-                    @endphp
+                <div class="mg-notif-item {{ in_array($notif->status, ['unread','sent']) ? 'unread' : 'read' }}"
+                     data-id="{{ $notif->id }}">
 
-                    <div class="mg-notif-item {{ in_array($notif->status, ['unread','sent']) ? 'unread' : 'read' }}">
+                    {{-- Icon --}}
+                    <div class="mg-notif-icon
+                        @switch($notif->type)
+                            @case('match_confirmed') type-match     @break
+                            @case('match_challenge') type-challenge @break
+                            @case('match_reminder')  type-reminder  @break
+                            @case('match_result')    type-result    @break
+                            @default                 type-system
+                        @endswitch
+                    ">
+                        @switch($notif->type)
+                            @case('match_confirmed')
+                                <i class="bi bi-trophy-fill"></i>
+                                @break
+                            @case('match_challenge')
+                                <i class="bi bi-send-fill"></i>
+                                @break
+                            @case('match_reminder')
+                                <i class="bi bi-calendar-event-fill"></i>
+                                @break
+                            @case('match_result')
+                                <i class="bi bi-check-circle-fill"></i>
+                                @break
+                            @default
+                                <i class="bi bi-bell-fill"></i>
+                        @endswitch
+                    </div>
 
-                        {{-- Icon --}}
-                        <div class="mg-notif-icon
-                            @switch($notif->type)
-                                @case('match_confirmed') type-match     @break
-                                @case('match_challenge') type-challenge @break
-                                @case('match_reminder')  type-reminder  @break
-                                @case('match_result')    type-result    @break
-                                @default                 type-system
-                            @endswitch
-                        ">
-                            @switch($notif->type)
-                                @case('match_confirmed')
-                                    <i class="bi bi-trophy-fill"></i>
-                                    @break
-                                @case('match_challenge')
-                                    <i class="bi bi-send-fill"></i>
-                                    @break
-                                @case('match_reminder')
-                                    <i class="bi bi-calendar-event-fill"></i>
-                                    @break
-                                @case('match_result')
-                                    <i class="bi bi-check-circle-fill"></i>
-                                    @break
-                                @default
-                                    <i class="bi bi-bell-fill"></i>
-                            @endswitch
-                        </div>
+                    {{-- Body --}}
+                    <div class="mg-notif-body">
 
-                        {{-- Body --}}
-                        <div class="mg-notif-body">
+                        <p class="mg-notif-body-title">{{ $notif->title }}</p>
+                        <p class="mg-notif-body-desc">{{ $notif->message }}</p>
 
-                            <p class="mg-notif-body-title">{{ $notif->title }}</p>
-                            <p class="mg-notif-body-desc">{{ $notif->message }}</p>
+                        {{-- Tombol Terima / Tolak untuk challenge --}}
+                        @if(
+                            $notif->type === 'match_challenge' &&
+                            in_array($notif->status, ['unread','sent']) &&
+                            isset($notifData['match_request_id'])
+                        )
+                            <div class="mg-notif-actions">
+                                <form action="{{ route('matchmaking.accept', $notifData['match_request_id']) }}"
+                                      method="POST" style="display:inline;">
+                                    @csrf
+                                    <button type="submit" class="btn-notif-accept">
+                                        <i class="bi bi-check-lg"></i> Terima
+                                    </button>
+                                </form>
+                                <form action="{{ route('matchmaking.reject', $notifData['match_request_id']) }}"
+                                      method="POST" style="display:inline;">
+                                    @csrf
+                                    <button type="submit" class="btn-notif-reject">
+                                        <i class="bi bi-x-lg"></i> Tolak
+                                    </button>
+                                </form>
+                            </div>
+                        @endif
 
-                            {{-- Tombol Terima / Tolak untuk challenge --}}
-                            @if(
-                                $notif->type === 'match_challenge' &&
-                                in_array($notif->status, ['unread','sent']) &&
-                                isset($notifData['match_request_id'])
-                            )
-                                <div class="mg-notif-actions">
-                                    <form action="{{ route('matchmaking.accept', $notifData['match_request_id']) }}"
-                                          method="POST" style="display:inline;">
-                                        @csrf
-                                        <button type="submit" class="btn-notif-accept">
-                                            <i class="bi bi-check-lg"></i> Terima
-                                        </button>
-                                    </form>
-                                    <form action="{{ route('matchmaking.reject', $notifData['match_request_id']) }}"
-                                          method="POST" style="display:inline;">
-                                        @csrf
-                                        <button type="submit" class="btn-notif-reject">
-                                            <i class="bi bi-x-lg"></i> Tolak
-                                        </button>
-                                    </form>
-                                </div>
-                            @endif
-
-                            <p class="mg-notif-time">
-                                <i class="bi bi-clock me-1"></i>
-                                {{ \Carbon\Carbon::parse($notif->created_at)->diffForHumans() }}
-                            </p>
-
-                        </div>
+                        <p class="mg-notif-time">
+                            <i class="bi bi-clock me-1"></i>
+                            {{ \Carbon\Carbon::parse($notif->created_at)->diffForHumans() }}
+                        </p>
 
                     </div>
 
-                @endforeach
-
-            </div>
-
-            {{-- Pagination --}}
-            @if($notifications->hasPages())
-                <div style="padding: 1.25rem 1.5rem; border-top: 1px solid var(--border-subtle);">
-                    {{ $notifications->links() }}
                 </div>
-            @endif
 
+            @endforeach
+
+        </div>
+
+        {{-- Pagination --}}
+        @if($notifications->hasPages())
+            <div style="padding: 1.25rem 1.5rem; border-top: 1px solid var(--border-subtle);">
+                {{ $notifications->links() }}
+            </div>
         @endif
 
     </div>
 </div>
+
+@push('scripts')
+<script>
+(function () {
+    const POLL_URL      = '{{ route("notifications.poll") }}';
+    const POLL_INTERVAL = 15000;
+    const CSRF          = '{{ csrf_token() }}';
+
+    let lastUnreadCount = {{ $unreadCount }};
+    let lastTotal       = {{ $notifications->total() }};
+
+    /* ── Update sidebar badge ── */
+    function updateSidebarBadge(count) {
+        const badge = document.getElementById('notif-sidebar-badge');
+        const dot   = document.getElementById('notif-topbar-dot');
+
+        if (badge) {
+            badge.textContent    = count > 99 ? '99+' : count;
+            badge.style.display  = count > 0 ? 'inline-flex' : 'none';
+        }
+        if (dot) {
+            dot.style.display = count > 0 ? 'block' : 'none';
+        }
+    }
+
+    /* ── Update section header ── */
+    function updateHeader(total, unreadCount) {
+        const numEl     = document.getElementById('notif-section-num');
+        const subEl     = document.getElementById('notif-section-sub');
+        const markAllEl = document.getElementById('notif-mark-all-form');
+
+        if (numEl) numEl.textContent = total > 0 ? total : '—';
+
+        if (subEl) {
+            subEl.textContent = unreadCount > 0
+                ? `${unreadCount} notifikasi belum dibaca.`
+                : 'Semua notifikasi sudah dibaca.';
+        }
+
+        if (markAllEl) {
+            markAllEl.style.display = unreadCount > 0 ? 'block' : 'none';
+        }
+    }
+
+    /* ── Render list notifikasi ── */
+    function renderList(notifications) {
+        const listEl  = document.getElementById('notif-list-wrapper');
+        const emptyEl = document.getElementById('notif-empty-state');
+
+        if (!listEl) return;
+
+        if (notifications.length === 0) {
+            listEl.innerHTML = '';
+            if (emptyEl) emptyEl.style.display = 'block';
+            return;
+        }
+
+        if (emptyEl) emptyEl.style.display = 'none';
+
+        const iconClassMap = {
+            'match_confirmed': 'type-match',
+            'match_challenge': 'type-challenge',
+            'match_reminder':  'type-reminder',
+            'match_result':    'type-result',
+        };
+
+        const iconElMap = {
+            'match_confirmed': '<i class="bi bi-trophy-fill"></i>',
+            'match_challenge': '<i class="bi bi-send-fill"></i>',
+            'match_reminder':  '<i class="bi bi-calendar-event-fill"></i>',
+            'match_result':    '<i class="bi bi-check-circle-fill"></i>',
+        };
+
+        listEl.innerHTML = notifications.map(function (n) {
+
+            const iconClass = iconClassMap[n.type] || 'type-system';
+            const iconEl    = iconElMap[n.type] || '<i class="bi bi-bell-fill"></i>';
+
+            /* Tombol terima/tolak */
+            let actionBtns = '';
+            if (
+                n.type === 'match_challenge' &&
+                n.is_unread &&
+                n.data &&
+                n.data.match_request_id
+            ) {
+                actionBtns = `
+                    <div class="mg-notif-actions">
+                        <form action="/matchmaking/accept/${n.data.match_request_id}"
+                              method="POST" style="display:inline;">
+                            <input type="hidden" name="_token" value="${CSRF}">
+                            <button type="submit" class="btn-notif-accept">
+                                <i class="bi bi-check-lg"></i> Terima
+                            </button>
+                        </form>
+                        <form action="/matchmaking/reject/${n.data.match_request_id}"
+                              method="POST" style="display:inline;">
+                            <input type="hidden" name="_token" value="${CSRF}">
+                            <button type="submit" class="btn-notif-reject">
+                                <i class="bi bi-x-lg"></i> Tolak
+                            </button>
+                        </form>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="mg-notif-item ${n.is_unread ? 'unread' : 'read'}" data-id="${n.id}">
+                    <div class="mg-notif-icon ${iconClass}">${iconEl}</div>
+                    <div class="mg-notif-body">
+                        <p class="mg-notif-body-title">${n.title}</p>
+                        <p class="mg-notif-body-desc">${n.message}</p>
+                        ${actionBtns}
+                        <p class="mg-notif-time">
+                            <i class="bi bi-clock me-1"></i>${n.time}
+                        </p>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    /* ── Notif sound ── */
+    function playNotifSound() {
+        try {
+            const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+            const osc  = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.value = 880;
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.3);
+        } catch (e) {}
+    }
+
+    /* ── Polling ── */
+    function poll() {
+        fetch(POLL_URL, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            }
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            const newCount = data.unread_count;
+            const newTotal = data.notifications.length;
+
+            // Notif baru masuk → play sound
+            if (newCount > lastUnreadCount) {
+                playNotifSound();
+            }
+
+            lastUnreadCount = newCount;
+            lastTotal       = newTotal;
+
+            // Update badge sidebar & topbar
+            updateSidebarBadge(newCount);
+
+            // Update header section
+            updateHeader(newTotal, newCount);
+
+            // Re-render list (hanya di halaman notifications)
+            if (window.location.pathname.includes('/notifications')) {
+                renderList(data.notifications);
+            }
+        })
+        .catch(function (err) {
+            console.warn('[Polling] Error:', err);
+        });
+    }
+
+    // Mulai polling
+    poll();
+    setInterval(poll, POLL_INTERVAL);
+
+})();
+</script>
+@endpush
 
 @endsection

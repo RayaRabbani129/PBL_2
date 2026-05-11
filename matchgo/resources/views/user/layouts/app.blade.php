@@ -1206,6 +1206,180 @@
         }
     </script>
 
+    <script>
+    /* ═══════════════════════════════════════════════
+    REALTIME NOTIFICATION POLLING
+    Interval: setiap 15 detik
+    ═══════════════════════════════════════════════ */
+    @auth
+    (function () {
+        const POLL_URL      = '{{ route("notifications.poll") }}';
+        const POLL_INTERVAL = 15000; // 15 detik
+        const CSRF          = '{{ csrf_token() }}';
+
+        let lastUnreadCount = {{ $unreadCount ?? 0 }};
+
+        function updateSidebarBadge(count) {
+            const badge = document.getElementById('notif-sidebar-badge');
+            const dot   = document.getElementById('notif-topbar-dot');
+
+            if (count > 0) {
+                if (badge) {
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.style.display = 'inline-flex';
+                }
+                if (dot) dot.style.display = 'block';
+            } else {
+                if (badge) badge.style.display = 'none';
+                if (dot)   dot.style.display   = 'none';
+            }
+        }
+
+        function renderNotifList(notifications, unreadCount) {
+            const list      = document.getElementById('notif-list-wrapper');
+            const emptyEl   = document.getElementById('notif-empty-state');
+            const countEl   = document.getElementById('notif-section-num');
+            const subEl     = document.getElementById('notif-section-sub');
+            const markAllEl = document.getElementById('notif-mark-all-form');
+
+            // Update section num & sub
+            if (countEl) countEl.textContent = notifications.length > 0 ? notifications.length : '—';
+            if (subEl) {
+                subEl.textContent = unreadCount > 0
+                    ? `${unreadCount} notifikasi belum dibaca.`
+                    : 'Semua notifikasi sudah dibaca.';
+            }
+
+            // Tampil/sembunyikan tombol mark all
+            if (markAllEl) {
+                markAllEl.style.display = unreadCount > 0 ? 'block' : 'none';
+            }
+
+            if (!list) return;
+
+            if (notifications.length === 0) {
+                list.innerHTML = '';
+                if (emptyEl) emptyEl.style.display = 'block';
+                return;
+            }
+
+            if (emptyEl) emptyEl.style.display = 'none';
+
+            list.innerHTML = notifications.map(function (n) {
+                const iconClass = {
+                    'match_confirmed': 'type-match',
+                    'match_challenge': 'type-challenge',
+                    'match_reminder':  'type-reminder',
+                    'match_result':    'type-result',
+                }[n.type] || 'type-system';
+
+                const iconEl = {
+                    'match_confirmed': '<i class="bi bi-trophy-fill"></i>',
+                    'match_challenge': '<i class="bi bi-send-fill"></i>',
+                    'match_reminder':  '<i class="bi bi-calendar-event-fill"></i>',
+                    'match_result':    '<i class="bi bi-check-circle-fill"></i>',
+                }[n.type] || '<i class="bi bi-bell-fill"></i>';
+
+                // Tombol terima/tolak untuk challenge
+                let actionBtns = '';
+                if (
+                    n.type === 'match_challenge' &&
+                    n.is_unread &&
+                    n.data &&
+                    n.data.match_request_id
+                ) {
+                    actionBtns = `
+                        <div class="mg-notif-actions">
+                            <form action="/matchmaking/accept/${n.data.match_request_id}" method="POST" style="display:inline;">
+                                <input type="hidden" name="_token" value="${CSRF}">
+                                <button type="submit" class="btn-notif-accept">
+                                    <i class="bi bi-check-lg"></i> Terima
+                                </button>
+                            </form>
+                            <form action="/matchmaking/reject/${n.data.match_request_id}" method="POST" style="display:inline;">
+                                <input type="hidden" name="_token" value="${CSRF}">
+                                <button type="submit" class="btn-notif-reject">
+                                    <i class="bi bi-x-lg"></i> Tolak
+                                </button>
+                            </form>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="mg-notif-item ${n.is_unread ? 'unread' : 'read'}" data-id="${n.id}">
+                        <div class="mg-notif-icon ${iconClass}">${iconEl}</div>
+                        <div class="mg-notif-body">
+                            <p class="mg-notif-body-title">${n.title}</p>
+                            <p class="mg-notif-body-desc">${n.message}</p>
+                            ${actionBtns}
+                            <p class="mg-notif-time">
+                                <i class="bi bi-clock me-1"></i>${n.time}
+                            </p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function poll() {
+            fetch(POLL_URL, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                }
+            })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                const newCount = data.unread_count;
+
+                // Update badge sidebar & topbar dot
+                updateSidebarBadge(newCount);
+
+                // Re-render list jika ada perubahan jumlah unread
+                if (newCount !== lastUnreadCount) {
+                    lastUnreadCount = newCount;
+
+                    // Play sound jika ada notif baru masuk
+                    if (newCount > lastUnreadCount) {
+                        playNotifSound();
+                    }
+                }
+
+                // Selalu render ulang list jika berada di halaman notifikasi
+                if (window.location.pathname.includes('/notifications')) {
+                    renderNotifList(data.notifications, newCount);
+                }
+            })
+            .catch(function (err) {
+                console.warn('Polling error:', err);
+            });
+        }
+
+        function playNotifSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 880;
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.3);
+            } catch (e) {}
+        }
+
+        // Jalankan polling pertama kali dan set interval
+        poll();
+        setInterval(poll, POLL_INTERVAL);
+    })();
+    @endauth
+    </script>
+
+    @stack('scripts')
+
     @stack('scripts')
 </body>
 </html>
