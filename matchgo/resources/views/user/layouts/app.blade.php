@@ -1058,6 +1058,139 @@
         @media (max-width: 576px) {
             .col-6 { width: 100%; }
         }
+
+        /* ══════════════════════════════════════════
+           TUTORIAL OVERLAY
+        ══════════════════════════════════════════ */
+        .mg-tutorial-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 2100;
+            background: transparent;
+            overflow: hidden;
+        }
+
+        .mg-tutorial-overlay.open {
+            display: block;
+        }
+
+        .mg-tutorial-spotlight {
+            position: absolute;
+            border: 2px solid var(--accent);
+            border-radius: 20px;
+            box-shadow: 0 0 0 9999px rgba(8, 12, 20, 0.88), 0 0 0 3px rgba(163, 177, 75, 0.95);
+            transition: all 0.18s ease;
+            pointer-events: none;
+            background: transparent;
+        }
+
+        .mg-tutorial-active {
+            position: relative;
+            z-index: 2150 !important;
+            border-radius: 18px !important;
+            box-shadow: 0 0 0 4px rgba(163, 177, 75, 0.22), 0 0 0 12px rgba(8, 12, 20, 0.50);
+            background: rgba(163, 177, 75, 0.08) !important;
+            transition: box-shadow 0.18s ease, background 0.18s ease;
+        }
+
+        .mg-tutorial-card {
+            position: absolute;
+            width: min(380px, calc(100% - 32px));
+            max-width: 420px;
+            padding: 22px 24px;
+            border-radius: 22px;
+            background: var(--surface-1);
+            border: 1px solid var(--border-medium);
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.22);
+            color: var(--txt-primary);
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+
+        .mg-tutorial-card h3 {
+            margin-bottom: 10px;
+            font-size: 1.05rem;
+            letter-spacing: -0.02em;
+            line-height: 1.35;
+            font-weight: 700;
+        }
+
+        .mg-tutorial-card p {
+            margin-bottom: 18px;
+            color: var(--txt-secondary);
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .mg-tutorial-card .step-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            background: var(--accent);
+            color: var(--btn-primary-txt);
+            font-weight: 700;
+            margin-bottom: 14px;
+            box-shadow: 0 12px 18px rgba(163, 177, 75, 0.25);
+        }
+
+        .mg-tutorial-card footer {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            margin-top: 8px;
+        }
+
+        .mg-tutorial-card button {
+            border: none;
+            border-radius: 999px;
+            padding: 10px 16px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.18s ease, background 0.18s ease;
+        }
+
+        .mg-tutorial-card button:hover {
+            transform: translateY(-1px);
+        }
+
+        .mg-tutorial-card .btn-secondary {
+            background: rgba(163, 177, 75, 0.08);
+            color: var(--txt-primary);
+        }
+
+        .mg-tutorial-card .btn-primary {
+            background: var(--accent);
+            color: var(--btn-primary-txt);
+        }
+
+        .mg-tutorial-close {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.12);
+            color: var(--txt-primary);
+            border: 1px solid rgba(255,255,255,0.08);
+            cursor: pointer;
+        }
+
+        .mg-tutorial-close:hover {
+            background: rgba(255,255,255,0.18);
+        }
+
+        @keyframes mg-fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 
     @stack('styles')
@@ -1137,6 +1270,22 @@
         </footer>
     </main>
 
+    <div id="mgTutorialOverlay" class="mg-tutorial-overlay" role="dialog" aria-modal="true" aria-label="Tutorial MATCHGO">
+        <div id="mgTutorialSpotlight" class="mg-tutorial-spotlight"></div>
+        <div id="mgTutorialCard" class="mg-tutorial-card">
+            <button type="button" id="mgTutorialClose" class="mg-tutorial-close" aria-label="Tutup tutorial">
+                <i class="bi bi-x"></i>
+            </button>
+            <span class="step-badge" id="mgTutorialStepNumber">1</span>
+            <h3 id="mgTutorialTitle">Selamat datang di MATCHGO</h3>
+            <p id="mgTutorialDescription">Ikuti petunjuk singkat untuk mengenal fungsi utama menu dan kartu informasi.</p>
+            <footer>
+                <button id="mgTutorialBack" class="btn-secondary">Kembali</button>
+                <button id="mgTutorialNext" class="btn-primary">Lanjut</button>
+            </footer>
+        </div>
+    </div>
+
     <script>
         /* ── Theme system ── */
         (function () {
@@ -1203,6 +1352,175 @@
                     sidebar.classList.remove('open');
                 }
             });
+        }
+
+        /* ── Tutorial walkthrough ── */
+        const tutorial = {
+            overlay: document.getElementById('mgTutorialOverlay'),
+            spotlight: document.getElementById('mgTutorialSpotlight'),
+            card: document.getElementById('mgTutorialCard'),
+            title: document.getElementById('mgTutorialTitle'),
+            description: document.getElementById('mgTutorialDescription'),
+            stepNumber: document.getElementById('mgTutorialStepNumber'),
+            btnNext: document.getElementById('mgTutorialNext'),
+            btnBack: document.getElementById('mgTutorialBack'),
+            btnClose: document.getElementById('mgTutorialClose'),
+            steps: [
+                {
+                    title: 'Dashboard cepat',
+                    description: 'Tempat utama untuk melihat statistik, jadwal, dan kondisi tim Anda secara cepat.',
+                    selector: '#mgSidebar .mg-nav-item[href*="/dashboard"]'
+                },
+                {
+                    title: 'Tim Saya',
+                    description: 'Kelola anggota tim, lihat status pertandingan, dan atur formasi dalam satu tempat.',
+                    selector: '#mgSidebar .mg-nav-item[href*="/team"]'
+                },
+                {
+                    title: 'Matchmaking',
+                    description: 'Cari pertandingan yang cocok, ajukan tantangan, dan temukan lawan terbaik.',
+                    selector: '#mgSidebar .mg-nav-item[href*="/matchmaking"]'
+                },
+                {
+                    title: 'Pertandingan',
+                    description: 'Lihat semua jadwal dan hasil pertandingan yang telah Anda ikuti.',
+                    selector: '#mgSidebar .mg-nav-item[href*="/matches"]'
+                },
+                {
+                    title: 'Notifikasi & Bantuan',
+                    description: 'Ikon ini memberi tahu update penting. Tekan tombol tutorial setiap kali butuh bantuan cepat.',
+                    selector: '#startTutorial'
+                },
+                {
+                    title: 'Kartu fungsi',
+                    description: 'Di halaman ini, kartu-kartu menampilkan informasi penting dan jalur ke tindakan utama.',
+                    selector: 'main .dash-card, main .stat-card, main .card-matchgo, main .preview-card, main .mm-team-card'
+                }
+            ],
+            currentStep: 0,
+            open() {
+                this.currentStep = 0;
+                this.overlay.classList.add('open');
+                document.body.style.overflow = 'hidden';
+                this.showStep();
+            },
+            close() {
+                this.overlay.classList.remove('open');
+                document.body.style.overflow = '';
+                this.resetSpotlight();
+            },
+            resetSpotlight() {
+                this.spotlight.style.width = '0';
+                this.spotlight.style.height = '0';
+                this.spotlight.style.transform = 'translate(0, 0)';
+            },
+            showStep() {
+                const step = this.steps[this.currentStep];
+                if (!step) {
+                    return this.close();
+                }
+
+                const target = document.querySelector(step.selector);
+                const rect = target ? target.getBoundingClientRect() : null;
+                const padding = 8;
+
+                this.title.textContent = step.title;
+                this.description.textContent = step.description;
+                this.stepNumber.textContent = String(this.currentStep + 1);
+                this.btnBack.style.display = this.currentStep === 0 ? 'none' : 'inline-flex';
+                this.btnNext.textContent = this.currentStep === this.steps.length - 1 ? 'Selesai' : 'Lanjut';
+
+                if (this.currentTarget) {
+                    this.currentTarget.classList.remove('mg-tutorial-active');
+                    this.currentTarget = null;
+                }
+
+                if (target && rect) {
+                    this.currentTarget = target;
+                    this.currentTarget.classList.add('mg-tutorial-active');
+
+                    const top = rect.top - padding;
+                    const left = rect.left - padding;
+                    const width = rect.width + padding * 2;
+                    const height = rect.height + padding * 2;
+
+                    const spotWidth = Math.min(Math.max(width, 56), window.innerWidth - 32);
+                    const spotHeight = Math.min(Math.max(height, 40), window.innerHeight - 32);
+                    this.spotlight.style.width = `${spotWidth}px`;
+                    this.spotlight.style.height = `${spotHeight}px`;
+                    this.spotlight.style.borderRadius = `${Math.min(20, spotHeight / 2)}px`;
+                    this.spotlight.style.transform = `translate(${left}px, ${top}px)`;
+
+                    const cardX = left + width + 18;
+                    const fallbackX = Math.max(16, left - this.card.offsetWidth - 18);
+                    const resolvedX = cardX + this.card.offsetWidth < window.innerWidth ? cardX : fallbackX;
+                    const resolvedY = top + height + 18;
+                    const finalY = resolvedY + this.card.offsetHeight < window.innerHeight ? resolvedY : Math.max(16, top - this.card.offsetHeight - 18);
+
+                    this.card.style.left = `${Math.min(Math.max(resolvedX, 16), window.innerWidth - this.card.offsetWidth - 16)}px`;
+                    this.card.style.top = `${finalY}px`;
+                } else {
+                    if (this.currentTarget) {
+                        this.currentTarget.classList.remove('mg-tutorial-active');
+                        this.currentTarget = null;
+                    }
+                    this.resetSpotlight();
+                    this.card.style.left = `${Math.max(16, (window.innerWidth - this.card.offsetWidth) / 2)}px`;
+                    this.card.style.top = '16vh';
+                }
+            },
+            next() {
+                if (this.currentStep >= this.steps.length - 1) {
+                    return this.close();
+                }
+                this.currentStep += 1;
+                this.showStep();
+            },
+            back() {
+                if (this.currentStep === 0) {
+                    return;
+                }
+                this.currentStep -= 1;
+                this.showStep();
+            }
+        };
+
+        const tutorialButton = document.getElementById('startTutorial');
+        if (tutorialButton && tutorial.overlay && tutorial.btnNext && tutorial.btnBack && tutorial.btnClose) {
+            tutorialButton.addEventListener('click', function (event) {
+                event.preventDefault();
+                tutorial.open();
+            });
+
+            tutorial.btnNext.addEventListener('click', function () {
+                tutorial.next();
+            });
+
+            tutorial.btnBack.addEventListener('click', function () {
+                tutorial.back();
+            });
+
+            tutorial.btnClose.addEventListener('click', function () {
+                tutorial.close();
+            });
+
+            tutorial.overlay.addEventListener('click', function (event) {
+                if (event.target === tutorial.overlay) {
+                    tutorial.close();
+                }
+            });
+
+            window.addEventListener('resize', function () {
+                if (tutorial.overlay.classList.contains('open')) {
+                    tutorial.showStep();
+                }
+            });
+
+            window.addEventListener('scroll', function () {
+                if (tutorial.overlay.classList.contains('open')) {
+                    tutorial.showStep();
+                }
+            }, { passive: true });
         }
     </script>
 

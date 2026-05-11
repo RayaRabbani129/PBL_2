@@ -16,10 +16,10 @@
         <div class="mg-topbar-right">
 
             {{-- Tutorial --}}
-            <a href="#" class="mg-icon-btn" aria-label="Notifikasi">
+            <button type="button" id="startTutorial" class="mg-icon-btn" aria-label="Tutorial pengguna" title="Mulai tutorial cepat">
                 <i class="bi bi-question-circle"></i>
                 <span class="mg-notif-dot"></span>
-            </a>
+            </button>
 
             {{-- Notification --}}
             <a href="#" class="mg-icon-btn" aria-label="Notifikasi">

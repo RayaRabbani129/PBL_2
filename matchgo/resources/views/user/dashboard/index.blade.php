@@ -482,8 +482,8 @@ $quickActions = [
     ['icon'=>'bi-search',        'bg'=>'var(--accent-dim)',           'color'=>'var(--accent)', 'label'=>'Cari Lawan',      'url'=>route('matchmaking.index')],
     ['icon'=>'bi-shield-fill',   'bg'=>'rgba(59,130,246,0.10)',       'color'=>'#60a5fa',       'label'=>'Kelola Tim',       'url'=>route('team.index')],
     ['icon'=>'bi-calendar-plus', 'bg'=>'rgba(167,139,250,0.10)',      'color'=>'#a78bfa',       'label'=>'Tambah Jadwal',    'url'=>route('schedule.create')],
-    ['icon'=>'bi-geo-alt-fill',  'bg'=>'rgba(34,211,238,0.10)',       'color'=>'#22d3ee',       'label'=>'Lapangan',         'url'=>route('venues.index')],
-    ['icon'=>'bi-calculator',    'bg'=>'rgba(251,146,60,0.10)',       'color'=>'#fb923c',       'label'=>'Biaya Split',      'url'=>route('match-cost.index')],
+    // ['icon'=>'bi-geo-alt-fill',  'bg'=>'rgba(34,211,238,0.10)',       'color'=>'#22d3ee',       'label'=>'Lapangan',         'url'=>route('venues.index')],
+    // ['icon'=>'bi-calculator',    'bg'=>'rgba(251,146,60,0.10)',       'color'=>'#fb923c',       'label'=>'Biaya Split',      'url'=>route('match-cost.index')],
     ['icon'=>'bi-person-circle', 'bg'=>'rgba(16,185,129,0.10)',       'color'=>'#10b981',       'label'=>'Profil',           'url'=>route('profile.index')],
 ];
 @endphp

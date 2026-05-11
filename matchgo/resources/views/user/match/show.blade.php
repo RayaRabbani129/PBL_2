@@ -532,8 +532,24 @@
                 </div>
                 @if ($match->total_cost)
                     <div class="detail-row">
-                        <span class="detail-row-label">Total Biaya</span>
+                        <span class="detail-row-label">Total Biaya Sewa Lapangan</span>
                         <span class="detail-row-val">Rp {{ number_format($match->total_cost, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-row-label">Biaya per tim (50:50)</span>
+                        <span class="detail-row-val">Rp {{ number_format($homeTeamShare, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-row-label">{{ $match->homeTeam->name ?? 'Tim Kandang' }} ({{ $homeTeamMembers }} anggota)</span>
+                        <span class="detail-row-val">
+                            {{ $homeCostPerMember ? 'Rp ' . number_format($homeCostPerMember, 0, ',', '.') . ' / anggota' : '—' }}
+                        </span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-row-label">{{ $match->awayTeam->name ?? 'Tim Tamu' }} ({{ $awayTeamMembers }} anggota)</span>
+                        <span class="detail-row-val">
+                            {{ $awayCostPerMember ? 'Rp ' . number_format($awayCostPerMember, 0, ',', '.') . ' / anggota' : '—' }}
+                        </span>
                     </div>
                 @endif
                 @if ($match->notes)

@@ -85,15 +85,35 @@ class MatchController extends Controller
         $myTeam = Team::where('user_id', auth()->id())->firstOrFail();
         $this->authorizeMatch($match, $myTeam);
 
-        $match->load(['homeTeam', 'awayTeam', 'venue', 'field', 'verification.auditor', 'booking', 'cost']);
+        $match->load([
+            'homeTeam.members',
+            'awayTeam.members',
+            'venue',
+            'field',
+            'verification.auditor',
+            'booking',
+            'cost'
+        ]);
 
         $isHome         = $match->home_team_id === $myTeam->id;
         $myTeamInMatch  = $isHome ? $match->homeTeam : $match->awayTeam;
         $oppTeamInMatch = $isHome ? $match->awayTeam : $match->homeTeam;
 
+        $homeTeamMembers = $match->homeTeam->members->count();
+        $awayTeamMembers = $match->awayTeam->members->count();
+
+        $homeTeamShare = round($match->total_cost / 2, 2);
+        $awayTeamShare = round($match->total_cost / 2, 2);
+
+        $homeCostPerMember = $homeTeamMembers > 0 ? round($homeTeamShare / $homeTeamMembers, 2) : null;
+        $awayCostPerMember = $awayTeamMembers > 0 ? round($awayTeamShare / $awayTeamMembers, 2) : null;
+
         return view('user.match.show', compact(
             'match', 'myTeam', 'isHome',
-            'myTeamInMatch', 'oppTeamInMatch'
+            'myTeamInMatch', 'oppTeamInMatch',
+            'homeTeamMembers', 'awayTeamMembers',
+            'homeTeamShare', 'awayTeamShare',
+            'homeCostPerMember', 'awayCostPerMember'
         ));
     }
 
