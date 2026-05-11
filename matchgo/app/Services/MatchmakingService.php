@@ -170,6 +170,45 @@ class MatchmakingService
         }
 
         // =========================================================
+        // FILTER JARAK
+        // =========================================================
+
+        if (
+            isset($filters['max_distance']) &&
+            $filters['max_distance'] &&
+            $myTeam->latitude &&
+            $myTeam->longitude
+        ) {
+
+            $maxDistance = (float) $filters['max_distance'];
+
+            $query->selectRaw("
+                teams.*,
+                (
+                    6371 * acos(
+                        cos(radians(?))
+                        * cos(radians(latitude))
+                        * cos(radians(longitude) - radians(?))
+                        + sin(radians(?))
+                        * sin(radians(latitude))
+                    )
+                ) AS distance
+            ", [
+                $myTeam->latitude,
+                $myTeam->longitude,
+                $myTeam->latitude,
+            ]);
+
+            $query->whereNotNull('latitude')
+                ->whereNotNull('longitude');
+
+            $query->having('distance', '<=', $maxDistance);
+
+            // Optional: urutkan dari paling dekat
+            $query->orderBy('distance');
+        }
+
+        // =========================================================
         // AMBIL TEAM
         // =========================================================
 
@@ -297,24 +336,54 @@ class MatchmakingService
         }
 
         // =========================================================
-        // 3. LOKASI
+        // 3. LOKASI (BERDASARKAN JARAK GPS)
         // =========================================================
 
         if (
-            $mine->city &&
-            $opponent->city &&
-            strtolower($mine->city) === strtolower($opponent->city)
+            $mine->latitude &&
+            $mine->longitude &&
+            $opponent->latitude &&
+            $opponent->longitude
         ) {
 
-            $score += 20;
+            $distance = $this->calculateDistance(
+                $mine->latitude,
+                $mine->longitude,
+                $opponent->latitude,
+                $opponent->longitude
+            );
 
-        } elseif (
-            $mine->province &&
-            $opponent->province &&
-            strtolower($mine->province) === strtolower($opponent->province)
-        ) {
+            /**
+             * Contoh scoring:
+             *
+             * <= 5 km      = +20
+             * <= 10 km     = +18
+             * <= 20 km     = +15
+             * <= 35 km     = +10
+             * <= 50 km     = +5
+             * > 50 km      = +0
+             */
 
-            $score += 10;
+            if ($distance <= 5) {
+
+                $score += 20;
+
+            } elseif ($distance <= 10) {
+
+                $score += 18;
+
+            } elseif ($distance <= 20) {
+
+                $score += 15;
+
+            } elseif ($distance <= 35) {
+
+                $score += 10;
+
+            } elseif ($distance <= 50) {
+
+                $score += 5;
+            }
         }
 
         // =========================================================
@@ -523,14 +592,40 @@ class MatchmakingService
         }
 
         if (
-            $mine->city &&
-            $opponent->city &&
-            strtolower($mine->city) === strtolower($opponent->city)
+            $mine->latitude &&
+            $mine->longitude &&
+            $opponent->latitude &&
+            $opponent->longitude
         ) {
+
+            $distance = round(
+                $this->calculateDistance(
+                    $mine->latitude,
+                    $mine->longitude,
+                    $opponent->latitude,
+                    $opponent->longitude
+                ),
+                1
+            );
+
+            $distanceText = match (true) {
+
+                $distance <= 5
+                    => 'Sangat dekat (' . $distance . ' km)',
+
+                $distance <= 15
+                    => 'Lokasi dekat (' . $distance . ' km)',
+
+                $distance <= 35
+                    => 'Masih terjangkau (' . $distance . ' km)',
+
+                default
+                    => 'Jarak ' . $distance . ' km',
+            };
 
             $reasons[] = [
                 'icon' => 'bi-geo-alt',
-                'text' => 'Kota sama: ' . $mine->city,
+                'text' => $distanceText,
             ];
         }
 
@@ -567,5 +662,35 @@ class MatchmakingService
             'competitive' => 'Competitive',
             default => ucfirst(str_replace('_', ' ', $level ?? '-')),
         };
+    }
+
+    // =============================================================
+    // DISTANCE HELPER (HAVERSINE)
+    // =============================================================
+
+    private function calculateDistance(
+        float $lat1,
+        float $lon1,
+        float $lat2,
+        float $lon2
+    ): float {
+
+        $earthRadius = 6371; // km
+
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+
+        $a =
+            sin($dLat / 2) * sin($dLat / 2)
+            +
+            cos(deg2rad($lat1))
+            * cos(deg2rad($lat2))
+            *
+            sin($dLon / 2)
+            * sin($dLon / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
     }
 }

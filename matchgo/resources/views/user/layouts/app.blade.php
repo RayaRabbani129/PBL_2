@@ -1497,19 +1497,39 @@
     }
 
     /* ── Notif sound ── */
-    function playNotifSound() {
+    // function playNotifSound() {
+    //     try {
+    //         const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+    //         const osc  = ctx.createOscillator();
+    //         const gain = ctx.createGain();
+    //         osc.connect(gain);
+    //         gain.connect(ctx.destination);
+    //         osc.frequency.value = 880;
+    //         gain.gain.setValueAtTime(0.1, ctx.currentTime);
+    //         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    //         osc.start(ctx.currentTime);
+    //         osc.stop(ctx.currentTime + 0.3);
+    //     } catch (e) {}
+    // }
+
+    function playNotifSound(status) {
         try {
-            const ctx  = new (window.AudioContext || window.webkitAudioContext)();
-            const osc  = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.frequency.value = 880;
-            gain.gain.setValueAtTime(0.1, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-            osc.start(ctx.currentTime);
-            osc.stop(ctx.currentTime + 0.3);
-        } catch (e) {}
+            if (status === 'challenge_accepted') {
+                const audio = new Audio('/sounds/jokowi-saya-akan-lawan.mp3');
+                audio.volume = 1;
+                audio.play();
+            } else if (status === 'challenge_rejected') {
+                const audio = new Audio('/sounds/hidup-jokowi.mp3');
+                audio.volume = 1;
+                audio.play();
+            } else {
+                const audio = new Audio('/sounds/cihuyy.mp3');
+                audio.volume = 1;
+                audio.play();
+            }
+        } catch (e) {
+            console.log(e);
+        }
     }
 
     /* ── Polling ── */
@@ -1526,7 +1546,7 @@
 
             // Play sound jika ada notif baru
             if (newCount > lastUnreadCount) {
-                playNotifSound();
+                playNotifSound(data.notifications[0].type);
             }
 
             lastUnreadCount = newCount;
