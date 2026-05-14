@@ -3,104 +3,60 @@
 namespace App\Filament\FieldAdmin\Widgets;
 
 use App\Models\VenueSchedule;
-use Filament\Tables;
-use Filament\Tables\Columns\BadgeColumn;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\ToggleColumn;
-use Filament\Tables\Filters\Filter;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Table;
-use Filament\Widgets\TableWidget as BaseWidget;
-use Illuminate\Database\Eloquent\Builder;
+use Filament\Widgets\Widget;
+use Illuminate\Support\Collection;
 
-class ScheduleAvailabilityWidget extends BaseWidget
+class ScheduleAvailabilityWidget extends Widget
 {
-    protected static ?string $heading = 'Ketersediaan Jadwal';
+    protected string $view = 'filament.field-admin.widgets.schedule-availability-widget';
 
     protected static ?int $sort = 3;
 
-    protected static ?string $pollingInterval = '10s';
+    protected ?string $pollingInterval = '10s';
 
-    protected int|string|array $columnSpan = [
-        'default' => 'full',
-        'sm'      => 'full',
-        'md'      => 'full',
-        'lg'      => 7,
-        'xl'      => 7,
-        '2xl'     => 7,
-    ];
+    protected int|string|array $columnSpan = 'full';
 
-    public function table(Table $table): Table
+    /** Filter aktif: 'all' | 'available' | 'booked' */
+    public string $filter = 'all';
+
+    protected function getViewData(): array
     {
         $venueIds = auth()->user()
             ->managedVenues()
             ->pluck('venues.id');
 
-        return $table
-            ->query(
-                VenueSchedule::query()
-                    ->whereIn('venue_id', $venueIds)
-                    ->orderBy('date')
-                    ->orderBy('start_time')
-            )
-            ->striped()
-            ->paginated([8, 15, 25])
-            ->defaultPaginationPageOption(8)
-            ->columns([
-                TextColumn::make('field.name')
-                    ->label('Lapangan')
-                    ->badge()
-                    ->color('primary')
-                    ->sortable(),
+        $query = VenueSchedule::whereIn('venue_id', $venueIds)
+            ->whereDate('date', today())
+            ->with('field')
+            ->orderBy('date')
+            ->orderBy('start_time');
 
-                TextColumn::make('date')
-                    ->label('Tanggal')
-                    ->date('d M Y')
-                    ->sortable(),
+        if ($this->filter === 'available') {
+            $query->where('is_available', true);
+        } elseif ($this->filter === 'booked') {
+            $query->where('is_available', false);
+        }
 
-                TextColumn::make('start_time')
-                    ->label('Mulai')
-                    ->time('H:i')
-                    ->icon('heroicon-m-play-circle')
-                    ->iconColor('success'),
+        $schedules = $query->get();
 
-                TextColumn::make('end_time')
-                    ->label('Selesai')
-                    ->time('H:i')
-                    ->icon('heroicon-m-stop-circle')
-                    ->iconColor('danger'),
+        // Hitung occupancy dari semua slot hari ini (bukan cuma yang difilter)
+        $allToday        = VenueSchedule::whereIn('venue_id', $venueIds)->whereDate('date', today());
+        $todayTotal      = (clone $allToday)->count();
+        $todayAvailable  = (clone $allToday)->where('is_available', true)->count();
+        $todayBooked     = $todayTotal - $todayAvailable;
+        $occupancyRate   = $todayTotal > 0 ? round(($todayBooked / $todayTotal) * 100) : 0;
 
-                BadgeColumn::make('is_available')
-                    ->label('Status')
-                    ->getStateUsing(fn ($record) => $record->is_available ? 'Tersedia' : 'Terisi')
-                    ->colors([
-                        'success' => 'Tersedia',
-                        'danger'  => 'Terisi',
-                    ])
-                    ->icons([
-                        'heroicon-m-check-circle' => 'Tersedia',
-                        'heroicon-m-x-circle'     => 'Terisi',
-                    ]),
+        return compact('schedules', 'todayTotal', 'todayBooked', 'todayAvailable', 'occupancyRate');
+    }
 
-                ToggleColumn::make('is_available')
-                    ->label('Toggle')
-                    ->onColor('success')
-                    ->offColor('danger'),
-            ])
-            ->filters([
-                Filter::make('today')
-                    ->label('Hari ini saja')
-                    ->query(fn (Builder $query) => $query->whereDate('date', today())),
+    public function setFilter(string $filter): void
+    {
+        $this->filter = $filter;
+    }
 
-                SelectFilter::make('is_available')
-                    ->label('Ketersediaan')
-                    ->options([
-                        '1' => 'Tersedia',
-                        '0' => 'Terisi',
-                    ]),
-            ])
-            ->emptyStateHeading('Tidak ada jadwal')
-            ->emptyStateDescription('Belum ada jadwal yang dibuat.')
-            ->emptyStateIcon('heroicon-o-calendar-days');
+    public function toggleAvailable(int $scheduleId): void
+    {
+        $schedule = VenueSchedule::findOrFail($scheduleId);
+        $schedule->update(['is_available' => ! $schedule->is_available]);
     }
 }

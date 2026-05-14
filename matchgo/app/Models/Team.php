@@ -65,4 +65,9 @@ class Team extends Model
     {
         return $this->hasMany(Matches::class, 'away_team_id');
     }
+
+    public function latestStatusLog()
+    {
+        return $this->hasOne(TeamStatusLog::class)->latestOfMany();
+    }
 }

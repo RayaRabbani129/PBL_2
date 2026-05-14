@@ -2,8 +2,9 @@
 
 namespace App\Filament\FieldAdmin\Pages;
 
-use App\Filament\FieldAdmin\Widgets\FieldOverviewWidget;
 use App\Filament\FieldAdmin\Widgets\FieldStatusWidget;
+use App\Filament\FieldAdmin\Widgets\HeroWidget;
+use App\Filament\FieldAdmin\Widgets\QuickActionsWidget;
 use App\Filament\FieldAdmin\Widgets\ScheduleAvailabilityWidget;
 use Filament\Pages\Dashboard as BaseDashboard;
 
@@ -16,21 +17,15 @@ class Dashboard extends BaseDashboard
     public function getWidgets(): array
     {
         return [
-            FieldOverviewWidget::class,
+            HeroWidget::class,
             FieldStatusWidget::class,
             ScheduleAvailabilityWidget::class,
+            QuickActionsWidget::class,
         ];
     }
 
-    public function getColumns(): int | array
+    public function getColumns(): int|array
     {
-        return [
-            'default' => 'full',
-            'sm'      => 'full',
-            'md'      => 'full',
-            'lg'      => 7,
-            'xl'      => 7,
-            '2xl'     => 7,
-        ];
+        return 1;
     }
 }
