@@ -232,8 +232,9 @@
   <nav class="navbar navbar-matchgo fixed-top" style="padding: 0.75rem 0;">
     <div class="container">
       <a class="navbar-brand-custom" href="{{ url('/') }}">
-        <span class="brand-icon"><i class="bi bi-lightning-charge-fill"></i></span>
-        MATCH<span class="brand-accent">GO</span>
+          <img src="{{ asset('img/logo/logo.png') }}" alt="MatchGo Logo" style="width:10%;height:10%;object-fit:contain;">
+          {{-- <span class="brand-icon"><i class="bi bi-lightning-charge-fill"></i></span>
+          MATCH<span class="brand-accent">GO</span> --}}
       </a>
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
         <i class="bi bi-moon-fill icon-moon"></i>

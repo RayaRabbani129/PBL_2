@@ -13,6 +13,11 @@ class TeamScheduleController extends Controller
     {
         $team = Team::where('user_id', auth()->id())->first();
 
+        if (!$team) {
+            return redirect()->route('team.index')
+                ->with('warning', 'Buat tim terlebih dahulu sebelum mencari lawan.');
+        }
+
         $schedules = $team
             ? TeamSchedule::where('team_id', $team->id)->get()
             : collect();

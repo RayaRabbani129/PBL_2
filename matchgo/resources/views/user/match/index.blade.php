@@ -518,7 +518,12 @@
                 <a href="{{ route('matches.show', $match) }}" class="match-card status-scheduled">
                     <div class="match-card-teams">
                         <div>
-                            <div class="match-team-ava">{{ strtoupper(substr($myTeamInMatch->name, 0, 2)) }}</div>
+                            @if ($myTeamInMatch && $myTeamInMatch->logo_path)
+                                <img src="{{ asset('storage/' . $myTeamInMatch->logo_path) }}" alt="{{ $myTeamInMatch->name }} Logo"
+                                     class="match-team-ava" style="object-fit:cover;">
+                            @else
+                                <div class="match-team-ava">{{ strtoupper(substr($myTeamInMatch->name, 0, 2)) }}</div>
+                            @endif
                         </div>
                         <div>
                             <div class="match-team-name">{{ $myTeamInMatch->name }}</div>
@@ -526,9 +531,14 @@
                         </div>
                         <div class="match-vs">VS</div>
                         <div>
-                            <div class="match-team-ava" style="background:var(--surface-4);border-color:var(--border-medium);color:var(--txt-secondary);">
-                                {{ strtoupper(substr($oppTeamInMatch->name, 0, 2)) }}
-                            </div>
+                            @if ($oppTeamInMatch && $oppTeamInMatch->logo_path)
+                                <img src="{{ asset('storage/' . $oppTeamInMatch->logo_path) }}" alt="{{ $oppTeamInMatch->name }} Logo"
+                                     class="match-team-ava" style="object-fit:cover;">
+                            @else
+                                <div class="match-team-ava" style="background:var(--surface-4);border-color:var(--border-medium);color:var(--txt-secondary);">
+                                    {{ strtoupper(substr($oppTeamInMatch->name, 0, 2)) }}
+                                </div>
+                            @endif
                         </div>
                         <div>
                             <div class="match-team-name">{{ $oppTeamInMatch->name }}</div>
@@ -576,9 +586,14 @@
                 @foreach ($incoming as $req)
                     @php $challenger = $req->team; @endphp
                     <div class="challenge-card" data-challenge-id="{{ $req->id }}">
-                        <div class="mm-card-avatar">
-                            {{ strtoupper(substr($challenger->name, 0, 2)) }}
-                        </div>
+                        @if ($challenger && $challenger->logo_path)
+                            <img src="{{ asset('storage/' . $challenger->logo_path) }}" alt="{{ $challenger->name }} Logo"
+                                 class="mm-card-avatar" style="object-fit:cover;">
+                        @else
+                            <div class="mm-card-avatar">
+                                {{ strtoupper(substr($challenger->name, 0, 2)) }}
+                            </div>
+                        @endif
                         <div class="challenge-card-body">
                             <div class="challenge-team-name">{{ $challenger->name }}</div>
                             <div class="challenge-meta">
@@ -627,9 +642,14 @@
             @foreach ($outgoing as $req)
                 @php $opponent = $req->matchedTeam; @endphp
                 <div class="challenge-card">
-                    <div class="mm-card-avatar" style="background:var(--surface-4);border-color:var(--border-medium);color:var(--txt-secondary);">
-                        {{ $opponent ? strtoupper(substr($opponent->name, 0, 2)) : '?' }}
-                    </div>
+                    @if ($opponent && $opponent->logo_path)
+                        <img src="{{ asset('storage/' . $opponent->logo_path) }}" alt="{{ $opponent->name }} Logo"
+                             class="mm-card-avatar" style="object-fit:cover;">
+                    @else
+                        <div class="mm-card-avatar" style="background:var(--surface-4);border-color:var(--border-medium);color:var(--txt-secondary);">
+                            {{ $opponent ? strtoupper(substr($opponent->name, 0, 2)) : '?' }}
+                        </div>
+                    @endif
                     <div class="challenge-card-body">
                         <div class="challenge-team-name">{{ $opponent->name ?? 'Tim tidak ditemukan' }}</div>
                         <div class="challenge-meta">
@@ -677,7 +697,12 @@
                 <a href="{{ route('matches.show', $match) }}" class="match-card status-completed">
                     <div class="match-card-teams">
                         <div>
-                            <div class="match-team-ava">{{ strtoupper(substr($myTeamInMatch->name, 0, 2)) }}</div>
+                            @if ($myTeamInMatch->logo_path)
+                                <img src="{{ asset('storage/' . $myTeamInMatch->logo_path) }}" alt="{{ $myTeamInMatch->name }} Logo"
+                                     class="match-team-ava" style="object-fit:cover;">
+                            @else
+                                <div class="match-team-ava">{{ strtoupper(substr($myTeamInMatch->name, 0, 2)) }}</div>
+                            @endif
                         </div>
                         <div>
                             <div class="match-team-name">{{ $myTeamInMatch->name }}</div>
@@ -685,9 +710,14 @@
                         </div>
                         <div class="match-score">{{ $myScore }} – {{ $oppScore }}</div>
                         <div>
-                            <div class="match-team-ava" style="background:var(--surface-4);border-color:var(--border-medium);color:var(--txt-secondary);">
-                                {{ strtoupper(substr($oppTeamInMatch->name, 0, 2)) }}
-                            </div>
+                            @if ($oppTeamInMatch->logo_path)
+                                <img src="{{ asset('storage/' . $oppTeamInMatch->logo_path) }}" alt="{{ $oppTeamInMatch->name }} Logo"
+                                     class="match-team-ava" style="object-fit:cover;">
+                            @else
+                                <div class="match-team-ava" style="background:var(--surface-4);border-color:var(--border-medium);color:var(--txt-secondary);">
+                                    {{ strtoupper(substr($oppTeamInMatch->name, 0, 2)) }}
+                                </div>
+                            @endif
                         </div>
                         <div>
                             <div class="match-team-name">{{ $oppTeamInMatch->name }}</div>

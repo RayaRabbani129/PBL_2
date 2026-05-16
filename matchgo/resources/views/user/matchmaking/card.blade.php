@@ -31,8 +31,11 @@
 <div class="mm-team-card {{ $rank === 1 ? 'rank-1' : '' }}">
 
     <div class="mm-rank {{ $rankClass }}">#{{ $rank }}</div>
-
-    <div class="mm-card-avatar">{{ strtoupper(substr($team->name, 0, 2)) }}</div>
+    @if ($team->logo_path)
+        <img src="{{ asset('storage/' . $team->logo_path) }}" alt="Logo {{ $team->name }}" class="mm-card-avatar" style="object-fit: cover;">
+    @else
+        <div class="mm-card-avatar">{{ strtoupper(substr($team->name, 0, 2)) }}</div>
+    @endif
 
     <div class="mm-card-body">
         <div class="mm-card-team-name">{{ $team->name }}</div>
@@ -107,6 +110,7 @@
             class="mm-challenge-btn js-open-challenge"
             data-action="{{ route('matchmaking.challenge', $team) }}"
             data-name="{{ $team->name }}"
+            data-logo="{{ $team->logo_path }}"
             data-initials="{{ strtoupper(substr($team->name, 0, 2)) }}"
             data-meta="{{ $teamMeta }}"
         >

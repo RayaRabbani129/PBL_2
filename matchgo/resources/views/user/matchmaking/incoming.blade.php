@@ -206,7 +206,11 @@
             @php $challenger = $challenge->team; @endphp
 
             <div class="mm-challenge-card">
-                <div class="mm-challenge-avatar">{{ strtoupper(substr($challenger->name, 0, 2)) }}</div>
+                @if ($challenger && $challenger->logo_path)
+                    <img src="{{ asset('storage/' . $challenger->logo_path) }}" alt="Logo {{ $challenger->name }}" class="mm-challenge-avatar" style="object-fit: cover;">
+                @else
+                    <div class="mm-challenge-avatar">{{ strtoupper(substr($challenger->name, 0, 2)) }}</div>
+                @endif
 
                 <div class="mm-challenge-body">
                     <div class="mm-challenge-team-name">{{ $challenger->name }}</div>

@@ -1325,8 +1325,8 @@
             { title: 'Tim Saya', description: 'Kelola anggota tim, lihat status pertandingan, dan atur formasi dalam satu tempat.', selector: '#mgSidebar .mg-nav-item[href*="/team"]' },
             { title: 'Matchmaking', description: 'Cari pertandingan yang cocok, ajukan tantangan, dan temukan lawan terbaik.', selector: '#mgSidebar .mg-nav-item[href*="/matchmaking"]' },
             { title: 'Pertandingan', description: 'Lihat semua jadwal dan hasil pertandingan yang telah Anda ikuti.', selector: '#mgSidebar .mg-nav-item[href*="/matches"]' },
-            { title: 'Notifikasi & Bantuan', description: 'Ikon ini memberi tahu update penting. Tekan tombol tutorial setiap kali butuh bantuan cepat.', selector: '#startTutorial' },
-            { title: 'Kartu fungsi', description: 'Di halaman ini, kartu-kartu menampilkan informasi penting dan jalur ke tindakan utama.', selector: 'main .dash-card, main .stat-card, main .card-matchgo, main .preview-card, main .mm-team-card' }
+            { title: 'NBantuan', description: 'Tekan tombol tutorial setiap kali butuh bantuan cepat.', selector: '#startTutorial' },
+            // { title: 'Kartu fungsi', description: 'Di halaman ini, kartu-kartu menampilkan informasi penting dan jalur ke tindakan utama.', selector: 'main .dash-card, main .stat-card, main .card-matchgo, main .preview-card, main .mm-team-card' }
         ],
         currentStep: 0,
         open()  { this.currentStep = 0; this.overlay.classList.add('open'); document.body.style.overflow = 'hidden'; this.showStep(); },

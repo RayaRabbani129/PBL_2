@@ -128,7 +128,11 @@
             @php $opponent = $challenge->matchedTeam; @endphp
 
             <div class="mm-out-card status-{{ $challenge->status }}">
-                <div class="mm-out-avatar">{{ $opponent ? strtoupper(substr($opponent->name, 0, 2)) : '?' }}</div>
+                @if ($opponent && $opponent->logo_path)
+                    <img src="{{ asset('storage/' . $opponent->logo_path) }}" alt="Logo {{ $opponent->name }}" class="mm-out-avatar" style="object-fit: cover;">
+                @else
+                    <div class="mm-out-avatar">{{ $opponent ? strtoupper(substr($opponent->name, 0, 2)) : '?' }}</div>
+                @endif    
 
                 <div class="mm-out-body">
                     <div class="mm-out-team-name">{{ $opponent->name ?? 'Tim tidak ditemukan' }}</div>

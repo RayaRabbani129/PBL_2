@@ -215,7 +215,13 @@
     <div class="match-vs-block">
         {{-- My team --}}
         <div class="match-team-side">
-            <div class="match-team-avatar">{{ strtoupper(substr($myTeamR->name ?? '?', 0, 2)) }}</div>
+            @if ($myTeamR && $myTeamR->logo_path)
+                <img src="{{ asset('storage/' . $myTeamR->logo_path) }}" alt="Logo {{ $myTeamR->name }}" class="match-team-avatar" style="object-fit: cover; position:absolute; left:0; top:0;">
+            @else
+                <div class="match-team-avatar">
+                    {{ strtoupper(substr($myTeamR->name ?? '?', 0, 2)) }}
+                </div>
+            @endif
             <div class="match-team-name">{{ $myTeamR->name ?? '—' }}</div>
             <span class="match-team-label">Saya</span>
         </div>
@@ -242,7 +248,11 @@
 
         {{-- Opponent --}}
         <div class="match-team-side">
-            <div class="match-team-avatar opp">{{ strtoupper(substr($oppTeam->name ?? '?', 0, 2)) }}</div>
+            @if ($oppTeam && $oppTeam->logo_path)
+                <img src="{{ asset('storage/' . $oppTeam->logo_path) }}" alt="Logo {{ $oppTeam->name }}" class="match-team-avatar opp" style="object-fit: cover; position:absolute; left:0; top:0;">
+            @else
+                <div class="match-team-avatar opp">{{ strtoupper(substr($oppTeam->name ?? '?', 0, 2)) }}</div>
+            @endif
             <div class="match-team-name" style="color:var(--txt-secondary);">{{ $oppTeam->name ?? '—' }}</div>
             <span class="match-team-label">Lawan</span>
         </div>

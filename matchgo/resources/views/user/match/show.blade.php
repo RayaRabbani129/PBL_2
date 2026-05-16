@@ -356,9 +356,13 @@
             <div class="match-vs-panel">
                 {{-- My Team --}}
                 <div class="match-team-block">
-                    <div class="match-team-big-avatar mine">
-                        {{ strtoupper(substr($myTeamInMatch->name ?? '?', 0, 2)) }}
-                    </div>
+                    @if ($myTeamInMatch && $myTeamInMatch->logo_path)
+                        <img src="{{ asset('storage/' . $myTeamInMatch->logo_path) }}" alt="Logo {{ $myTeamInMatch->name }}" class="match-team-big-avatar mine" style="object-fit: cover;">
+                    @else
+                         <div class="match-team-big-avatar mine">
+                            {{ strtoupper(substr($myTeamInMatch->name ?? '?', 0, 2)) }}
+                        </div>
+                    @endif
                     <div class="match-team-big-name">{{ $myTeamInMatch->name }}</div>
                     <span class="match-team-big-label">Tim Saya</span>
                 </div>
@@ -390,9 +394,13 @@
 
                 {{-- Opponent --}}
                 <div class="match-team-block">
-                    <div class="match-team-big-avatar opp">
-                        {{ strtoupper(substr($oppTeamInMatch->name ?? '?', 0, 2)) }}
-                    </div>
+                    @if ($oppTeamInMatch && $oppTeamInMatch->logo_path)
+                        <img src="{{ asset('storage/' . $oppTeamInMatch->logo_path) }}" alt="Logo {{ $oppTeamInMatch->name }}" class="match-team-big-avatar opp" style="object-fit: cover;">
+                    @else
+                         <div class="match-team-big-avatar opp">
+                            {{ strtoupper(substr($oppTeamInMatch->name ?? '?', 0, 2)) }}
+                        </div>
+                    @endif
                     <div class="match-team-big-name" style="color:var(--txt-secondary);">{{ $oppTeamInMatch->name }}</div>
                     <span class="match-team-big-label">Lawan</span>
                 </div>
