@@ -5,26 +5,28 @@ namespace App\Filament\FieldAdmin\Resources;
 use App\Filament\FieldAdmin\Resources\VenueScheduleResource\Pages;
 use App\Models\Field;
 use App\Models\VenueSchedule;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
-use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Get;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Tables;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\ValidationException;
@@ -34,84 +36,54 @@ class VenueScheduleResource extends Resource
     protected static ?string $model = VenueSchedule::class;
 
     protected static ?string $navigationLabel = 'Jadwal Booking';
-
-    protected static ?string $modelLabel = 'Jadwal';
-
+    protected static ?string $modelLabel       = 'Jadwal';
     protected static ?string $pluralModelLabel = 'Jadwal Booking';
-
-    protected static ?int $navigationSort = 2;
+    protected static ?int    $navigationSort   = 2;
 
     public static function getNavigationIcon(): string|\BackedEnum|null
     {
         return 'heroicon-o-calendar-days';
     }
 
-    /**
-     * Hanya tampilkan jadwal venue milik admin login
-     */
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->whereHas('venue.fieldAdmins', function ($query) {
-                $query->where('user_id', auth()->id());
-            });
+            ->whereHas('venue.fieldAdmins', fn ($q) => $q->where('user_id', auth()->id()))
+            ->with(['field', 'venue']);
     }
 
+    // ─────────────────────────────────────────────────────────────
+    //  FORM
+    // ─────────────────────────────────────────────────────────────
     public static function form(Schema $form): Schema
     {
-        $user = auth()->user();
-
-        $venue = $user
-            ? $user->managedVenues()->first()
-            : null;
+        $venue = auth()->user()?->managedVenues()?->first();
 
         return $form->schema([
-
             Section::make('Informasi Venue')
                 ->icon('heroicon-o-building-office-2')
-                ->description('Venue yang Anda kelola')
                 ->schema([
-
                     Placeholder::make('venue_name')
                         ->label('Nama Venue')
-                        ->content(
-                            $venue?->name ?? 'Belum ada venue'
-                        ),
+                        ->content($venue?->name ?? '-'),
 
                     Placeholder::make('venue_city')
                         ->label('Kota')
-                        ->content(
-                            $venue?->city ?? '-'
-                        ),
-
-                    Placeholder::make('venue_address')
-                        ->label('Alamat')
-                        ->content(
-                            $venue?->address ?? '-'
-                        )
-                        ->columnSpanFull(),
-
+                        ->content($venue?->city ?? '-'),
                 ])
                 ->columns(2),
 
-            Section::make('Pengaturan Jadwal')
+            Section::make('Detail Jadwal')
                 ->icon('heroicon-o-calendar')
-                ->description('Atur jadwal lapangan venue')
                 ->schema([
-
                     Select::make('field_id')
                         ->label('Lapangan')
                         ->options(function () use ($venue) {
-
-                            if (! $venue) {
-                                return [];
-                            }
-
+                            if (! $venue) return [];
                             return Field::query()
                                 ->where('venue_id', $venue->id)
                                 ->where('status', 'active')
                                 ->pluck('name', 'id');
-
                         })
                         ->searchable()
                         ->preload()
@@ -138,69 +110,80 @@ class VenueScheduleResource extends Resource
 
                     Toggle::make('is_available')
                         ->label('Tersedia untuk booking')
-                        ->default(true),
-
+                        ->default(true)
+                        ->columnSpanFull(),
                 ])
                 ->columns(2),
-
         ]);
     }
 
+    // ─────────────────────────────────────────────────────────────
+    //  TABLE
+    // ─────────────────────────────────────────────────────────────
     public static function table(Table $table): Table
     {
         return $table
             ->striped()
             ->defaultSort('date', 'asc')
+            ->defaultGroup(
+                Group::make('date')
+                    ->label('Tanggal')
+                    ->date()
+                    ->collapsible()
+            )
 
             ->columns([
-
                 TextColumn::make('field.name')
                     ->label('Lapangan')
                     ->searchable()
                     ->sortable()
-                    ->weight('bold')
                     ->badge()
-                    ->color('primary'),
+                    ->color('primary')
+                    ->icon('heroicon-m-map-pin'),
 
                 TextColumn::make('date')
                     ->label('Tanggal')
-                    ->date('d F Y')
+                    ->date('d M Y')
                     ->sortable()
-                    ->badge()
-                    ->color('gray'),
+                    ->description(fn ($record) => $record->date
+                        ? \Carbon\Carbon::parse($record->date)->translatedFormat('l')
+                        : null
+                    ),
 
+                // Jam start–end dalam satu kolom
                 TextColumn::make('start_time')
-                    ->label('Mulai')
-                    ->time('H:i')
+                    ->label('Waktu')
+                    ->formatStateUsing(fn ($record) =>
+                        \Carbon\Carbon::parse($record->start_time)->format('H:i')
+                        . ' – '
+                        . \Carbon\Carbon::parse($record->end_time)->format('H:i')
+                    )
                     ->badge()
-                    ->color('success'),
+                    ->color('gray')
+                    ->icon('heroicon-m-clock'),
 
-                TextColumn::make('end_time')
-                    ->label('Selesai')
-                    ->time('H:i')
+                TextColumn::make('duration')
+                    ->label('Durasi')
+                    ->getStateUsing(fn ($record) =>
+                        \Carbon\Carbon::parse($record->start_time)
+                            ->diffInMinutes(\Carbon\Carbon::parse($record->end_time)) . ' mnt'
+                    )
                     ->badge()
-                    ->color('warning'),
+                    ->color('info'),
 
-                IconColumn::make('is_available')
+                // Satu kolom gabungan (hilangkan IconColumn duplikat)
+                TextColumn::make('status_label')
                     ->label('Status')
-                    ->boolean(),
-
-                BadgeColumn::make('status_badge')
-                    ->label('Kondisi')
-                    ->getStateUsing(function ($record) {
-                        return $record->is_available
-                            ? 'Tersedia'
-                            : 'Tidak Tersedia';
-                    })
-                    ->colors([
-                        'success' => 'Tersedia',
-                        'danger' => 'Tidak Tersedia',
-                    ]),
-
+                    ->getStateUsing(fn ($record) => $record->is_available ? 'Tersedia' : 'Tutup')
+                    ->badge()
+                    ->color(fn ($state) => $state === 'Tersedia' ? 'success' : 'danger')
+                    ->icon(fn ($state) => $state === 'Tersedia'
+                        ? 'heroicon-m-check-circle'
+                        : 'heroicon-m-x-circle'
+                    ),
             ])
 
             ->filters([
-
                 SelectFilter::make('field_id')
                     ->label('Lapangan')
                     ->relationship('field', 'name')
@@ -208,75 +191,127 @@ class VenueScheduleResource extends Resource
                     ->preload(),
 
                 TernaryFilter::make('is_available')
-                    ->label('Status Ketersediaan'),
+                    ->label('Status')
+                    ->trueLabel('Tersedia')
+                    ->falseLabel('Tutup')
+                    ->native(false),
 
+                Filter::make('date_range')
+                    ->label('Rentang Tanggal')
+                    ->form([
+                        DatePicker::make('from')->label('Dari')->native(false),
+                        DatePicker::make('until')->label('Sampai')->native(false),
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        return $query
+                            ->when($data['from'],  fn ($q) => $q->whereDate('date', '>=', $data['from']))
+                            ->when($data['until'], fn ($q) => $q->whereDate('date', '<=', $data['until']));
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['from'])  $indicators[] = 'Dari: ' . \Carbon\Carbon::parse($data['from'])->format('d M Y');
+                        if ($data['until']) $indicators[] = 'Sampai: ' . \Carbon\Carbon::parse($data['until'])->format('d M Y');
+                        return $indicators;
+                    }),
+
+                Filter::make('upcoming')
+                    ->label('Hanya Mendatang')
+                    ->query(fn (Builder $q) => $q->whereDate('date', '>=', now()))
+                    ->toggle(),
+
+                Filter::make('today')
+                    ->label('Hari Ini Saja')
+                    ->query(fn (Builder $q) => $q->whereDate('date', today()))
+                    ->toggle(),
             ])
+            ->filtersLayout(FiltersLayout::Dropdown)
+            ->filtersTriggerAction(
+                fn (Action $action) => $action
+                    ->button()
+                    ->label('Filter')
+                    ->icon('heroicon-o-funnel')
+            )
 
             ->actions([
+                // Toggle slot — langsung terlihat di baris
+                Action::make('toggle_available')
+                    ->label(fn ($record) => $record->is_available ? 'Tutup' : 'Buka')
+                    ->icon(fn ($record) => $record->is_available
+                        ? 'heroicon-o-lock-closed'
+                        : 'heroicon-o-lock-open'
+                    )
+                    ->color(fn ($record) => $record->is_available ? 'danger' : 'success')
+                    ->action(fn ($record) => $record->update(['is_available' => ! $record->is_available]))
+                    ->tooltip(fn ($record) => $record->is_available ? 'Tutup slot' : 'Buka slot'),
 
-                EditAction::make()
-                    ->modalWidth('2xl'),
-
-                DeleteAction::make(),
-
+                // Edit & Delete dikumpulkan dalam satu dropdown
+                ActionGroup::make([
+                    EditAction::make()->modalWidth('2xl'),
+                    DeleteAction::make()->requiresConfirmation(),
+                ])->icon('heroicon-m-ellipsis-vertical'),
             ])
 
             ->bulkActions([
-
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
+                    BulkAction::make('bulk_open')
+                        ->label('Buka Slot')
+                        ->icon('heroicon-o-lock-open')
+                        ->color('success')
+                        ->action(fn ($records) => $records->each->update(['is_available' => true]))
+                        ->deselectRecordsAfterCompletion(),
 
+                    BulkAction::make('bulk_close')
+                        ->label('Tutup Slot')
+                        ->icon('heroicon-o-lock-closed')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('Tutup semua slot yang dipilih?')
+                        ->modalDescription('Slot yang ditutup tidak bisa dipesan oleh pengguna.')
+                        ->action(fn ($records) => $records->each->update(['is_available' => false]))
+                        ->deselectRecordsAfterCompletion(),
+
+                    DeleteBulkAction::make()->requiresConfirmation(),
+                ]),
+            ])
+
+            ->emptyStateIcon('heroicon-o-calendar-days')
+            ->emptyStateHeading('Belum ada jadwal')
+            ->emptyStateDescription('Gunakan "Generate Massal" untuk membuat banyak slot, atau "Tambah Manual" untuk satu slot.')
+            ->emptyStateActions([
+                Action::make('go_generate')
+                    ->label('Generate Massal')
+                    ->icon('heroicon-o-sparkles')
+                    ->url(fn () => static::getUrl('index')),
             ]);
     }
 
-    /**
-     * VALIDASI BENTROK JADWAL
-     */
-    public static function mutateFormDataBeforeCreate(array $data): array
+    // ─────────────────────────────────────────────────────────────
+    //  VALIDASI BENTROK — dipakai dari CreateVenueSchedule & EditVenueSchedule
+    // ─────────────────────────────────────────────────────────────
+    public static function validateSchedule(array $data, ?int $excludeId = null): void
     {
-        static::validateSchedule($data);
-
-        $venue = auth()->user()?->managedVenues()?->first();
-
-        $data['venue_id'] = $venue->id;
-
-        return $data;
-    }
-
-    public static function mutateFormDataBeforeSave(array $data): array
-    {
-        static::validateSchedule($data);
-
-        return $data;
-    }
-
-    protected static function validateSchedule(array $data): void
-    {
-        $exists = VenueSchedule::query()
+        $query = VenueSchedule::query()
             ->where('field_id', $data['field_id'])
             ->where('date', $data['date'])
+            ->where(fn ($q) => $q
+                ->where('start_time', '<', $data['end_time'])
+                ->where('end_time',   '>',  $data['start_time'])
+            );
 
-            ->where(function ($query) use ($data) {
-                $query
-                    ->whereBetween('start_time', [
-                        $data['start_time'],
-                        $data['end_time'],
-                    ])
-                    ->orWhereBetween('end_time', [
-                        $data['start_time'],
-                        $data['end_time'],
-                    ]);
-            })
-            ->exists();
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
 
-        if ($exists) {
+        if ($query->exists()) {
             throw ValidationException::withMessages([
-                'start_time' => 'Jadwal bentrok dengan jadwal lain.',
+                'start_time' => 'Jadwal bentrok dengan jadwal lain pada lapangan dan tanggal yang sama.',
             ]);
         }
     }
 
+    // ─────────────────────────────────────────────────────────────
+    //  PAGES
+    // ─────────────────────────────────────────────────────────────
     public static function getPages(): array
     {
         return [

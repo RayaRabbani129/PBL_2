@@ -2,14 +2,18 @@
 
 namespace App\Filament\Resources\Teams\Tables;
 
+use App\Models\TeamStatusLog;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Tables\Columns\IconColumn;
+use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class TeamsTable
 {
@@ -47,7 +51,7 @@ class TeamsTable
                     ->searchable()
                     ->sortable()
                     ->weight('bold')
-                    ->description(fn ($record) => $record->city . ', ' . $record->province)
+                    ->description(fn ($record) => trim(($record->city ?? '-') . ', ' . ($record->province ?? '-')))
                     ->icon('heroicon-m-shield-check')
                     ->limit(28),
 
@@ -55,12 +59,14 @@ class TeamsTable
                     ->label('Owner')
                     ->searchable()
                     ->sortable()
-                    ->icon('heroicon-m-user-circle'),
+                    ->icon('heroicon-m-user-circle')
+                    ->placeholder('-'),
 
                 TextColumn::make('owner.email')
                     ->label('Email Owner')
                     ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->placeholder('-'),
 
                 TextColumn::make('level')
                     ->label('Level')
@@ -79,24 +85,40 @@ class TeamsTable
                         default => '-',
                     }),
 
-                IconColumn::make('status')
+                TextColumn::make('status')
                     ->label('Status')
-                    ->boolean()
-                    ->trueIcon('heroicon-m-check-circle')
-                    ->falseIcon('heroicon-m-x-circle')
-                    ->trueColor('success')
-                    ->falseColor('danger')
-                    ->getStateUsing(fn ($record) => $record->status === 'active'),
+                    ->badge()
+                    ->sortable()
+                    ->color(fn (?string $state): string => match ($state) {
+                        'active' => 'success',
+                        'inactive' => 'gray',
+                        'banned' => 'danger',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (?string $state) => match ($state) {
+                        'active' => 'Active',
+                        'inactive' => 'Inactive',
+                        'banned' => 'Banned',
+                        default => '-',
+                    }),
 
                 TextColumn::make('warning_points')
                     ->label('Warning')
                     ->badge()
+                    ->sortable()
                     ->color(fn ($state) => match (true) {
-                        $state >= 5 => 'danger',
-                        $state >= 3 => 'warning',
+                        (int) $state >= 5 => 'danger',
+                        (int) $state >= 3 => 'warning',
                         default => 'success',
                     })
-                    ->sortable(),
+                    ->default(0),
+
+                TextColumn::make('banned_at')
+                    ->label('Tanggal Ban')
+                    ->dateTime('d M Y H:i')
+                    ->sortable()
+                    ->placeholder('-')
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('members_count')
                     ->label('Members')
@@ -152,7 +174,7 @@ class TeamsTable
 
                 TextColumn::make('total_matches_relasi')
                     ->label('Total Match Relasi')
-                    ->state(fn ($record) => $record->home_matches_count + $record->away_matches_count)
+                    ->state(fn ($record) => ($record->home_matches_count ?? 0) + ($record->away_matches_count ?? 0))
                     ->badge()
                     ->color('gray')
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -182,6 +204,11 @@ class TeamsTable
                     ->placeholder('-')
                     ->toggleable(isToggledHiddenByDefault: true),
 
+                TextColumn::make('latestStatusLog.updater.name')
+                    ->label('Diubah Oleh')
+                    ->placeholder('-')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 TextColumn::make('created_at')
                     ->label('Dibuat')
                     ->dateTime('d M Y')
@@ -207,6 +234,79 @@ class TeamsTable
                     ]),
             ])
             ->recordActions([
+                Action::make('ban')
+                    ->label('Ban')
+                    ->icon('heroicon-o-no-symbol')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Ban Team')
+                    ->modalDescription('Team yang diban tidak dapat digunakan untuk aktivitas matchmaking.')
+                    ->modalSubmitActionLabel('Ya, Ban Team')
+                    ->form([
+                        Textarea::make('reason')
+                            ->label('Alasan Ban')
+                            ->required()
+                            ->rows(3)
+                            ->placeholder('Contoh: Melanggar aturan pertandingan'),
+                    ])
+                    ->visible(fn ($record) => $record->status !== 'banned')
+                    ->action(function ($record, array $data) {
+                        $record->update([
+                            'status' => 'banned',
+                            'banned_at' => now(),
+                            'warning_points' => ((int) $record->warning_points) + 1,
+                        ]);
+
+                        TeamStatusLog::create([
+                            'team_id' => $record->id,
+                            'status' => 'banned',
+                            'reason' => $data['reason'],
+                            'updated_by' => Auth::id(),
+                        ]);
+
+                        Notification::make()
+                            ->title('Team berhasil diban')
+                            ->body("Team {$record->name} sudah diban.")
+                            ->danger()
+                            ->send();
+                    }),
+
+                Action::make('unban')
+                    ->label('Unban')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('Aktifkan Kembali Team')
+                    ->modalDescription('Team akan diaktifkan kembali dan bisa digunakan lagi.')
+                    ->modalSubmitActionLabel('Ya, Aktifkan')
+                    ->form([
+                        Textarea::make('reason')
+                            ->label('Alasan Unban')
+                            ->required()
+                            ->rows(3)
+                            ->placeholder('Contoh: Team sudah menyelesaikan pelanggaran'),
+                    ])
+                    ->visible(fn ($record) => $record->status === 'banned')
+                    ->action(function ($record, array $data) {
+                        $record->update([
+                            'status' => 'active',
+                            'banned_at' => null,
+                        ]);
+
+                        TeamStatusLog::create([
+                            'team_id' => $record->id,
+                            'status' => 'active',
+                            'reason' => $data['reason'],
+                            'updated_by' => Auth::id(),
+                        ]);
+
+                        Notification::make()
+                            ->title('Team berhasil diaktifkan')
+                            ->body("Team {$record->name} sudah aktif kembali.")
+                            ->success()
+                            ->send();
+                    }),
+
                 EditAction::make()
                     ->iconButton()
                     ->color('warning'),

@@ -13,7 +13,6 @@ class CreateVenueSchedule extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $field = Field::findOrFail($data['field_id']);
-
         $data['venue_id'] = $field->venue_id;
 
         return $data;

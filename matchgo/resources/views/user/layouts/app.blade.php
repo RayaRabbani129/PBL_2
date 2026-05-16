@@ -1162,11 +1162,17 @@
 {{-- ── Hitung unread count untuk sidebar & topbar ── --}}
 @php
     $unreadCount = 0;
+    $notificationRingtones = [];
     if (auth()->check()) {
         $unreadCount = \Illuminate\Support\Facades\DB::table('notifications')
             ->where('user_id', auth()->id())
             ->whereIn('status', ['unread', 'sent'])
             ->count();
+        $notificationRingtones = \App\Models\NotificationRingtone::query()
+            ->where('is_active', true)
+            ->pluck('file_path', 'category')
+            ->map(fn ($path) => asset('storage/' . $path))
+            ->toArray();
     }
 @endphp
 
@@ -1402,10 +1408,11 @@
 @auth
 (function () {
     const POLL_URL      = '{{ route("notifications.poll") }}';
-    const POLL_INTERVAL = 15000;
+    const POLL_INTERVAL = 5000;
     const CSRF          = '{{ csrf_token() }}';
 
     let lastUnreadCount = {{ $unreadCount ?? 0 }};
+    const RINGTONES = @json($notificationRingtones ?? []);
 
     /* ── Update badge sidebar + topbar ── */
     function updateSidebarBadge(count) {
@@ -1497,39 +1504,42 @@
     }
 
     /* ── Notif sound ── */
-    // function playNotifSound() {
-    //     try {
-    //         const ctx  = new (window.AudioContext || window.webkitAudioContext)();
-    //         const osc  = ctx.createOscillator();
-    //         const gain = ctx.createGain();
-    //         osc.connect(gain);
-    //         gain.connect(ctx.destination);
-    //         osc.frequency.value = 880;
-    //         gain.gain.setValueAtTime(0.1, ctx.currentTime);
-    //         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-    //         osc.start(ctx.currentTime);
-    //         osc.stop(ctx.currentTime + 0.3);
-    //     } catch (e) {}
-    // }
-
-    function playNotifSound(status) {
+    function playNotifSound(type) {
         try {
-            if (status === 'challenge_accepted') {
-                const audio = new Audio('/sounds/jokowi-saya-akan-lawan.mp3');
-                audio.volume = 1;
-                audio.play();
-            } else if (status === 'challenge_rejected') {
-                const audio = new Audio('/sounds/hidup-jokowi.mp3');
-                audio.volume = 1;
-                audio.play();
-            } else {
-                const audio = new Audio('/sounds/cihuyy.mp3');
-                audio.volume = 1;
-                audio.play();
+            const ringtoneUrl = RINGTONES[type] || RINGTONES['match'] || RINGTONES['booking'];
+
+            if (!ringtoneUrl) {
+                fallbackBeep();
+                return;
             }
+
+            const audio = new Audio(ringtoneUrl);
+            audio.volume = 1;
+
+            audio.play().catch(function () {
+                fallbackBeep();
+            });
         } catch (e) {
-            console.log(e);
+            fallbackBeep();
         }
+    }
+
+    function fallbackBeep() {
+        try {
+            const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+            const osc  = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.frequency.value = 880;
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.3);
+        } catch (e) {}
     }
 
     /* ── Polling ── */
