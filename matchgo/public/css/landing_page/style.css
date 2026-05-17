@@ -9,80 +9,233 @@
 /* ---------- CSS Variables: Dark (default) ---------- */
 :root,
 [data-theme="dark"] {
-  --bg-primary: #070b14;
-  --bg-secondary: #0d1224;
-  --bg-card: rgba(15, 23, 42, 0.6);
-  --bg-glass: rgba(15, 23, 42, 0.45);
-  --bg-navbar: rgba(7, 11, 20, 0.75);
-  --bg-navbar-scroll: rgba(7, 11, 20, 0.92);
-  --bg-mobile-menu: #0d1224;
-  --bg-field-line: rgba(163, 230, 53, 0.06);
-  --bg-grid-line: rgba(163, 230, 53, 0.03);
-  --bg-radial: rgba(163, 230, 53, 0.06);
-  --bg-browser-screen: linear-gradient(180deg, #0f1a2e 0%, #0a1220 100%);
-  --bg-browser-bar: #1a2338;
-  --bg-browser-dots: #2a3654;
-  --bg-info-row: rgba(255,255,255,0.04);
-  --lime: #a3e635;
-  --lime-dim: rgba(163, 230, 53, 0.15);
-  --lime-glow: rgba(163, 230, 53, 0.35);
+
+  /* =========================
+     BRAND
+  ========================= */
+
+  --accent: #A3B14B;
+  --accent-hover: #8f9c40;
+  --accent-light: #d4e170;
+
+  --accent-dim: rgba(163,177,75,0.12);
+  --accent-dim-hover: rgba(163,177,75,0.20);
+
+  /* =========================
+     SURFACE
+  ========================= */
+
+  --surface-0: #0C0C0C;
+  --surface-1: #111111;
+  --surface-2: #161616;
+  --surface-3: #1C1C1C;
+  --surface-4: #242424;
+  --surface-5: #2C2C2C;
+
+  /* =========================
+     BACKGROUND
+  ========================= */
+
+  --bg-primary: var(--surface-0);
+  --bg-secondary: var(--surface-1);
+
+  --bg-card: rgba(22,22,22,0.72);
+  --bg-glass: rgba(28,28,28,0.60);
+
+  --bg-navbar: rgba(12,12,12,0.82);
+  --bg-navbar-scroll: rgba(12,12,12,0.94);
+
+  --bg-mobile-menu: var(--surface-2);
+
+  --bg-field-line: rgba(163,177,75,0.08);
+  --bg-grid-line: rgba(163,177,75,0.035);
+  --bg-radial: rgba(163,177,75,0.08);
+
+  --bg-browser-screen:
+    linear-gradient(
+      180deg,
+      #171717 0%,
+      #111111 100%
+    );
+
+  --bg-browser-bar: #1F1F1F;
+  --bg-browser-dots: #2B2B2B;
+
+  --bg-info-row: rgba(255,255,255,0.045);
+
+  /* =========================
+     COLORS
+  ========================= */
+
+  --lime: var(--accent);
+  --lime-dim: var(--accent-dim);
+  --lime-glow: rgba(163,177,75,0.35);
+
   --cyan: #22d3ee;
-  --cyan-dim: rgba(34, 211, 238, 0.15);
-  --purple: #a78bfa;
-  --purple-dim: rgba(167, 139, 250, 0.15);
+  --cyan-dim: rgba(34,211,238,0.12);
+
+  --purple: #a855f7;
+  --purple-dim: rgba(168,85,247,0.12);
+
   --rose: #fb7185;
-  --rose-dim: rgba(251, 113, 133, 0.15);
+  --rose-dim: rgba(251,113,133,0.12);
+
   --amber: #fbbf24;
-  --amber-dim: rgba(251, 191, 36, 0.15);
+  --amber-dim: rgba(251,191,36,0.12);
+
   --emerald: #34d399;
-  --emerald-dim: rgba(52, 211, 153, 0.15);
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --border-color: rgba(148, 163, 184, 0.1);
-  --shadow-card: 0 20px 60px rgba(0, 0, 0, 0.3);
-  --shadow-navbar: 0 4px 30px rgba(0, 0, 0, 0.3);
+  --emerald-dim: rgba(52,211,153,0.12);
+
+  /* =========================
+     TEXT
+  ========================= */
+
+  --text-primary: #F5F5F0;
+  --text-secondary: #A8A29E;
+  --text-muted: #78716C;
+  --text-faint: #57534E;
+
+  /* =========================
+     BORDER
+  ========================= */
+
+  --border-color: rgba(255,255,255,0.08);
+
+  /* =========================
+     SHADOW
+  ========================= */
+
+  --shadow-card:
+    0 20px 60px rgba(0,0,0,0.42);
+
+  --shadow-navbar:
+    0 4px 30px rgba(0,0,0,0.45);
+
+  /* =========================
+     TYPOGRAPHY
+  ========================= */
+
   --font-heading: 'Space Grotesk', sans-serif;
   --font-body: 'Plus Jakarta Sans', sans-serif;
-  --toggler-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23a3e635' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+
+  /* =========================
+     TOGGLER ICON
+  ========================= */
+
+  --toggler-icon:
+    url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23A3B14B' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
 /* ---------- CSS Variables: Light ---------- */
 [data-theme="light"] {
-  --bg-primary: #f8fafc;
-  --bg-secondary: #f1f5f9;
-  --bg-card: rgba(255, 255, 255, 0.85);
-  --bg-glass: rgba(255, 255, 255, 0.6);
-  --bg-navbar: rgba(248, 250, 252, 0.8);
-  --bg-navbar-scroll: rgba(248, 250, 252, 0.95);
-  --bg-mobile-menu: #f1f5f9;
-  --bg-field-line: rgba(22, 101, 52, 0.06);
-  --bg-grid-line: rgba(22, 101, 52, 0.04);
-  --bg-radial: rgba(163, 230, 53, 0.08);
-  --bg-browser-screen: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  --bg-browser-bar: #e2e8f0;
-  --bg-browser-dots: #cbd5e1;
+
+  /* =========================
+     BRAND
+  ========================= */
+
+  --accent: #7A8C2E;
+  --accent-hover: #69791f;
+  --accent-light: #4D6010;
+
+  --accent-dim: rgba(122,140,46,0.10);
+  --accent-dim-hover: rgba(122,140,46,0.18);
+
+  /* =========================
+     SURFACE
+  ========================= */
+
+  --surface-0: #F8F8F4;
+  --surface-1: #FFFFFF;
+  --surface-2: #F4F4EF;
+  --surface-3: #EEEEE8;
+  --surface-4: #E6E6DF;
+  --surface-5: #DDDDD5;
+
+  /* =========================
+     BACKGROUND
+  ========================= */
+
+  --bg-primary: var(--surface-0);
+  --bg-secondary: var(--surface-2);
+
+  --bg-card: rgba(255,255,255,0.82);
+  --bg-glass: rgba(255,255,255,0.65);
+
+  --bg-navbar: rgba(248,248,244,0.86);
+  --bg-navbar-scroll: rgba(248,248,244,0.96);
+
+  --bg-mobile-menu: var(--surface-1);
+
+  --bg-field-line: rgba(122,140,46,0.08);
+  --bg-grid-line: rgba(122,140,46,0.045);
+  --bg-radial: rgba(122,140,46,0.08);
+
+  --bg-browser-screen:
+    linear-gradient(
+      180deg,
+      #FFFFFF 0%,
+      #F4F4EF 100%
+    );
+
+  --bg-browser-bar: #ECECE5;
+  --bg-browser-dots: #D8D8D0;
+
   --bg-info-row: rgba(0,0,0,0.03);
-  --lime: #65a30d;
-  --lime-dim: rgba(101, 163, 13, 0.12);
-  --lime-glow: rgba(101, 163, 13, 0.25);
+
+  /* =========================
+     COLORS
+  ========================= */
+
+  --lime: var(--accent);
+  --lime-dim: var(--accent-dim);
+  --lime-glow: rgba(122,140,46,0.22);
+
   --cyan: #0891b2;
-  --cyan-dim: rgba(8, 145, 178, 0.1);
-  --purple: #7c3aed;
-  --purple-dim: rgba(124, 58, 237, 0.1);
+  --cyan-dim: rgba(8,145,178,0.10);
+
+  --purple: #9333ea;
+  --purple-dim: rgba(147,51,234,0.10);
+
   --rose: #e11d48;
-  --rose-dim: rgba(225, 29, 72, 0.1);
+  --rose-dim: rgba(225,29,72,0.10);
+
   --amber: #d97706;
-  --amber-dim: rgba(217, 119, 6, 0.1);
+  --amber-dim: rgba(217,119,6,0.10);
+
   --emerald: #059669;
-  --emerald-dim: rgba(5, 150, 105, 0.1);
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  --border-color: rgba(15, 23, 42, 0.08);
-  --shadow-card: 0 20px 60px rgba(0, 0, 0, 0.06);
-  --shadow-navbar: 0 4px 30px rgba(0, 0, 0, 0.06);
-  --toggler-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%2365a30d' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+  --emerald-dim: rgba(5,150,105,0.10);
+
+  /* =========================
+     TEXT
+  ========================= */
+
+  --text-primary: #1A1A17;
+  --text-secondary: #4A4A42;
+  --text-muted: #6E6E64;
+  --text-faint: #9E9E93;
+
+  /* =========================
+     BORDER
+  ========================= */
+
+  --border-color: rgba(0,0,0,0.08);
+
+  /* =========================
+     SHADOW
+  ========================= */
+
+  --shadow-card:
+    0 20px 60px rgba(0,0,0,0.08);
+
+  --shadow-navbar:
+    0 4px 30px rgba(0,0,0,0.08);
+
+  /* =========================
+     TOGGLER ICON
+  ========================= */
+
+  --toggler-icon:
+    url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%237A8C2E' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
 /* ---------- Reset & Base ---------- */
