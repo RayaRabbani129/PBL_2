@@ -11,8 +11,9 @@ class NotificationService
         string $type,
         string $title,
         string $message
-    ): void {
-        Notification::create([
+    ): Notification {
+        
+        return Notification::create([
             'user_id' => $userId,
             'type'    => $type,
             'title'   => $title,
@@ -35,7 +36,7 @@ class NotificationService
     {
         self::send(
             $userId,
-            'match_accepted',
+            'challenge_accepted',
             'Challenge Diterima',
             "{$teamName} menerima challenge pertandingan."
         );
@@ -45,7 +46,7 @@ class NotificationService
     {
         self::send(
             $userId,
-            'reminder',
+            'match',
             'Reminder Jadwal',
             $message
         );
