@@ -16,20 +16,28 @@
     };
 @endphp
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<div class="admin-login-root" data-theme="dark" id="adminLoginRoot">
-
+<x-filament-panels::page.simple>
     <style>
         @import url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css');
 
-        /* ─── Reset Filament simple layout ─── */
+        html,
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: var(--surface-0) !important;
+        }
+
+        .fi-simple-header,
+        .fi-simple-header-heading,
+        .fi-simple-header-subheading,
+        .fi-logo {
+            display: none !important;
+        }
+
         .fi-simple-layout,
         .fi-simple-main,
         .fi-simple-main-ctn,
-        .fi-simple-page,
-        .fi-page,
-        .fi-body {
+        .fi-simple-page {
             width: 100% !important;
             max-width: none !important;
             min-height: 100vh !important;
@@ -37,476 +45,437 @@
             margin: 0 !important;
             background: transparent !important;
         }
+
         .fi-simple-main,
-        .fi-simple-main-ctn { display: block !important; }
+        .fi-simple-main-ctn {
+            display: block !important;
+        }
 
-        /* Sembunyikan heading/subheading bawaan Filament */
-        .fi-simple-page > .fi-simple-page-ctn > h1,
-        .fi-simple-page > .fi-simple-page-ctn > p { display: none !important; }
+        .admin-login-root,
+        .admin-login-root[data-theme="dark"] {
+            --accent: #A3B14B;
+            --accent-hover: #8f9c40;
+            --accent-light: #d4e170;
 
-        /* ─── CSS Variables ─── */
-        .admin-login-root {
-            --lime:           #a3e635;
-            --lime-hover:     #bef264;
-            --lime-dim:       rgba(163, 230, 53, 0.12);
-            --bg:             #070b14;
-            --text-primary:   #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted:     #64748b;
-            --border-color:   rgba(148, 163, 184, 0.10);
-            --input-bg:       rgba(255, 255, 255, 0.06);
-            --input-border:   rgba(255, 255, 255, 0.10);
-            --card-bg:        rgba(255, 255, 255, 0.04);
-            --card-border:    rgba(255, 255, 255, 0.08);
-            --nav-bg:         rgba(7, 11, 20, 0.85);
-            --error-text:     #fca5a5;
-            width: 100vw !important;
-            min-height: 100vh !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            background: var(--bg);
-            color: var(--text-primary);
-            font-family: 'Inter', system-ui, sans-serif;
+            --accent-dim: rgba(163,177,75,0.12);
+            --accent-dim-hover: rgba(163,177,75,0.20);
+
+            --surface-0: #0C0C0C;
+            --surface-1: #111111;
+            --surface-2: #161616;
+            --surface-3: #1C1C1C;
+            --surface-4: #242424;
+            --surface-5: #2C2C2C;
+
+            --txt-primary: #F5F5F0;
+            --txt-secondary: #A8A29E;
+            --txt-muted: #78716C;
+            --txt-faint: #57534E;
+
+            --border-subtle: rgba(255,255,255,0.06);
+            --border-medium: rgba(255,255,255,0.10);
+            --border-strong: rgba(255,255,255,0.18);
+
+            --topbar-bg: rgba(12,12,12,0.88);
+
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.6);
+            --btn-primary-txt: #0C0C0C;
+
+            width: 100%;
+            min-height: 100vh;
+            background: var(--surface-0);
+            color: var(--txt-primary);
+            font-family: Inter, system-ui, sans-serif;
             position: relative;
             overflow-x: hidden;
         }
+
         .admin-login-root[data-theme="light"] {
-            --lime:           #65a30d;
-            --lime-hover:     #84cc16;
-            --lime-dim:       rgba(101, 163, 13, 0.10);
-            --bg:             #f8fafc;
-            --text-primary:   #0f172a;
-            --text-secondary: #475569;
-            --text-muted:     #64748b;
-            --border-color:   rgba(15, 23, 42, 0.08);
-            --input-bg:       #ffffff;
-            --input-border:   #e2e8f0;
-            --card-bg:        rgba(255, 255, 255, 0.95);
-            --card-border:    rgba(0, 0, 0, 0.08);
-            --nav-bg:         rgba(248, 250, 252, 0.88);
-            --error-text:     #be123c;
-            background: var(--bg);
+            --accent: #7A8C2E;
+            --accent-hover: #69791f;
+            --accent-light: #4D6010;
+
+            --accent-dim: rgba(122,140,46,0.10);
+            --accent-dim-hover: rgba(122,140,46,0.18);
+
+            --surface-0: #F8F8F4;
+            --surface-1: #FFFFFF;
+            --surface-2: #F4F4EF;
+            --surface-3: #EEEEE8;
+            --surface-4: #E6E6DF;
+            --surface-5: #DDDDD5;
+
+            --txt-primary: #1A1A17;
+            --txt-secondary: #4A4A42;
+            --txt-muted: #6E6E64;
+            --txt-faint: #9E9E93;
+
+            --border-subtle: rgba(0,0,0,0.07);
+            --border-medium: rgba(0,0,0,0.11);
+            --border-strong: rgba(0,0,0,0.18);
+
+            --topbar-bg: rgba(248,248,244,0.92);
+
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+            --btn-primary-txt: #FFFFFF;
+
+            background: var(--surface-0);
+            color: var(--txt-primary);
         }
 
-        /* ─── Navbar ─── */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(var(--border-subtle) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: .75;
+        }
+
+        .bg-radial-top {
+            position: fixed;
+            top: -250px;
+            left: 50%;
+            z-index: 0;
+            width: 700px;
+            height: 700px;
+            transform: translateX(-50%);
+            pointer-events: none;
+            background: radial-gradient(circle, var(--accent-dim-hover), transparent 70%);
+            filter: blur(60px);
+        }
+
         .navbar-matchgo {
-            background: var(--nav-bg);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: var(--topbar-bg);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border-color);
-            padding: 0.7rem 0;
-            z-index: 1050;
+            border-bottom: 1px solid var(--border-subtle);
+            z-index: 50;
         }
-        .navbar-brand-custom {
-            font-weight: 800;
-            font-size: 1.4rem;
-            color: var(--text-primary) !important;
+
+        .navbar-inner {
+            height: 64px;
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 0 1rem;
             display: flex;
             align-items: center;
-            gap: 8px;
-            text-decoration: none;
+            justify-content: space-between;
         }
+
         .theme-toggle {
-            width: 38px; height: 38px;
-            border: 1px solid var(--border-color);
+            width: 38px;
+            height: 38px;
+            border: 1px solid var(--border-subtle);
             border-radius: 10px;
             background: transparent;
-            color: var(--text-secondary);
-            display: flex; align-items: center; justify-content: center;
+            color: var(--txt-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            transition: all .25s;
-            font-size: 1rem;
+            transition: all .2s ease;
         }
-        .theme-toggle:hover { background: var(--lime-dim); color: var(--lime); border-color: var(--lime); }
-        .theme-toggle .icon-sun  { display: none; }
-        .theme-toggle .icon-moon { display: inline; }
-        [data-theme="light"] .theme-toggle .icon-sun  { display: inline; }
-        [data-theme="light"] .theme-toggle .icon-moon { display: none; }
 
-        /* ─── Layout ─── */
+        .theme-toggle:hover {
+            background: var(--accent-dim);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .theme-toggle .icon-sun {
+            display: none;
+        }
+
+        .theme-toggle .icon-moon {
+            display: inline;
+        }
+
+        [data-theme="light"] .theme-toggle .icon-sun {
+            display: inline;
+        }
+
+        [data-theme="light"] .theme-toggle .icon-moon {
+            display: none;
+        }
+
         .admin-login-page {
-            position: relative;
-            z-index: 2;
             min-height: 100vh;
             width: 100%;
-            padding: clamp(5.5rem, 12vw, 8rem) 1rem clamp(2rem, 5vw, 4rem) !important;
+            padding: 7rem 1rem 2rem;
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: center;
+            position: relative;
+            z-index: 2;
         }
-        .admin-login-shell { width: 100%; max-width: 440px; }
+
+        .admin-login-shell {
+            width: 100%;
+            max-width: 440px;
+            position: relative;
+            z-index: 2;
+        }
+
         .admin-back-home {
             font-size: .82rem;
-            color: var(--text-muted);
+            color: var(--accent);
             text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: .35rem;
-            margin-bottom: 1.25rem;
-            transition: color .2s;
+            margin-bottom: 1.5rem;
+            transition: opacity .2s ease;
         }
-        .admin-back-home:hover { color: var(--lime); text-decoration: none; }
 
-        /* ─── Card ─── */
+        .admin-back-home:hover {
+            opacity: .75;
+            color: var(--accent);
+        }
+
         .admin-login-card {
             width: 100%;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 2.25rem 2rem;
+            background: var(--surface-2);
+            border: 1px solid var(--border-subtle);
+            border-radius: 24px;
+            padding: 2.5rem 2rem;
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            position: relative;
-            z-index: 2;
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+            box-shadow: var(--shadow-md);
+            color: var(--txt-primary);
         }
-        [data-theme="light"] .admin-login-card { box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08); }
 
         .admin-login-title {
-            font-size: 1.45rem;
+            font-size: 1.5rem;
             font-weight: 700;
-            color: var(--text-primary);
-            margin: 0 0 .3rem;
-            line-height: 1.3;
+            color: var(--txt-primary) !important;
+            margin-bottom: .25rem;
         }
+
         .admin-login-subtitle {
-            font-size: .875rem;
-            color: var(--text-muted);
-            margin: 0 0 1.5rem;
+            font-size: .92rem;
+            color: var(--txt-muted) !important;
+            margin-bottom: 1.5rem;
             line-height: 1.55;
         }
 
-        /* ─── Override Filament v5 form fields ─── */
-        .admin-login-card .fi-fo-field-wrp { margin-bottom: .85rem; }
-
-        .admin-login-card .fi-fo-field-wrp-label,
-        .admin-login-card .fi-fo-field-wrp > label {
-            display: block !important;
-            font-size: .82rem !important;
-            font-weight: 600 !important;
-            color: var(--text-secondary) !important;
-            margin-bottom: .38rem !important;
+        .admin-login-card form {
+            width: 100% !important;
         }
+
+        .admin-login-card label,
+        .admin-login-card .fi-fo-field-wrp-label {
+            color: var(--txt-secondary) !important;
+            font-size: .85rem !important;
+            font-weight: 600 !important;
+        }
+
         .admin-login-card .fi-input-wrp {
-            background: var(--input-bg) !important;
-            border: 1px solid var(--input-border) !important;
-            border-radius: 10px !important;
-            transition: border-color .2s, box-shadow .2s !important;
+            background: var(--surface-3) !important;
+            border: 1px solid var(--border-medium) !important;
+            border-radius: 12px !important;
             box-shadow: none !important;
         }
+
         .admin-login-card .fi-input-wrp:focus-within {
-            border-color: var(--lime) !important;
-            box-shadow: 0 0 0 3px var(--lime-dim) !important;
+            border-color: var(--accent) !important;
+            background: var(--surface-4) !important;
+            box-shadow: 0 0 0 4px var(--accent-dim) !important;
         }
+
         .admin-login-card .fi-input {
             background: transparent !important;
-            color: var(--text-primary) !important;
-            font-size: .9rem !important;
+            color: var(--txt-primary) !important;
             border: none !important;
             box-shadow: none !important;
-            padding: .65rem .9rem !important;
         }
-        .admin-login-card .fi-input::placeholder { color: var(--text-muted) !important; }
-        .admin-login-card .fi-input:focus { outline: none !important; box-shadow: none !important; }
 
-        /* Password toggle icon */
+        .admin-login-card .fi-input::placeholder {
+            color: var(--txt-muted) !important;
+        }
+
         .admin-login-card .fi-input-wrp button {
-            color: var(--text-muted) !important;
+            color: var(--txt-muted) !important;
             background: transparent !important;
+        }
+
+        .admin-login-card .fi-input-wrp button:hover {
+            color: var(--accent) !important;
+        }
+
+        .admin-login-card input[type="checkbox"] {
+            accent-color: var(--accent) !important;
+        }
+
+        .admin-login-card .fi-fo-checkbox label,
+        .admin-login-card .fi-checkbox-input + label {
+            color: var(--txt-muted) !important;
+        }
+
+        .admin-login-card .fi-btn {
+            width: 100% !important;
+            justify-content: center !important;
+            border-radius: 12px !important;
+            background: var(--accent) !important;
+            color: var(--btn-primary-txt) !important;
+            font-weight: 700 !important;
+            margin-top: 1rem !important;
+            padding: .8rem 1.5rem !important;
             border: none !important;
-            transition: color .2s !important;
-        }
-        .admin-login-card .fi-input-wrp button:hover { color: var(--lime) !important; }
-
-        /* Checkbox (Remember me) */
-        .admin-login-card .fi-checkbox-input,
-        .admin-login-card input[type="checkbox"] { accent-color: var(--lime) !important; }
-        .admin-login-card .fi-fo-checkbox .fi-fo-field-wrp-label,
-        .admin-login-card .fi-fo-checkbox label {
-            color: var(--text-secondary) !important;
-            font-size: .82rem !important;
-            font-weight: 500 !important;
+            transition: all .2s ease !important;
         }
 
-        /* Validation error */
+        .admin-login-card .fi-btn:hover {
+            background: var(--accent-hover) !important;
+            transform: translateY(-1px);
+        }
+
         .admin-login-card .fi-fo-field-wrp-error-message {
-            color: var(--error-text) !important;
-            font-size: .78rem !important;
-            margin-top: .25rem !important;
+            color: #fca5a5 !important;
+            font-size: .8rem !important;
         }
 
-        /* Filament form container */
-        .admin-login-card .fi-form,
-        .admin-login-card [data-form] {
-            background: transparent !important;
-            padding: 0 !important;
-            border: none !important;
-            box-shadow: none !important;
-        }
-
-        /* ─── Manual login fields — compatible with Filament BaseLogin ─── */
-        .admin-alert {
-            background: rgba(239, 68, 68, .11);
-            border: 1px solid rgba(239, 68, 68, .22);
-            color: var(--error-text);
-            border-radius: 10px;
-            padding: .75rem .9rem;
-            font-size: .84rem;
-            margin-bottom: 1rem;
-        }
-        .admin-field {
-            margin-bottom: .95rem;
-        }
-        .admin-label {
-            display: block;
-            font-size: .82rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: .38rem;
-        }
-        .admin-input-wrap {
-            position: relative;
-        }
-        .admin-input-icon {
-            position: absolute;
-            left: .9rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            font-size: 1rem;
-            pointer-events: none;
-        }
-        .admin-input {
-            width: 100%;
-            background: var(--input-bg);
-            border: 1px solid var(--input-border);
-            border-radius: 10px;
-            color: var(--text-primary);
-            padding: .65rem .9rem .65rem 2.65rem;
-            font-size: .9rem;
-            outline: none;
-            transition: border-color .2s, box-shadow .2s, background .2s;
-        }
-        .admin-input:focus {
-            border-color: var(--lime);
-            box-shadow: 0 0 0 3px var(--lime-dim);
-        }
-        .admin-input::placeholder {
-            color: var(--text-muted);
-        }
-        .admin-password-input {
-            padding-right: 2.8rem;
-        }
-        .admin-toggle-password {
-            position: absolute;
-            right: .9rem;
-            top: 50%;
-            transform: translateY(-50%);
-            border: none;
-            background: transparent;
-            color: var(--text-muted);
-            cursor: pointer;
-            padding: 0;
-            font-size: 1rem;
-            line-height: 1;
-            transition: color .2s;
-        }
-        .admin-toggle-password:hover {
-            color: var(--lime);
-        }
-        .admin-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            margin: 1rem 0 1.25rem;
-        }
-        .admin-remember {
-            display: inline-flex;
-            align-items: center;
-            gap: .45rem;
-            color: var(--text-secondary);
-            font-size: .84rem;
-            cursor: pointer;
-        }
-        .admin-remember input {
-            width: 15px;
-            height: 15px;
-            accent-color: var(--lime);
-        }
-
-        /* ─── Submit button ─── */
-        .admin-submit {
-            box-sizing: border-box;
-            width: 100%;
+        .admin-panel-note {
             margin-top: 1.25rem;
-            border: none;
-            border-radius: 10px;
-            background: var(--lime);
-            color: #0f172a;
-            font-weight: 700;
-            font-size: .95rem;
-            padding: .72rem 1.5rem;
-            cursor: pointer;
-            transition: background .2s, transform .15s;
+            background: var(--accent-dim);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            padding: .9rem 1rem;
+            display: flex;
+            gap: .8rem;
+        }
+
+        .admin-panel-note i {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--accent-dim-hover);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: .5rem;
+            color: var(--accent);
+            flex-shrink: 0;
         }
-        .admin-submit:hover { background: var(--lime-hover); transform: translateY(-1px); }
-        .admin-submit:active { transform: translateY(0); }
-        .admin-submit:disabled { opacity: .7; cursor: not-allowed; transform: none; }
 
-        /* Spinner */
-        .admin-spin {
-            width: 16px; height: 16px;
-            border: 2px solid rgba(15, 23, 42, .3);
-            border-top-color: #0f172a;
-            border-radius: 50%;
-            display: inline-block;
-            animation: spin .7s linear infinite;
+        .admin-panel-note strong {
+            display: block;
+            color: var(--accent);
+            font-size: .82rem;
+            margin-bottom: .15rem;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ─── Panel note ─── */
-        .admin-panel-note {
-            margin-top: 1.25rem;
-            background: rgba(163, 230, 53, .05);
-            border: 1px solid rgba(163, 230, 53, .15);
-            border-radius: 10px;
-            padding: .85rem 1rem;
-            display: flex;
-            align-items: flex-start;
-            gap: .7rem;
+        .admin-panel-note small {
+            color: var(--txt-muted);
+            font-size: .74rem;
+            line-height: 1.5;
         }
-        [data-theme="light"] .admin-panel-note {
-            background: rgba(101, 163, 13, .06);
-            border-color: rgba(101, 163, 13, .2);
-        }
-        .admin-panel-note i { color: var(--lime); margin-top: .1rem; flex-shrink: 0; }
-        .admin-panel-note strong { display: block; color: var(--lime); font-size: .82rem; margin-bottom: .15rem; }
-        .admin-panel-note small { color: var(--text-muted); font-size: .74rem; line-height: 1.5; }
 
-        /* ─── Responsive ─── */
         @media (max-width: 576px) {
-            .admin-login-page { padding-left: .85rem !important; padding-right: .85rem !important; padding-top: 5.75rem !important; }
-            .admin-login-card { padding: 1.75rem 1.35rem !important; border-radius: 18px; }
-            .admin-login-title { font-size: 1.3rem; }
-        }
-        @media (max-width: 380px) {
-            .admin-login-page { padding-top: 5.5rem !important; padding-left: .65rem !important; padding-right: .65rem !important; }
-            .admin-login-card { padding: 1.5rem 1.1rem !important; border-radius: 16px; }
-            .admin-login-title { font-size: 1.2rem; }
-            .admin-login-subtitle { font-size: .82rem; margin-bottom: 1.25rem; }
+            .admin-login-page {
+                padding-top: 6rem;
+                padding-left: .85rem;
+                padding-right: .85rem;
+            }
+
+            .admin-login-card {
+                padding: 1.75rem 1.35rem;
+                border-radius: 18px;
+            }
         }
     </style>
 
-    {{-- ── Navbar ── --}}
-    <nav class="navbar navbar-matchgo fixed-top">
-        <div class="container">
-            <a class="navbar-brand-custom" href="{{ url('/') }}">
-                <img
-                    src="{{ asset('img/logo/logo.png') }}"
-                    alt="MatchGo Logo"
-                    style="height:32px; width:auto; object-fit:contain;"
-                >
-            </a>
-            <button type="button" class="theme-toggle" id="adminThemeToggle" aria-label="Toggle theme">
-                <i class="bi bi-moon-fill icon-moon"></i>
-                <i class="bi bi-sun-fill icon-sun"></i>
-            </button>
-        </div>
-    </nav>
+    <div class="admin-login-root" id="adminLoginRoot">
+        <div class="bg-grid"></div>
+        <div class="bg-radial-top"></div>
 
-    {{-- ── Main ── --}}
-    <main class="admin-login-page">
-        <div class="admin-login-shell">
-
-            <a href="{{ url('/login') }}" class="admin-back-home">
-                <i class="bi bi-arrow-left"></i>
-                Kembali ke Login Pengguna
-            </a>
-
-            <section class="admin-login-card">
-
-                <h1 class="admin-login-title">Selamat Datang Kembali</h1>
-                <p class="admin-login-subtitle">{{ $panelSubtitle }}</p>
-
-                @if ($errors->any())
-                    <div class="admin-alert">
-                        <i class="bi bi-exclamation-circle me-1"></i>
-                        {{ $errors->first() }}
-                    </div>
-                @endif
-
-                <form wire:submit.prevent="authenticate" id="adminLoginForm">
-                    {{ $this->form }}
-
-                    <button
-                        type="submit"
-                        class="admin-submit"
-                        wire:loading.attr="disabled"
-                        wire:target="authenticate"
+        <nav class="navbar-matchgo">
+            <div class="navbar-inner">
+                <a href="{{ url('/') }}">
+                    <img
+                        src="{{ asset('img/logo/logo.png') }}"
+                        alt="MatchGo Logo"
+                        style="height:32px; width:auto; object-fit:contain;"
                     >
-                        <span wire:loading.remove wire:target="authenticate">
-                            <i class="bi bi-box-arrow-in-right"></i>
-                            Masuk ke Panel
-                        </span>
-                        <span wire:loading wire:target="authenticate">
-                            <span class="admin-spin"></span>
-                            Memproses...
-                        </span>
-                    </button>
-                </form>
+                </a>
 
-                {{-- Wajib untuk notifikasi & modal Filament --}}
-                <x-filament-actions::modals />
+                <button type="button" class="theme-toggle" id="adminThemeToggle" aria-label="Toggle theme">
+                    <i class="bi bi-moon-fill icon-moon"></i>
+                    <i class="bi bi-sun-fill icon-sun"></i>
+                </button>
+            </div>
+        </nav>
 
-                <div class="admin-panel-note" role="note">
-                    <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
-                    <div>
-                        <strong>Akses Khusus — {{ $panelTitle }}</strong>
-                        <small>
-                            Halaman ini hanya untuk Super Admin,
-                            Admin Lapangan, dan Auditor yang
-                            memiliki hak akses sistem MATCHGO.
-                        </small>
+        <main class="admin-login-page">
+            <div class="admin-login-shell">
+                <a href="{{ url('/login') }}" class="admin-back-home">
+                    <i class="bi bi-arrow-left"></i>
+                    Kembali ke Login Pengguna
+                </a>
+
+                <section class="admin-login-card">
+                    <h1 class="admin-login-title">Selamat Datang Kembali</h1>
+                    <p class="admin-login-subtitle">{{ $panelSubtitle }}</p>
+
+                    {{ $this->content }}
+
+                    <div class="admin-panel-note">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <div>
+                            <strong>Akses Khusus — {{ $panelTitle }}</strong>
+                            <small>
+                                Halaman ini hanya untuk Super Admin,
+                                Admin Lapangan, dan Auditor yang memiliki hak akses sistem MATCHGO.
+                            </small>
+                        </div>
                     </div>
-                </div>
-
-            </section>
-        </div>
-    </main>
+                </section>
+            </div>
+        </main>
+    </div>
 
     <script>
-        function toggleAdminPassword() {
-            const passwordInput = document.getElementById('password');
-            const toggleIcon = document.getElementById('toggleIcon');
-
-            if (!passwordInput || !toggleIcon) return;
-
-            const isPassword = passwordInput.type === 'password';
-
-            passwordInput.type = isPassword ? 'text' : 'password';
-            toggleIcon.className = isPassword ? 'bi bi-eye-slash' : 'bi bi-eye';
-        }
-
-        (function () {
-            'use strict';
-
-            const root        = document.getElementById('adminLoginRoot');
+        document.addEventListener('DOMContentLoaded', function () {
+            const root = document.getElementById('adminLoginRoot');
+            const html = document.documentElement;
             const themeToggle = document.getElementById('adminThemeToggle');
-            const savedTheme  = localStorage.getItem('matchgo-admin-theme');
 
-            if (savedTheme) root.setAttribute('data-theme', savedTheme);
+            function getTheme() {
+                return (
+                    localStorage.getItem('theme') ||
+                    localStorage.getItem('matchgo-theme') ||
+                    localStorage.getItem('matchgo-theme-mode') ||
+                    html.getAttribute('data-theme') ||
+                    'dark'
+                );
+            }
 
-            themeToggle && themeToggle.addEventListener('click', function () {
-                const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-                root.setAttribute('data-theme', next);
-                localStorage.setItem('matchgo-admin-theme', next);
+            function setTheme(theme) {
+                if (! root) return;
+
+                root.setAttribute('data-theme', theme);
+                html.setAttribute('data-theme', theme);
+
+                localStorage.setItem('theme', theme);
+                localStorage.setItem('matchgo-theme', theme);
+                localStorage.setItem('matchgo-theme-mode', theme);
+            }
+
+            setTheme(getTheme());
+
+            themeToggle?.addEventListener('click', function () {
+                const current = root.getAttribute('data-theme') || getTheme();
+                const next = current === 'dark' ? 'light' : 'dark';
+
+                setTheme(next);
             });
-        })();
+        });
     </script>
-
-</div>
+</x-filament-panels::page.simple>

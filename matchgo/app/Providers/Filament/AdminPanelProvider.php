@@ -28,7 +28,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login(Login::class)
             ->brandName('MATCHGO Super Admin')
             ->sidebarCollapsibleOnDesktop()
             ->colors([
