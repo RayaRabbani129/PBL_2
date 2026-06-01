@@ -3,24 +3,27 @@
 namespace App\Filament\FieldAdmin\Resources;
 
 use App\Filament\FieldAdmin\Resources\FieldResource\Pages;
+use App\Filament\FieldAdmin\Resources\FieldResource\RelationManagers\SchedulesRelationManager;
 use App\Models\Field;
 use App\Models\Venue;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\FileUpload;
-use Filament\Schemas\Components\Grid;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
-use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Tables;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
@@ -35,11 +38,8 @@ class FieldResource extends Resource
     protected static ?string $model = Field::class;
 
     protected static ?string $navigationLabel = 'Lapangan';
-
     protected static ?string $modelLabel = 'Lapangan';
-
     protected static ?string $pluralModelLabel = 'Lapangan';
-
     protected static ?int $navigationSort = 1;
 
     public static function getNavigationIcon(): string|\BackedEnum|null
@@ -47,9 +47,6 @@ class FieldResource extends Resource
         return 'heroicon-o-rectangle-group';
     }
 
-    /**
-     * Filter hanya field milik venue admin login
-     */
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
@@ -65,29 +62,20 @@ class FieldResource extends Resource
         })->first();
 
         return $form->components([
-
-            /**
-             * Hidden Venue ID
-             */
             Hidden::make('venue_id')
                 ->default($venue?->id)
                 ->required(),
 
-            /**
-             * SECTION INFORMASI
-             */
             Section::make('Informasi Lapangan')
                 ->icon('heroicon-o-building-office-2')
                 ->description('Lengkapi data utama lapangan futsal.')
                 ->schema([
-
                     Placeholder::make('venue_name')
                         ->label('Venue')
                         ->content($venue?->name ?? '-'),
 
                     Grid::make(2)
                         ->schema([
-
                             TextInput::make('name')
                                 ->label('Nama Lapangan')
                                 ->placeholder('Contoh: Lapangan Futsal A')
@@ -103,12 +91,10 @@ class FieldResource extends Resource
                                 ->disabled()
                                 ->dehydrated()
                                 ->formatStateUsing(fn () => 'futsal'),
-
                         ]),
 
                     Grid::make(2)
                         ->schema([
-
                             TextInput::make('capacity')
                                 ->label('Kapasitas Pemain')
                                 ->numeric()
@@ -126,7 +112,6 @@ class FieldResource extends Resource
                                 ->minValue(1000)
                                 ->maxValue(10000000)
                                 ->placeholder('50000'),
-
                         ]),
 
                     Textarea::make('description')
@@ -135,18 +120,12 @@ class FieldResource extends Resource
                         ->placeholder('Masukkan deskripsi fasilitas lapangan...')
                         ->columnSpanFull()
                         ->maxLength(1000),
+                ]),
 
-                ])
-                ->columns(1),
-
-            /**
-             * SECTION FOTO
-             */
             Section::make('Foto Lapangan')
                 ->icon('heroicon-o-photo')
                 ->description('Upload foto terbaik lapangan.')
                 ->schema([
-
                     FileUpload::make('photo_path')
                         ->label('Foto')
                         ->image()
@@ -164,16 +143,11 @@ class FieldResource extends Resource
                         ])
                         ->helperText('Format: JPG, PNG, WEBP. Maksimal 4MB.')
                         ->columnSpanFull(),
-
                 ]),
 
-            /**
-             * SECTION STATUS
-             */
             Section::make('Status Lapangan')
                 ->icon('heroicon-o-check-badge')
                 ->schema([
-
                     Toggle::make('is_available')
                         ->label('Tersedia untuk Booking')
                         ->default(true)
@@ -184,10 +158,96 @@ class FieldResource extends Resource
                         ->default(true)
                         ->formatStateUsing(fn ($state) => $state === 'active')
                         ->dehydrateStateUsing(fn ($state) => $state ? 'active' : 'inactive'),
-
                 ])
                 ->columns(2),
+        ]);
+    }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make('Preview Lapangan')
+                ->icon('heroicon-o-photo')
+                ->description('Tampilan foto utama lapangan.')
+                ->schema([
+                    ImageEntry::make('photo_path')
+                        ->label('')
+                        ->disk('public')
+                        ->height(320)
+                        ->columnSpanFull(),
+                ])
+                ->columnSpanFull(),
+
+            Grid::make(3)
+                ->schema([
+                    Section::make('Informasi Utama')
+                        ->icon('heroicon-o-information-circle')
+                        ->schema([
+                            TextEntry::make('name')
+                                ->label('Nama Lapangan')
+                                ->weight('bold')
+                                ->size('lg'),
+
+                            TextEntry::make('venue.name')
+                                ->label('Venue')
+                                ->badge()
+                                ->color('gray'),
+
+                            TextEntry::make('type')
+                                ->label('Jenis Lapangan')
+                                ->badge()
+                                ->color('info')
+                                ->formatStateUsing(fn ($state) => ucfirst($state ?? 'futsal')),
+                        ])
+                        ->columnSpan(2),
+
+                    Section::make('Status')
+                        ->icon('heroicon-o-check-badge')
+                        ->schema([
+                            TextEntry::make('status')
+                                ->label('Status Lapangan')
+                                ->badge()
+                                ->formatStateUsing(fn ($state) => $state === 'active' ? 'Aktif' : 'Nonaktif')
+                                ->color(fn ($state) => $state === 'active' ? 'success' : 'danger'),
+
+                            IconEntry::make('is_available')
+                                ->label('Tersedia Booking')
+                                ->boolean(),
+
+                            TextEntry::make('created_at')
+                                ->label('Tanggal Dibuat')
+                                ->dateTime('d M Y H:i'),
+                        ])
+                        ->columnSpan(1),
+                ]),
+
+            Section::make('Detail Harga & Kapasitas')
+                ->icon('heroicon-o-banknotes')
+                ->schema([
+                    Grid::make(2)
+                        ->schema([
+                            TextEntry::make('capacity')
+                                ->label('Kapasitas Pemain')
+                                ->suffix(' Orang')
+                                ->badge()
+                                ->color('info'),
+
+                            TextEntry::make('price_per_hour')
+                                ->label('Harga per Jam')
+                                ->money('IDR')
+                                ->badge()
+                                ->color('success'),
+                        ]),
+                ]),
+
+            Section::make('Deskripsi')
+                ->icon('heroicon-o-document-text')
+                ->schema([
+                    TextEntry::make('description')
+                        ->label('')
+                        ->placeholder('Belum ada deskripsi lapangan.')
+                        ->columnSpanFull(),
+                ]),
         ]);
     }
 
@@ -196,9 +256,7 @@ class FieldResource extends Resource
         return $table
             ->striped()
             ->defaultSort('created_at', 'desc')
-
             ->columns([
-
                 ImageColumn::make('photo_path')
                     ->label('')
                     ->disk('public')
@@ -245,19 +303,13 @@ class FieldResource extends Resource
 
                 BadgeColumn::make('status')
                     ->label('Status')
-                    ->formatStateUsing(fn ($state) => $state === 'active'
-                        ? 'Aktif'
-                        : 'Nonaktif'
-                    )
+                    ->formatStateUsing(fn ($state) => $state === 'active' ? 'Aktif' : 'Nonaktif')
                     ->colors([
                         'success' => 'active',
                         'danger' => 'inactive',
                     ]),
-
             ])
-
             ->filters([
-
                 TernaryFilter::make('is_available')
                     ->label('Tersedia'),
 
@@ -266,29 +318,23 @@ class FieldResource extends Resource
                         'active' => 'Aktif',
                         'inactive' => 'Nonaktif',
                     ]),
-
             ])
-
             ->actions([
+                ViewAction::make()
+                    ->label('Lihat')
+                    ->iconButton(),
 
                 EditAction::make()
                     ->iconButton(),
 
                 DeleteAction::make()
                     ->iconButton(),
-
             ])
-
             ->bulkActions([
-
                 BulkActionGroup::make([
-
                     DeleteBulkAction::make(),
-
                 ]),
-
             ])
-
             ->emptyStateHeading('Belum ada lapangan')
             ->emptyStateDescription('Tambahkan lapangan futsal pertama.')
             ->emptyStateIcon('heroicon-o-rectangle-group');
@@ -297,7 +343,7 @@ class FieldResource extends Resource
     public static function getRelationManagers(): array
     {
         return [
-            FieldResource\RelationManagers\SchedulesRelationManager::class,
+            SchedulesRelationManager::class,
         ];
     }
 
@@ -306,6 +352,7 @@ class FieldResource extends Resource
         return [
             'index' => Pages\ListFields::route('/'),
             'create' => Pages\CreateField::route('/create'),
+            'view' => Pages\ViewField::route('/{record}'),
             'edit' => Pages\EditField::route('/{record}/edit'),
         ];
     }

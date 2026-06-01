@@ -397,6 +397,109 @@
         cursor: pointer; font-size: 0.875rem; transition: all 0.15s;
     }
     .rj-close:hover { background: var(--surface-5); color: var(--txt-primary); }
+    /* ── Cancel Modal ── */
+    #cancel-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.60);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.22s ease;
+    }
+
+    #cancel-backdrop.is-open {
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    #cancel-modal {
+        background: var(--surface-2);
+        border: 1px solid var(--border-medium);
+        border-radius: 20px;
+        padding: 1.5rem;
+        width: 100%;
+        max-width: 430px;
+        transform: translateY(14px) scale(0.97);
+        transition: transform 0.22s ease;
+    }
+
+    #cancel-backdrop.is-open #cancel-modal {
+        transform: translateY(0) scale(1);
+    }
+
+    .cancel-title {
+        font-family: 'Manrope', sans-serif;
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--txt-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .cancel-close {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: var(--surface-4);
+        border: 1px solid var(--border-subtle);
+        color: var(--txt-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .cancel-desc {
+        font-size: 0.85rem;
+        color: var(--txt-muted);
+        line-height: 1.6;
+    }
+
+    .cancel-team-box {
+        background: var(--surface-3);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        padding: 10px 14px;
+        margin: 1rem 0;
+        color: var(--txt-primary);
+        font-weight: 700;
+    }
+
+    .cancel-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 1.2rem;
+    }
+
+    .cancel-btn {
+        flex: 1;
+        border-radius: 11px;
+        padding: 10px 14px;
+        font-weight: 700;
+        font-size: 0.84rem;
+        cursor: pointer;
+        border: none;
+    }
+
+    .cancel-btn-secondary {
+        background: var(--surface-4);
+        color: var(--txt-secondary);
+        border: 1px solid var(--border-medium);
+    }
+
+    .cancel-btn-danger {
+        background: rgba(248,113,113,0.15);
+        color: #f87171;
+        border: 1px solid rgba(248,113,113,0.30);
+    }
 </style>
 @endpush
 
@@ -660,14 +763,15 @@
                             <span class="outgoing-status">
                                 <i class="bi bi-hourglass-split"></i> Menunggu Respons
                             </span>
-                            <form action="{{ route('matchmaking.cancel', $req) }}" method="POST"
-                                  onsubmit="return confirm('Batalkan tantangan ini?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn-cancel-sm">
-                                    <i class="bi bi-trash3"></i> Batalkan
-                                </button>
-                            </form>
+                            <button
+                                type="button"
+                                class="btn-cancel-sm js-open-cancel"
+                                data-cancel-url="{{ route('matchmaking.cancel', $req) }}"
+                                data-challenge-id="{{ $req->id }}"
+                                data-team="{{ $opponent->name ?? 'Tim tidak ditemukan' }}"
+                            >
+                                <i class="bi bi-trash3"></i> Batalkan
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -770,11 +874,120 @@
 
 {{-- ── Toast AJAX ── --}}
 <div id="ajax-toast"></div>
+{{-- ── Cancel Modal ── --}}
+<div id="cancel-backdrop" role="dialog" aria-modal="true">
+    <div id="cancel-modal">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+            <div class="cancel-title">
+                <i class="bi bi-trash3-fill" style="color:#f87171;"></i>
+                Batalkan Tantangan
+            </div>
 
+            <button type="button" class="cancel-close" id="cancel-close" aria-label="Tutup">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="cancel-desc">
+            Kamu yakin ingin membatalkan tantangan yang sudah dikirim ke tim ini?
+        </div>
+
+        <div class="cancel-team-box" id="cancel-team-name">
+            -
+        </div>
+
+        <div class="cancel-desc">
+            Setelah dibatalkan, tim lawan tidak bisa menerima tantangan ini lagi.
+        </div>
+
+        <div class="cancel-actions">
+            <button type="button" class="cancel-btn cancel-btn-secondary" id="cancel-no">
+                Tidak
+            </button>
+
+            <button type="button" class="cancel-btn cancel-btn-danger" id="cancel-yes">
+                Ya, Batalkan
+            </button>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script>
+// ─────────────────────────────────────────────────────────
+// Cancel outgoing challenge — modal
+// ─────────────────────────────────────────────────────────
+const cancelBackdrop = document.getElementById('cancel-backdrop');
+const cancelCloseBtn = document.getElementById('cancel-close');
+const cancelNoBtn    = document.getElementById('cancel-no');
+const cancelYesBtn   = document.getElementById('cancel-yes');
+const cancelTeamName = document.getElementById('cancel-team-name');
+
+let pendingCancelUrl = null;
+
+function cancelClose() {
+    cancelBackdrop?.classList.remove('is-open');
+    pendingCancelUrl = null;
+
+    if (cancelYesBtn) {
+        cancelYesBtn.disabled = false;
+        cancelYesBtn.innerHTML = 'Ya, Batalkan';
+    }
+}
+
+document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.js-open-cancel');
+    if (!btn) return;
+
+    e.preventDefault();
+
+    pendingCancelUrl = btn.dataset.cancelUrl;
+
+    if (cancelTeamName) {
+        cancelTeamName.textContent = btn.dataset.team || 'Tim lawan';
+    }
+
+    cancelBackdrop?.classList.add('is-open');
+});
+
+cancelCloseBtn?.addEventListener('click', cancelClose);
+cancelNoBtn?.addEventListener('click', cancelClose);
+
+cancelBackdrop?.addEventListener('click', function (e) {
+    if (e.target === cancelBackdrop) {
+        cancelClose();
+    }
+});
+
+cancelYesBtn?.addEventListener('click', function () {
+    if (!pendingCancelUrl) return;
+
+    cancelYesBtn.disabled = true;
+    cancelYesBtn.innerHTML = '<span class="btn-spinner"></span> Membatalkan...';
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = pendingCancelUrl;
+
+    form.innerHTML = `
+        <input
+            type="hidden"
+            name="_token"
+            value="{{ csrf_token() }}"
+        >
+
+        <input
+            type="hidden"
+            name="_method"
+            value="DELETE"
+        >
+    `;
+
+    document.body.appendChild(form);
+    form.submit();
+});
+
 (function () {
     'use strict';
 

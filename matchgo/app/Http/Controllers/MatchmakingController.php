@@ -198,8 +198,9 @@ class MatchmakingController extends Controller
             DB::commit();
 
             return response()->json([
-                'success' => true,
-                'message' => "Tantangan berhasil dikirim ke {$opponent->name}! 🔥 Tunggu konfirmasi dari mereka.",
+                'success'  => true,
+                'message'  => "Tantangan berhasil dikirim ke {$opponent->name}! 🔥 Tunggu konfirmasi dari mereka.",
+                'redirect' => route('matches.index', ['tab' => 'outgoing']),
             ]);
 
         } catch (\Exception $e) {

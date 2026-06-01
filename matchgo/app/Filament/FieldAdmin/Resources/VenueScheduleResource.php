@@ -12,15 +12,18 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\Filter;
@@ -36,9 +39,9 @@ class VenueScheduleResource extends Resource
     protected static ?string $model = VenueSchedule::class;
 
     protected static ?string $navigationLabel = 'Jadwal Booking';
-    protected static ?string $modelLabel       = 'Jadwal';
+    protected static ?string $modelLabel = 'Jadwal';
     protected static ?string $pluralModelLabel = 'Jadwal Booking';
-    protected static ?int    $navigationSort   = 2;
+    protected static ?int $navigationSort = 2;
 
     public static function getNavigationIcon(): string|\BackedEnum|null
     {
@@ -52,9 +55,6 @@ class VenueScheduleResource extends Resource
             ->with(['field', 'venue']);
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  FORM
-    // ─────────────────────────────────────────────────────────────
     public static function form(Schema $form): Schema
     {
         $venue = auth()->user()?->managedVenues()?->first();
@@ -79,7 +79,10 @@ class VenueScheduleResource extends Resource
                     Select::make('field_id')
                         ->label('Lapangan')
                         ->options(function () use ($venue) {
-                            if (! $venue) return [];
+                            if (! $venue) {
+                                return [];
+                            }
+
                             return Field::query()
                                 ->where('venue_id', $venue->id)
                                 ->where('status', 'active')
@@ -117,9 +120,104 @@ class VenueScheduleResource extends Resource
         ]);
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  TABLE
-    // ─────────────────────────────────────────────────────────────
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema->components([
+            Grid::make(3)
+                ->schema([
+                    Section::make('Informasi Jadwal')
+                        ->icon('heroicon-o-calendar-days')
+                        ->description('Detail jadwal booking lapangan.')
+                        ->schema([
+                            TextEntry::make('venue.name')
+                                ->label('Venue')
+                                ->badge()
+                                ->color('gray'),
+
+                            TextEntry::make('field.name')
+                                ->label('Lapangan')
+                                ->badge()
+                                ->color('primary'),
+
+                            TextEntry::make('date')
+                                ->label('Tanggal')
+                                ->date('d M Y'),
+
+                            TextEntry::make('day_name')
+                                ->label('Hari')
+                                ->getStateUsing(fn ($record) => $record->date
+                                    ? \Carbon\Carbon::parse($record->date)->translatedFormat('l')
+                                    : '-'
+                                ),
+                        ])
+                        ->columnSpan(2),
+
+                    Section::make('Status Slot')
+                        ->icon('heroicon-o-check-badge')
+                        ->schema([
+                            IconEntry::make('is_available')
+                                ->label('Tersedia Booking')
+                                ->boolean(),
+
+                            TextEntry::make('status_label')
+                                ->label('Status')
+                                ->getStateUsing(fn ($record) => $record->is_available ? 'Tersedia' : 'Tutup')
+                                ->badge()
+                                ->color(fn ($state) => $state === 'Tersedia' ? 'success' : 'danger'),
+
+                            TextEntry::make('created_at')
+                                ->label('Dibuat')
+                                ->dateTime('d M Y H:i'),
+                        ])
+                        ->columnSpan(1),
+                ]),
+
+            Section::make('Detail Waktu')
+                ->icon('heroicon-o-clock')
+                ->schema([
+                    Grid::make(3)
+                        ->schema([
+                            TextEntry::make('start_time')
+                                ->label('Jam Mulai')
+                                ->getStateUsing(fn ($record) => \Carbon\Carbon::parse($record->start_time)->format('H:i'))
+                                ->badge()
+                                ->color('success'),
+
+                            TextEntry::make('end_time')
+                                ->label('Jam Selesai')
+                                ->getStateUsing(fn ($record) => \Carbon\Carbon::parse($record->end_time)->format('H:i'))
+                                ->badge()
+                                ->color('danger'),
+
+                            TextEntry::make('duration')
+                                ->label('Durasi')
+                                ->getStateUsing(fn ($record) =>
+                                    \Carbon\Carbon::parse($record->start_time)
+                                        ->diffInMinutes(\Carbon\Carbon::parse($record->end_time)) . ' menit'
+                                )
+                                ->badge()
+                                ->color('info'),
+                        ]),
+                ]),
+
+            Section::make('Informasi Tambahan')
+                ->icon('heroicon-o-information-circle')
+                ->schema([
+                    Grid::make(2)
+                        ->schema([
+                            TextEntry::make('updated_at')
+                                ->label('Terakhir Diubah')
+                                ->dateTime('d M Y H:i'),
+
+                            TextEntry::make('id')
+                                ->label('ID Jadwal')
+                                ->badge()
+                                ->color('gray'),
+                        ]),
+                ]),
+        ]);
+    }
+
     public static function table(Table $table): Table
     {
         return $table
@@ -131,7 +229,6 @@ class VenueScheduleResource extends Resource
                     ->date()
                     ->collapsible()
             )
-
             ->columns([
                 TextColumn::make('field.name')
                     ->label('Lapangan')
@@ -150,7 +247,6 @@ class VenueScheduleResource extends Resource
                         : null
                     ),
 
-                // Jam start–end dalam satu kolom
                 TextColumn::make('start_time')
                     ->label('Waktu')
                     ->formatStateUsing(fn ($record) =>
@@ -171,7 +267,6 @@ class VenueScheduleResource extends Resource
                     ->badge()
                     ->color('info'),
 
-                // Satu kolom gabungan (hilangkan IconColumn duplikat)
                 TextColumn::make('status_label')
                     ->label('Status')
                     ->getStateUsing(fn ($record) => $record->is_available ? 'Tersedia' : 'Tutup')
@@ -182,7 +277,6 @@ class VenueScheduleResource extends Resource
                         : 'heroicon-m-x-circle'
                     ),
             ])
-
             ->filters([
                 SelectFilter::make('field_id')
                     ->label('Lapangan')
@@ -204,13 +298,20 @@ class VenueScheduleResource extends Resource
                     ])
                     ->query(function (Builder $query, array $data) {
                         return $query
-                            ->when($data['from'],  fn ($q) => $q->whereDate('date', '>=', $data['from']))
+                            ->when($data['from'], fn ($q) => $q->whereDate('date', '>=', $data['from']))
                             ->when($data['until'], fn ($q) => $q->whereDate('date', '<=', $data['until']));
                     })
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
-                        if ($data['from'])  $indicators[] = 'Dari: ' . \Carbon\Carbon::parse($data['from'])->format('d M Y');
-                        if ($data['until']) $indicators[] = 'Sampai: ' . \Carbon\Carbon::parse($data['until'])->format('d M Y');
+
+                        if ($data['from']) {
+                            $indicators[] = 'Dari: ' . \Carbon\Carbon::parse($data['from'])->format('d M Y');
+                        }
+
+                        if ($data['until']) {
+                            $indicators[] = 'Sampai: ' . \Carbon\Carbon::parse($data['until'])->format('d M Y');
+                        }
+
                         return $indicators;
                     }),
 
@@ -231,9 +332,7 @@ class VenueScheduleResource extends Resource
                     ->label('Filter')
                     ->icon('heroicon-o-funnel')
             )
-
             ->actions([
-                // Toggle slot — langsung terlihat di baris
                 Action::make('toggle_available')
                     ->label(fn ($record) => $record->is_available ? 'Tutup' : 'Buka')
                     ->icon(fn ($record) => $record->is_available
@@ -244,13 +343,18 @@ class VenueScheduleResource extends Resource
                     ->action(fn ($record) => $record->update(['is_available' => ! $record->is_available]))
                     ->tooltip(fn ($record) => $record->is_available ? 'Tutup slot' : 'Buka slot'),
 
-                // Edit & Delete dikumpulkan dalam satu dropdown
                 ActionGroup::make([
-                    EditAction::make()->modalWidth('2xl'),
-                    DeleteAction::make()->requiresConfirmation(),
+                    ViewAction::make()
+                        ->label('Lihat')
+                        ->icon('heroicon-o-eye'),
+
+                    EditAction::make()
+                        ->modalWidth('2xl'),
+
+                    DeleteAction::make()
+                        ->requiresConfirmation(),
                 ])->icon('heroicon-m-ellipsis-vertical'),
             ])
-
             ->bulkActions([
                 BulkActionGroup::make([
                     BulkAction::make('bulk_open')
@@ -270,10 +374,10 @@ class VenueScheduleResource extends Resource
                         ->action(fn ($records) => $records->each->update(['is_available' => false]))
                         ->deselectRecordsAfterCompletion(),
 
-                    DeleteBulkAction::make()->requiresConfirmation(),
+                    DeleteBulkAction::make()
+                        ->requiresConfirmation(),
                 ]),
             ])
-
             ->emptyStateIcon('heroicon-o-calendar-days')
             ->emptyStateHeading('Belum ada jadwal')
             ->emptyStateDescription('Gunakan "Generate Massal" untuk membuat banyak slot, atau "Tambah Manual" untuk satu slot.')
@@ -285,9 +389,6 @@ class VenueScheduleResource extends Resource
             ]);
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  VALIDASI BENTROK — dipakai dari CreateVenueSchedule & EditVenueSchedule
-    // ─────────────────────────────────────────────────────────────
     public static function validateSchedule(array $data, ?int $excludeId = null): void
     {
         $query = VenueSchedule::query()
@@ -295,7 +396,7 @@ class VenueScheduleResource extends Resource
             ->where('date', $data['date'])
             ->where(fn ($q) => $q
                 ->where('start_time', '<', $data['end_time'])
-                ->where('end_time',   '>',  $data['start_time'])
+                ->where('end_time', '>', $data['start_time'])
             );
 
         if ($excludeId) {
@@ -309,15 +410,13 @@ class VenueScheduleResource extends Resource
         }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  PAGES
-    // ─────────────────────────────────────────────────────────────
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListVenueSchedules::route('/'),
+            'index' => Pages\ListVenueSchedules::route('/'),
             'create' => Pages\CreateVenueSchedule::route('/create'),
-            'edit'   => Pages\EditVenueSchedule::route('/{record}/edit'),
+            'view' => Pages\ViewVenueSchedule::route('/{record}'),
+            'edit' => Pages\EditVenueSchedule::route('/{record}/edit'),
         ];
     }
 }

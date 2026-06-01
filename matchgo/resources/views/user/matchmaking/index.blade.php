@@ -828,7 +828,15 @@
 
                 if (response.ok && data.success) {
                     showAlert('success', data.message ?? 'Tantangan berhasil dikirim! 🔥');
-                    setTimeout(closeModal, 1800);
+
+                    setTimeout(() => {
+                        if (data.redirect) {
+                            window.location.href = data.redirect;
+                            return;
+                        }
+
+                        window.location.href = "{{ route('matches.index', ['tab' => 'outgoing']) }}";
+                    }, 1200);
                 } else {
                     let msg = data.message ?? '';
 
