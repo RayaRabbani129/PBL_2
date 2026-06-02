@@ -280,6 +280,50 @@ class MatchForm
                             ->defaultItems(0)
                             ->addActionLabel('Tambah Audit'),
                     ]),
+
+                Section::make('Penyewaan Wasit')
+                    ->description('Informasi wasit untuk pertandingan ini')
+                    ->relationship('refereeRental')
+                    ->schema([
+                        Grid::make(2)
+                            ->schema([
+                                Select::make('referee_id')
+                                    ->label('Wasit')
+                                    ->relationship('referee', 'name')
+                                    ->searchable()
+                                    ->preload(),
+
+                                Select::make('status')
+                                    ->label('Status Sewa')
+                                    ->options([
+                                        'pending' => 'Menunggu Konfirmasi',
+                                        'confirmed' => 'Terkonfirmasi',
+                                        'completed' => 'Selesai',
+                                        'cancelled' => 'Dibatalkan',
+                                    ]),
+
+                                TextInput::make('hourly_rate')
+                                    ->label('Tarif Per Jam')
+                                    ->numeric()
+                                    ->prefix('Rp')
+                                    ->disabled(),
+
+                                TextInput::make('total_hours')
+                                    ->label('Total Jam')
+                                    ->numeric()
+                                    ->disabled(),
+
+                                TextInput::make('rental_cost')
+                                    ->label('Total Biaya Sewa')
+                                    ->numeric()
+                                    ->prefix('Rp')
+                                    ->disabled(),
+
+                                Textarea::make('notes')
+                                    ->label('Catatan')
+                                    ->columnSpanFull(),
+                            ]),
+                    ]),
             ]);
     }
 }

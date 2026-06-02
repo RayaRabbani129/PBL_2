@@ -57,5 +57,8 @@ class DatabaseSeeder extends Seeder
             'phone' => '082123456792',
         ]);
         $player->assignRole('player');
+
+        // Seed referees
+        $this->call(RefereeSeeder::class);
     }
 }

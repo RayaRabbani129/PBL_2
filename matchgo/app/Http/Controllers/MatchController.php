@@ -195,6 +195,7 @@ class MatchController extends Controller
             Notification::create([
                 'user_id' => $matchRequest->team->user_id,
                 'type'    => 'match_confirmed',
+                'title'   => 'Tantangan Diterima',
                 'message' => "{$myTeam->name} menerima tantanganmu! Pertandingan dijadwalkan pada {$matchRequest->preferred_date} pukul {$matchRequest->start_time}. ✅",
                 'status'  => 'unread',
             ]);
@@ -249,6 +250,7 @@ class MatchController extends Controller
         Notification::create([
             'user_id' => $matchRequest->team->user_id,
             'type'    => 'challenge_rejected',
+            'title'   => 'Tantangan Ditolak',
             'message' => "{$myTeam->name} menolak tantanganmu. Alasan: {$reason} ❌",
             'status'  => 'unread',
         ]);

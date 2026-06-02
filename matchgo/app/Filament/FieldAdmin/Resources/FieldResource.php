@@ -40,12 +40,8 @@ class FieldResource extends Resource
     protected static ?string $navigationLabel = 'Lapangan';
     protected static ?string $modelLabel = 'Lapangan';
     protected static ?string $pluralModelLabel = 'Lapangan';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-group';
     protected static ?int $navigationSort = 1;
-
-    public static function getNavigationIcon(): string|\BackedEnum|null
-    {
-        return 'heroicon-o-rectangle-group';
-    }
 
     public static function getEloquentQuery(): Builder
     {

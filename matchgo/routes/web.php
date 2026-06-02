@@ -13,6 +13,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\MatchCostController;
 use App\Http\Controllers\VenueRecommendationController;
+use App\Http\Controllers\RefereeController;
 
 // Landing
 Route::get('/', fn() => view('landingPage.index'))->name('home');
@@ -116,5 +117,13 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/{id}/read', [NotificationController::class, 'markAsRead'])->name('read');
         Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
         Route::get('/poll', [NotificationController::class, 'poll'])->name('poll');
+    });
+
+    Route::prefix('referees')->name('referees.')->group(function () {
+        Route::get('/', [RefereeController::class, 'index'])->name('index');
+        Route::get('/{referee}', [RefereeController::class, 'show'])->name('show');
+        Route::post('/matches/{match}/available', [RefereeController::class, 'getAvailableReferees'])->name('available');
+        Route::post('/matches/{match}/assign', [RefereeController::class, 'assignReferee'])->name('assign');
+        Route::delete('/matches/{match}/remove', [RefereeController::class, 'removeReferee'])->name('remove');
     });
 });

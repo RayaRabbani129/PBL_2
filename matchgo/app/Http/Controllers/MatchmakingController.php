@@ -471,11 +471,21 @@ class MatchmakingController extends Controller
     /**
      * Buat notifikasi untuk user tertentu.
      */
-    private function notify(int $userId, string $type, string $message): void
+    private function notify(int $userId, string $type, string $message, ?string $title = null): void
     {
+        $title ??= match ($type) {
+            'match_confirmed'   => 'Pertandingan Dikonfirmasi',
+            'match_challenge'   => 'Tantangan Pertandingan',
+            'challenge_accepted'=> 'Challenge Diterima',
+            'challenge_rejected'=> 'Tantangan Ditolak',
+            'challenge_cancelled' => 'Tantangan Dibatalkan',
+            default             => ucfirst(str_replace('_', ' ', $type)),
+        };
+
         Notification::create([
             'user_id' => $userId,
             'type'    => $type,
+            'title'   => $title,
             'message' => $message,
             'status'  => 'unread',
         ]);

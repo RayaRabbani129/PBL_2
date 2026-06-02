@@ -80,4 +80,14 @@ class Matches extends Model
     {
         return $this->belongsTo(Field::class);
     }
+
+    public function refereeRental()
+    {
+        return $this->hasOne(RefereeRental::class, 'match_id');
+    }
+
+    public function referee()
+    {
+        return $this->hasOneThrough(Referee::class, RefereeRental::class, 'match_id', 'id', 'id', 'referee_id');
+    }
 }
