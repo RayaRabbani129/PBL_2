@@ -37,10 +37,37 @@ class Notification extends Model
     }
 
     /**
-     * Cek apakah belum dibaca
+     * Cek apakah notifikasi belum dibaca
      */
     public function getIsUnreadAttribute(): bool
     {
         return $this->status === 'unread';
+    }
+
+    /**
+     * Ambil title aman supaya tidak null
+     */
+    public function getDisplayTitleAttribute(): string
+    {
+        return $this->title
+            ?: ($this->data['title'] ?? 'Notifikasi');
+    }
+
+    /**
+     * Ambil message aman supaya tidak null
+     */
+    public function getDisplayMessageAttribute(): string
+    {
+        return $this->message
+            ?: ($this->data['message'] ?? $this->data['body'] ?? 'Tidak ada pesan.');
+    }
+
+    /**
+     * Ambil type aman
+     */
+    public function getDisplayTypeAttribute(): string
+    {
+        return $this->type
+            ?: ($this->data['type'] ?? 'system');
     }
 }

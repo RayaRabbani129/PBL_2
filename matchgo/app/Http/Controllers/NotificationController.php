@@ -12,41 +12,29 @@ class NotificationController extends Controller
      */
     public function index()
     {
-        $notifications = Notification::where(
-                'user_id',
-                Auth::id()
-            )
-            ->latest()
-            ->paginate(15);
+        $notifications = Notification::where('user_id', Auth::id())
+            ->orderByDesc('id')
+            ->paginate(10);
 
-        $unreadCount = Notification::where(
-                'user_id',
-                Auth::id()
-            )
+        $unreadCount = Notification::where('user_id', Auth::id())
             ->where('status', 'unread')
             ->count();
 
-        return view(
-            'user.notifications.index',
-            compact(
-                'notifications',
-                'unreadCount'
-            )
-        );
+        return view('user.notifications.index', compact(
+            'notifications',
+            'unreadCount'
+        ));
     }
 
     /**
-     * Tandai semua dibaca
+     * Tandai semua notifikasi dibaca
      */
     public function readAll()
     {
-        Notification::where(
-                'user_id',
-                Auth::id()
-            )
+        Notification::where('user_id', Auth::id())
             ->where('status', 'unread')
             ->update([
-                'status' => 'read'
+                'status' => 'read',
             ]);
 
         return back()->with(
@@ -63,7 +51,7 @@ class NotificationController extends Controller
         Notification::where('id', $id)
             ->where('user_id', Auth::id())
             ->update([
-                'status' => 'read'
+                'status' => 'read',
             ]);
 
         return back();
@@ -85,25 +73,29 @@ class NotificationController extends Controller
     }
 
     /**
-     * Endpoint polling AJAX — return JSON notif terbaru
+     * Endpoint polling AJAX
      */
     public function poll()
     {
         $notifications = Notification::where('user_id', Auth::id())
-            ->latest()
-            ->take(15)
+            ->orderByDesc('id')
+            ->take(10)
             ->get()
             ->map(function ($n) {
+                $data = is_array($n->data)
+                    ? $n->data
+                    : (json_decode($n->data ?? '[]', true) ?: []);
+
                 return [
                     'id'         => $n->id,
-                    'type'       => $n->type,
-                    'title'      => $n->title,
-                    'message'    => $n->message,
-                    'data'       => $n->data,
+                    'type'       => $n->type ?: ($data['type'] ?? 'system'),
+                    'title'      => $n->display_title,
+                    'message'    => $n->display_message,
+                    'data'       => $data,
                     'status'     => $n->status,
                     'is_unread'  => $n->status === 'unread',
-                    'time'       => $n->created_at->diffForHumans(),
-                    'created_at' => $n->created_at->toISOString(),
+                    'time'       => $n->created_at ? $n->created_at->diffForHumans() : '-',
+                    'created_at' => $n->created_at ? $n->created_at->toISOString() : null,
                 ];
             });
 
@@ -111,9 +103,13 @@ class NotificationController extends Controller
             ->where('status', 'unread')
             ->count();
 
+        $total = Notification::where('user_id', Auth::id())
+            ->count();
+
         return response()->json([
             'notifications' => $notifications,
             'unread_count'  => $unreadCount,
+            'total'         => $total,
         ]);
     }
 }
