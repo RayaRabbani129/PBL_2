@@ -70,10 +70,15 @@
 
     </nav>
 
-    {{-- User bottom --}}
-    @auth
-    <div class="mg-sidebar-user">
-        <div class="mg-user-row">
+{{-- User bottom --}}
+@auth
+<div class="mg-sidebar-user">
+    <div class="mg-user-row">
+
+        {{-- Klik area user untuk ke profile --}}
+        <a href="{{ url('/profile') }}"
+           style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;text-decoration:none;color:inherit;">
+
             <div class="mg-user-avatar">
                 @if(Auth::user()->photo)
                     <img src="{{ asset('storage/' . Auth::user()->photo) }}"
@@ -83,6 +88,7 @@
                     {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
                 @endif
             </div>
+
             <div style="flex:1;min-width:0;">
                 <p class="mg-user-name">{{ Auth::user()->name }}</p>
                 <p class="mg-user-team">
@@ -93,18 +99,22 @@
                     @endif
                 </p>
             </div>
-            <form method="POST" action="{{ route('logout') }}" style="flex-shrink:0;">
-                @csrf
-                <button type="submit"
-                    style="width:30px;height:30px;border-radius:8px;background:none;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 0.15s;color:var(--txt-muted);"
-                    onmouseover="this.style.background='rgba(255,255,255,0.06)'"
-                    onmouseout="this.style.background='none'"
-                    title="Keluar">
-                    <i class="bi bi-box-arrow-right" style="font-size:0.85rem;"></i>
-                </button>
-            </form>
-        </div>
+        </a>
+
+        {{-- Tombol logout tetap sendiri --}}
+        <form method="POST" action="{{ route('logout') }}" style="flex-shrink:0;">
+            @csrf
+            <button type="submit"
+                style="width:30px;height:30px;border-radius:8px;background:none;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 0.15s;color:var(--txt-muted);"
+                onmouseover="this.style.background='rgba(255,255,255,0.06)'"
+                onmouseout="this.style.background='none'"
+                title="Keluar">
+                <i class="bi bi-box-arrow-right" style="font-size:0.85rem;"></i>
+            </button>
+        </form>
+
     </div>
-    @endauth
+</div>
+@endauth
 
 </aside>
