@@ -1,0 +1,51 @@
+@import '/vendor/filament/filament/resources/css/theme.css';
+
+:root {
+
+    --primary: 132 204 22;
+
+}
+
+/* CARD */
+.fi-wi-stats-overview-stat {
+    border-radius: 22px !important;
+    border: 1px solid rgba(255,255,255,.06);
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.04),
+            rgba(255,255,255,.02)
+        ) !important;
+
+    backdrop-filter: blur(20px);
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.18);
+
+    transition: all .25s ease;
+}
+
+.fi-wi-stats-overview-stat:hover {
+
+    transform: translateY(-4px);
+
+    box-shadow:
+        0 16px 40px rgba(0,0,0,.25);
+}
+
+/* TABLES */
+.fi-ta-table {
+    border-radius: 22px;
+    overflow: hidden;
+}
+
+/* HEADER */
+.fi-header-heading {
+    font-size: 2rem !important;
+    font-weight: 800 !important;
+}
+
+/* WIDGET */
+.fi-wi {
+    border-radius: 24px;
+}
