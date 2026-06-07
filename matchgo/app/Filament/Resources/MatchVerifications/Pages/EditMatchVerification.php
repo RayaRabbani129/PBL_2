@@ -11,6 +11,13 @@ class EditMatchVerification extends EditRecord
 {
     protected static string $resource = MatchVerificationResource::class;
 
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $data['verified_by'] = auth()->id();
+
+        return $data;
+    }
+
     protected function getHeaderActions(): array
     {
         return [

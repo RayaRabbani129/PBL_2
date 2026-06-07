@@ -72,6 +72,7 @@ class MatchForm
                                     ->options([
                                         'pending' => 'Pending',
                                         'scheduled' => 'Scheduled',
+                                        'awaiting_payment' => 'Awaiting Payment',
                                         'ongoing' => 'Ongoing',
                                         'completed' => 'Completed',
                                         'cancelled' => 'Cancelled',

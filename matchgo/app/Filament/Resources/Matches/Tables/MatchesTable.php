@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Matches\Tables;
 
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
@@ -21,6 +22,8 @@ class MatchesTable
                     'awayTeam',
                     'venue',
                     'field',
+                    'referee',
+                    'refereeRental',
                     'booking',
                     'cost',
                     'verification',
@@ -71,6 +74,35 @@ class MatchesTable
                     ->sortable()
                     ->toggleable(),
 
+                TextColumn::make('referee.name')
+                    ->label('Wasit')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('Tidak pakai')
+                    ->badge()
+                    ->color(fn ($state): string => $state ? 'success' : 'gray')
+                    ->toggleable(),
+
+                TextColumn::make('refereeRental.status')
+                    ->label('Status Wasit')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'pending' => 'Menunggu',
+                        'confirmed' => 'Terkonfirmasi',
+                        'completed' => 'Selesai',
+                        'cancelled' => 'Dibatalkan',
+                        default => 'Tidak pakai',
+                    })
+                    ->color(fn (?string $state): string => match ($state) {
+                        'pending' => 'warning',
+                        'confirmed' => 'success',
+                        'completed' => 'info',
+                        'cancelled' => 'gray',
+                        default => 'gray',
+                    })
+                    ->placeholder('Tidak pakai')
+                    ->toggleable(),
+
                 TextColumn::make('match_datetime')
                     ->label('Jadwal')
                     ->dateTime('d M Y H:i')
@@ -89,6 +121,7 @@ class MatchesTable
                     ->color(fn (?string $state): string => match ($state) {
                         'pending' => 'warning',
                         'scheduled' => 'info',
+                        'awaiting_payment' => 'warning',
                         'ongoing' => 'primary',
                         'completed' => 'success',
                         'cancelled' => 'danger',
@@ -123,10 +156,18 @@ class MatchesTable
                 TextColumn::make('verification.status')
                     ->label('Verifikasi')
                     ->badge()
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'pending' => 'Menunggu',
+                        'verified' => 'Terverifikasi',
+                        'rejected' => 'Ditolak',
+                        'valid' => 'Terverifikasi',
+                        'cheating' => 'Ditolak',
+                        default => '-',
+                    })
                     ->color(fn (?string $state): string => match ($state) {
                         'pending' => 'warning',
-                        'approved' => 'success',
-                        'rejected' => 'danger',
+                        'verified', 'valid' => 'success',
+                        'rejected', 'cheating' => 'danger',
                         default => 'gray',
                     })
                     ->placeholder('-'),
@@ -156,6 +197,7 @@ class MatchesTable
                     ->options([
                         'pending' => 'Pending',
                         'scheduled' => 'Scheduled',
+                        'awaiting_payment' => 'Awaiting Payment',
                         'ongoing' => 'Ongoing',
                         'completed' => 'Completed',
                         'cancelled' => 'Cancelled',
@@ -173,6 +215,12 @@ class MatchesTable
                     ->searchable()
                     ->preload(),
 
+                SelectFilter::make('referee_id')
+                    ->label('Wasit')
+                    ->relationship('referee', 'name')
+                    ->searchable()
+                    ->preload(),
+
                 SelectFilter::make('home_team_id')
                     ->label('Home Team')
                     ->relationship('homeTeam', 'name')
@@ -186,6 +234,27 @@ class MatchesTable
                     ->preload(),
             ])
             ->recordActions([
+                Action::make('verify_audited_match')
+                    ->label('Verifikasi Audit')
+                    ->icon('heroicon-o-shield-check')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->visible(fn ($record): bool => $record->status === 'completed'
+                        && (bool) $record->latestAudit?->audited_at
+                        && optional($record->verification)->status !== 'verified')
+                    ->action(function ($record): void {
+                        \App\Models\MatchVerification::updateOrCreate(
+                            ['match_id' => $record->id],
+                            [
+                                'score_team_a' => $record->home_score ?? 0,
+                                'score_team_b' => $record->away_score ?? 0,
+                                'status' => 'verified',
+                                'notes' => 'Diverifikasi super admin setelah audit selesai.',
+                                'verified_by' => auth()->id(),
+                            ]
+                        );
+                    }),
+
                 EditAction::make()
                     ->iconButton()
                     ->color('warning'),

@@ -321,6 +321,17 @@
             </div>
             @endif
 
+            @if($matchCost->match && $matchCost->match->refereeRental)
+            <div class="info-row">
+                <span class="info-key"><i class="bi bi-people-fill"></i> Wasit</span>
+                <span class="info-val">{{ optional($matchCost->match->refereeRental->referee)->name ?? '—' }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-key"><i class="bi bi-cash-stack"></i> Biaya Wasit</span>
+                <span class="info-val">Rp {{ number_format($matchCost->match->refereeRental->rental_cost, 0, ',', '.') }}</span>
+            </div>
+            @endif
+
             <div class="info-row">
                 <span class="info-key"><i class="bi bi-people"></i> Total Pemain</span>
                 <span class="info-val">

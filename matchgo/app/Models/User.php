@@ -8,7 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     use HasRoles;
     protected $guard_name = 'web';
@@ -41,5 +41,15 @@ class User extends Authenticatable
     public function verifications()
     {
         return $this->hasMany(MatchVerification::class, 'verified_by');
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return match ($panel->getId()) {
+            'admin' => $this->hasAnyRole(['super_admin', 'admin_field']),
+            'field-admin' => $this->hasRole('admin_field'),
+            'auditor' => $this->hasRole('auditor'),
+            default => false,
+        };
     }
 }

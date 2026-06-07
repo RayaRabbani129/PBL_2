@@ -140,15 +140,11 @@ class MatchAuditForm
                             ->label('Status Match')
                             ->native(false)
                             ->options([
-                                'scheduled' => 'Scheduled',
-                                'ongoing'   => 'Ongoing',
                                 'completed' => 'Completed',
-                                'cancelled' => 'Cancelled',
                             ])
-                            ->default(
-                                fn ($record) =>
-                                $record?->status ?? 'completed'
-                            )
+                            ->default('completed')
+                            ->disabled()
+                            ->dehydrated(false)
                             ->required(),
 
                     ]),

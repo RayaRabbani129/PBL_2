@@ -444,6 +444,152 @@
         animation: mmProgress 1.15s infinite ease-in-out;
     }
 
+    /* ===========================
+    Referee Toggle Card
+    =========================== */
+
+    .mm-referee-input{
+        display:none;
+    }
+
+    .mm-referee-card{
+        display:flex;
+        align-items:center;
+        gap:14px;
+
+        background:var(--surface-3);
+        border:1px solid var(--border-medium);
+
+        padding:14px;
+        border-radius:14px;
+
+        cursor:pointer;
+
+        transition:
+            border-color .2s,
+            background .2s,
+            transform .15s;
+    }
+
+    .mm-referee-card:hover{
+        transform:translateY(-1px);
+
+        border-color:
+            rgba(163,177,75,.25);
+
+        background:
+            var(--surface-4);
+    }
+
+    .mm-referee-icon{
+        width:46px;
+        height:46px;
+
+        flex-shrink:0;
+
+        border-radius:12px;
+
+        display:flex;
+        align-items:center;
+        justify-content:center;
+
+        background:var(--accent-dim);
+
+        border:
+            1px solid rgba(163,177,75,.25);
+
+        color:var(--accent);
+
+        font-size:1rem;
+    }
+
+    .mm-referee-content{
+        flex:1;
+        display:flex;
+        flex-direction:column;
+    }
+
+    .mm-referee-title{
+        font-size:.87rem;
+        font-weight:700;
+
+        color:
+            var(--txt-primary);
+    }
+
+    .mm-referee-sub{
+        margin-top:2px;
+
+        font-size:.75rem;
+
+        color:
+            var(--txt-muted);
+
+        line-height:1.4;
+    }
+
+    .mm-referee-switch{
+        width:52px;
+        height:30px;
+
+        border-radius:999px;
+
+        background:
+            var(--surface-4);
+
+        border:
+            1px solid var(--border-subtle);
+
+        position:relative;
+
+        transition:.2s;
+    }
+
+    .mm-referee-switch span{
+        position:absolute;
+
+        width:22px;
+        height:22px;
+
+        border-radius:999px;
+
+        background:white;
+
+        top:3px;
+        left:3px;
+
+        transition:.2s;
+    }
+
+    .mm-referee-input:checked
+    + .mm-referee-card{
+
+        border-color:
+            rgba(163,177,75,.35);
+
+        background:
+            rgba(163,177,75,.08);
+    }
+
+    .mm-referee-input:checked
+    + .mm-referee-card
+    .mm-referee-switch{
+
+        background:
+            var(--accent);
+
+        border-color:
+            var(--accent);
+    }
+
+    .mm-referee-input:checked
+    + .mm-referee-card
+    .mm-referee-switch span{
+
+        transform:
+            translateX(22px);
+    }
+
     @keyframes mmRadarSpin {
         from { transform: rotate(0deg); }
         to { transform: rotate(360deg); }
@@ -647,6 +793,43 @@
                 <div class="mm-field">
                     <label class="mm-label" for="mm-end">Selesai</label>
                     <input type="time" id="mm-end" name="end_time" class="mm-input" required>
+                </div>
+            </div>
+
+            <div class="mm-field">
+                <label class="mm-label" for="mm-use-referee">Butuh Wasit?</label>
+
+                <div class="mm-referee-check">
+                    <input
+                        type="checkbox"
+                        id="mm-use-referee"
+                        name="use_referee"
+                        value="1"
+                        class="mm-referee-input"
+                    >
+
+                    <label for="mm-use-referee" class="mm-referee-card">
+
+                        <div class="mm-referee-icon">
+                            <i class="bi bi-person-badge"></i>
+                        </div>
+
+                        <div class="mm-referee-content">
+                            <span class="mm-referee-title">
+                                Ya, gunakan wasit otomatis
+                            </span>
+
+                            <span class="mm-referee-sub">
+                                Sistem akan memilih wasit yang tersedia
+                                sesuai jadwal pertandingan
+                            </span>
+                        </div>
+
+                        <div class="mm-referee-switch">
+                            <span></span>
+                        </div>
+
+                    </label>
                 </div>
             </div>
 

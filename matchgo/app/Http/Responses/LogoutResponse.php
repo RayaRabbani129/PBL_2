@@ -8,6 +8,6 @@ class LogoutResponse implements LogoutResponseContract
 {
     public function toResponse($request)
     {
-        return redirect('/admin/login');
+        return redirect()->route('admin.login');
     }
 }

@@ -26,6 +26,19 @@ class MatchAudit extends Model
         'audited_at' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        static::saved(function (MatchAudit $audit): void {
+            if (! $audit->audited_at || ! $audit->match) {
+                return;
+            }
+
+            if ($audit->match->status !== 'completed') {
+                $audit->match->update(['status' => 'completed']);
+            }
+        });
+    }
+
     /*
     |--------------------------------------------------------------------------
     | RELATION

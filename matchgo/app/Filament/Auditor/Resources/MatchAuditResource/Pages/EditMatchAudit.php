@@ -24,7 +24,7 @@ class EditMatchAudit extends EditRecord
         return [
             'home_score' => $match->home_score,
             'away_score' => $match->away_score,
-            'status' => $match->status,
+            'status' => 'completed',
             'home_team_review' => $audit?->home_team_review ?? 'fair_play',
             'away_team_review' => $audit?->away_team_review ?? 'fair_play',
             'sportsmanship_rating' => $audit?->sportsmanship_rating,
@@ -43,7 +43,7 @@ class EditMatchAudit extends EditRecord
             $match->update([
                 'home_score' => $formData['home_score'],
                 'away_score' => $formData['away_score'],
-                'status'     => $formData['status'],
+                'status'     => 'completed',
             ]);
 
             $audit = MatchAudit::updateOrCreate(
@@ -61,7 +61,7 @@ class EditMatchAudit extends EditRecord
                 ]
             );
 
-            if ($formData['status'] === 'completed' && !$match->stats_processed) {
+            if (!$match->stats_processed) {
                 $this->updateStats($match);
                 $match->update(['stats_processed' => true]);
             }

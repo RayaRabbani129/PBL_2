@@ -3,14 +3,14 @@
 
     $panelTitle = match ($panelId) {
         'field-admin' => 'Admin Lapangan',
-        'admin'       => 'Super Admin / Auditor',
+        'admin'       => 'Admin MATCHGO',
         'auditor'     => 'Auditor',
         default       => 'Admin Panel',
     };
 
     $panelSubtitle = match ($panelId) {
         'field-admin' => 'Masuk untuk mengelola venue, lapangan, dan jadwal pertandingan.',
-        'admin'       => 'Masuk untuk mengelola sistem MATCHGO secara menyeluruh.',
+        'admin'       => 'Masuk sebagai Super Admin, Admin Lapangan, atau Auditor.',
         'auditor'     => 'Masuk untuk mengakses laporan dan data audit MATCHGO.',
         default       => 'Masuk untuk melanjutkan ke panel MATCHGO.',
     };
@@ -431,8 +431,7 @@
                         <div>
                             <strong>Akses Khusus — {{ $panelTitle }}</strong>
                             <small>
-                                Halaman ini hanya untuk Super Admin,
-                                Admin Lapangan, dan Auditor yang memiliki hak akses sistem MATCHGO.
+                                Super Admin, Admin Lapangan, dan Auditor masuk dari halaman ini.
                             </small>
                         </div>
                     </div>

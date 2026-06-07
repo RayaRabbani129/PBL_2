@@ -2,10 +2,10 @@
 
 namespace App\Filament\Auditor\Resources;
 
-use App\Filament\Auditor\Resources\TeamMonitoringResource\Forms\TeamMonitoringForm;
-use App\Filament\Auditor\Resources\TeamMonitoringResource\Pages\EditTeamMonitoring;
-use App\Filament\Auditor\Resources\TeamMonitoringResource\Pages\ListTeamMonitorings;
-use App\Filament\Auditor\Resources\TeamMonitoringResource\Tables\TeamMonitoringTable;
+use App\Filament\Auditor\Resources\TeamMonitorings\Pages\EditTeamMonitoring;
+use App\Filament\Auditor\Resources\TeamMonitorings\Pages\ListTeamMonitorings;
+use App\Filament\Auditor\Resources\TeamMonitorings\Schemas\TeamMonitoringForm;
+use App\Filament\Auditor\Resources\TeamMonitorings\Tables\TeamMonitoringsTable;
 use App\Models\Team;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -50,7 +50,7 @@ class TeamMonitoringResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return TeamMonitoringTable::configure($table);
+        return TeamMonitoringsTable::configure($table);
     }
 
     public static function getPages(): array

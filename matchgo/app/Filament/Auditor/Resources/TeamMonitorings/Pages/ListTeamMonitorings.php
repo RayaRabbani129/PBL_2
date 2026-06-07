@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Auditor\Resources\TeamMonitoringResource\Pages;
+namespace App\Filament\Auditor\Resources\TeamMonitorings\Pages;
 
 use App\Filament\Auditor\Resources\TeamMonitoringResource;
 use Filament\Resources\Pages\ListRecords;

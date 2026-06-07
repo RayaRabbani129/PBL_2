@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'payment_gateway' => [
+        'provider' => env('PAYMENT_GATEWAY_PROVIDER', 'generic'),
+        'api_key' => env('PAYMENT_GATEWAY_API_KEY'),
+        'invoice_endpoint' => env('PAYMENT_GATEWAY_INVOICE_ENDPOINT'),
+        'checkout_url' => env('PAYMENT_GATEWAY_CHECKOUT_URL', 'https://payment-gateway.example/checkout/{invoice_id}'),
+        'webhook_secret' => env('PAYMENT_GATEWAY_WEBHOOK_SECRET', 'local-webhook-secret'),
+        'expiry_minutes' => env('PAYMENT_GATEWAY_EXPIRY_MINUTES', 60),
+    ],
+
 ];

@@ -14,9 +14,15 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\MatchCostController;
 use App\Http\Controllers\VenueRecommendationController;
 use App\Http\Controllers\RefereeController;
+use App\Http\Controllers\PaymentController;
 
 // Landing
 Route::get('/', fn() => view('landingPage.index'))->name('home');
+
+Route::get('/admin/login', [LoginController::class, 'showAdminLoginForm'])->name('admin.login');
+Route::redirect('/admin/filament-login', '/admin/login')->name('filament.admin.auth.login');
+Route::post('/admin/login', [LoginController::class, 'adminLogin'])->name('admin.login.submit');
+Route::post('/midtrans/callback', [PaymentController::class, 'callback'])->name('midtrans.callback');
 
 // ── Player Auth ──────────────────────────────────────
 Route::middleware('guest')->group(function () {
@@ -90,6 +96,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/challenge/{matchRequest}/reject', [MatchController::class, 'rejectChallenge'])->name('challenge.reject');
         Route::get('/{match}', [MatchController::class, 'show'])->name('show');
         Route::post('/{match}/cancel', [MatchController::class, 'cancel'])->name('cancel');
+        Route::post('/{match}/payments/create', [PaymentController::class, 'createPayment'])->name('payments.create');
+        Route::get('/{match}/payment/success', [PaymentController::class, 'success'])->name('payment.success');
+        Route::get('/{match}/payment/failed', [PaymentController::class, 'failed'])->name('payment.failed');
         Route::post('/{match}/score', [MatchController::class, 'inputScore'])->name('score');
     });
 

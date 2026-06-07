@@ -28,6 +28,7 @@ class MatchmakingService
          * HANYA BLOK:
          * - pending
          * - confirmed
+         * - awaiting_payment
          * - ongoing
          *
          * completed => boleh muncul lagi
@@ -38,6 +39,7 @@ class MatchmakingService
             ->whereIn('status', [
                 'pending',
                 'confirmed',
+                'awaiting_payment',
                 'ongoing',
             ])
             ->get()

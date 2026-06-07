@@ -18,6 +18,10 @@ class RefereeTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->withCount([
+                'rentals',
+                'rentals as active_rentals_count' => fn ($query) => $query->whereIn('status', ['pending', 'confirmed']),
+            ]))
             ->columns([
                 TextColumn::make('name')
                     ->label('Nama Wasit')
@@ -62,6 +66,11 @@ class RefereeTable
                     ->label('Pertandingan')
                     ->numeric()
                     ->sortable(),
+                TextColumn::make('active_rentals_count')
+                    ->label('Sewa Aktif')
+                    ->badge()
+                    ->color(fn ($state): string => ((int) $state) > 0 ? 'warning' : 'success')
+                    ->sortable(),
             ])
             ->filters([
                 TernaryFilter::make('is_available')
@@ -80,7 +89,12 @@ class RefereeTable
                     ->searchable()
                     ->preload()
                     ->options(
-                        \App\Models\Referee::distinct()->pluck('city', 'city')
+                        \App\Models\Referee::query()
+                            ->whereNotNull('city')
+                            ->where('city', '!=', '')
+                            ->distinct()
+                            ->orderBy('city')
+                            ->pluck('city', 'city')
                     ),
             ])
             ->actions([

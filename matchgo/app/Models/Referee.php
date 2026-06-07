@@ -41,21 +41,34 @@ class Referee extends Model
         return $this->hasMany(RefereeRental::class);
     }
 
+    public function scopeAvailable($query)
+    {
+        return $query->where('is_available', true);
+    }
+
+    public function scopeFreeBetween($query, string $date, string $startTime, string $endTime)
+    {
+        return $query->whereDoesntHave('rentals', function ($query) use ($date, $startTime, $endTime) {
+            $query->where('rental_date', $date)
+                ->where('status', '!=', 'cancelled')
+                ->where('start_time', '<', $endTime)
+                ->where('end_time', '>', $startTime);
+        });
+    }
+
+    public static function availableFor(string $date, string $startTime, string $endTime)
+    {
+        return static::query()
+            ->available()
+            ->freeBetween($date, $startTime, $endTime);
+    }
+
     public function getAvailableReferees($date, $startTime, $endTime)
     {
-        return $this->where('is_available', true)
-            ->whereDoesntHave('rentals', function ($query) use ($date, $startTime, $endTime) {
-                $query->where('rental_date', $date)
-                    ->where(function ($q) use ($startTime, $endTime) {
-                        $q->whereBetween('start_time', [$startTime, $endTime])
-                            ->orWhereBetween('end_time', [$startTime, $endTime])
-                            ->orWhere(function ($q2) use ($startTime, $endTime) {
-                                $q2->where('start_time', '<=', $startTime)
-                                    ->where('end_time', '>=', $endTime);
-                            });
-                    });
-            })
+        return static::availableFor($date, $startTime, $endTime)
             ->orderByDesc('rating')
+            ->orderByDesc('experience_years')
+            ->orderBy('hourly_rate')
             ->get();
     }
 }

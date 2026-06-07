@@ -25,7 +25,7 @@ class FieldAdminPanelProvider extends PanelProvider
         return $panel
             ->id('field-admin')
             ->path('field-admin')
-            ->login()
+            ->login(fn () => redirect('/admin/login'))
             ->brandName('MATCHGO Admin Lapangan')
             ->sidebarCollapsibleOnDesktop()
             ->colors([

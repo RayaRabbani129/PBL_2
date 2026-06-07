@@ -25,7 +25,7 @@ class AuditorPanelProvider extends PanelProvider
         return $panel
             ->id('auditor')
             ->path('auditor')
-            ->login()
+            ->login(fn () => redirect('/admin/login'))
             ->brandName('MATCHGO Auditor')
             ->sidebarCollapsibleOnDesktop()
             ->colors([

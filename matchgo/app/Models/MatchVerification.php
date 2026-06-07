@@ -6,6 +6,25 @@ use Illuminate\Database\Eloquent\Model;
 
 class MatchVerification extends Model
 {
+    protected static function booted(): void
+    {
+        static::creating(function (MatchVerification $verification): void {
+            $verification->verified_by ??= auth()->id();
+        });
+
+        static::saving(function (MatchVerification $verification): void {
+            if ($verification->status === 'valid') {
+                $verification->status = 'verified';
+            }
+
+            if ($verification->status === 'cheating') {
+                $verification->status = 'rejected';
+            }
+
+            $verification->verified_by ??= auth()->id();
+        });
+    }
+
     protected $fillable = [
         'match_id',
         'score_team_a',

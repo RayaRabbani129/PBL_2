@@ -1,4 +1,7 @@
 <!DOCTYPE html>
+@php
+  $isAdminLogin = $isAdminLogin ?? false;
+@endphp
 <html lang="id" data-theme="dark">
 <head>
   <meta charset="UTF-8">
@@ -489,16 +492,18 @@
     <div style="width: 100%; max-width: 440px; position: relative; z-index: 2;">
 
       {{-- Back to home --}}
-      <a href="{{ url('/') }}" class="back-home">
-        <i class="bi bi-arrow-left"></i> Kembali ke Beranda
+      <a href="{{ $isAdminLogin ? route('login') : url('/') }}" class="back-home">
+        <i class="bi bi-arrow-left"></i> Kembali ke {{ $isAdminLogin ? 'Login Player' : 'Beranda' }}
       </a>
 
       <div class="login-card">
 
         {{-- Header --}}
         <div class="mb-4">
-          <h1 class="login-title">Selamat Datang Kembali</h1>
-          <p class="login-subtitle">Masuk untuk melanjutkan ke MATCHGO</p>
+          <h1 class="login-title">{{ $isAdminLogin ? 'Admin MATCHGO' : 'Selamat Datang Kembali' }}</h1>
+          <p class="login-subtitle">
+            {{ $isAdminLogin ? 'Masuk sebagai Super Admin, Admin Lapangan, atau Auditor' : 'Masuk untuk melanjutkan ke MATCHGO' }}
+          </p>
         </div>
 
         {{-- Error global --}}
@@ -518,7 +523,7 @@
         @endif
 
         {{-- Form --}}
-        <form method="POST" action="{{ route('login') }}" id="loginForm">
+        <form method="POST" action="{{ $isAdminLogin ? route('admin.login.submit') : route('login') }}" id="loginForm">
           @csrf
 
           {{-- Email --}}
@@ -575,26 +580,32 @@
           </button>
         </form>
 
-        {{-- Divider --}}
-        <div class="divider-text">
-          <span>atau</span>
-        </div>
-
-        {{-- Admin link --}}
-        <a href="{{ url('/admin/login') }}" class="admin-link-box">
-          <div class="admin-link-icon">
-            <i class="bi bi-shield-lock-fill"></i>
+        @if (! $isAdminLogin)
+          {{-- Divider --}}
+          <div class="divider-text">
+            <span>atau</span>
           </div>
-          <div class="admin-link-text">
-            <small>Login sebagai</small>
-            <span>Admin Panel <i class="bi bi-arrow-right ms-1" style="font-size: 0.75rem;"></i></span>
-          </div>
-        </a>
 
-        {{-- Register --}}
-        <p class="register-text">
-          Belum punya akun? <a href="{{ route('register') }}">Daftar Gratis</a>
-        </p>
+          {{-- Admin link --}}
+          <a href="{{ url('/admin/login') }}" class="admin-link-box">
+            <div class="admin-link-icon">
+              <i class="bi bi-shield-lock-fill"></i>
+            </div>
+            <div class="admin-link-text">
+              <small>Login sebagai</small>
+              <span>Admin MATCHGO <i class="bi bi-arrow-right ms-1" style="font-size: 0.75rem;"></i></span>
+            </div>
+          </a>
+
+          {{-- Register --}}
+          <p class="register-text">
+            Belum punya akun? <a href="{{ route('register') }}">Daftar Gratis</a>
+          </p>
+        @else
+          <p class="register-text">
+            Login sebagai pemain? <a href="{{ route('login') }}">Masuk Player</a>
+          </p>
+        @endif
 
       </div>
     </div>

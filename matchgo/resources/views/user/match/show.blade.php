@@ -198,6 +198,154 @@
     .detail-row-label { color: var(--txt-muted); font-weight: 500; flex-shrink: 0; }
     .detail-row-val   { color: var(--txt-primary); font-weight: 600; text-align: right; }
 
+    .payment-card {
+        background: var(--surface-2);
+        border: 1px solid var(--border-subtle);
+        border-radius: 16px;
+        overflow: hidden;
+        margin-bottom: 1.25rem;
+    }
+
+    .payment-card-header {
+        padding: 0.85rem 1.25rem;
+        border-bottom: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .payment-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: 'Manrope', sans-serif;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--txt-primary);
+    }
+
+    .payment-card-title i { color: var(--accent); }
+
+    .payment-card-badge {
+        padding: 5px 9px;
+        border-radius: 999px;
+        background: var(--surface-4);
+        border: 1px solid var(--border-subtle);
+        color: var(--txt-muted);
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        white-space: nowrap;
+    }
+
+    .payment-card-body { padding: 1.15rem 1.25rem 1.25rem; }
+
+    .payment-total-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 14px;
+        align-items: center;
+        padding: 0 0 1rem;
+        border-bottom: 1px solid var(--border-subtle);
+        margin-bottom: 1rem;
+    }
+
+    .payment-total-label {
+        color: var(--txt-muted);
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
+    .payment-total-value {
+        font-family: 'Manrope', sans-serif;
+        color: var(--accent);
+        font-size: 1.45rem;
+        font-weight: 900;
+        text-align: right;
+    }
+
+    .payment-breakdown,
+    .payment-team-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .payment-breakdown { margin-bottom: 1rem; }
+
+    .payment-mini-card,
+    .payment-team-card {
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        padding: 0.85rem;
+        min-width: 0;
+    }
+
+    .payment-mini-card { background: var(--surface-3); }
+    .payment-team-card { background: var(--surface-2); }
+
+    .payment-mini-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--txt-muted);
+        font-size: 0.72rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .payment-mini-label i { color: var(--accent); }
+
+    .payment-mini-value {
+        color: var(--txt-primary);
+        font-family: 'Manrope', sans-serif;
+        font-size: 0.98rem;
+        font-weight: 850;
+    }
+
+    .payment-team-name {
+        color: var(--txt-primary);
+        font-size: 0.78rem;
+        font-weight: 800;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 8px;
+    }
+
+    .payment-team-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        color: var(--txt-muted);
+        font-size: 0.72rem;
+    }
+
+    .payment-team-meta strong {
+        color: var(--txt-primary);
+        font-weight: 800;
+    }
+
+    @media (max-width: 640px) {
+        .payment-card-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .payment-total-row,
+        .payment-breakdown,
+        .payment-team-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .payment-total-value {
+            text-align: left;
+            font-size: 1.25rem;
+        }
+    }
+
     /* ── Status timeline ── */
     .status-timeline { display: flex; flex-direction: column; gap: 0; }
 
@@ -316,13 +464,14 @@
     $myScore  = $isHome ? $match->home_score : $match->away_score;
     $oppScore = $isHome ? $match->away_score : $match->home_score;
     $isCompleted = $match->status === 'completed';
-    $canInputScore = $match->status === 'accepted'
+    $canInputScore = $match->status === 'ongoing'
         && \Carbon\Carbon::parse($match->match_datetime)->isPast()
         && is_null($match->home_score);
 
     $statusSteps = [
         ['key' => 'created',   'label' => 'Tantangan Dikirim',  'sub' => $match->created_at->format('d M Y, H:i'), 'done' => true,         'icon' => 'bi-send'],
-        ['key' => 'accepted',  'label' => 'Match Dijadwalkan',  'sub' => 'Status: ' . ucfirst($match->status),    'done' => in_array($match->status, ['accepted','completed']), 'current' => $match->status === 'accepted', 'icon' => 'bi-calendar-check'],
+        ['key' => 'accepted',  'label' => 'Match Dijadwalkan',  'sub' => 'Status: ' . ucfirst(str_replace('_', ' ', $match->status)),    'done' => in_array($match->status, ['awaiting_payment','ongoing','completed']), 'current' => $match->status === 'awaiting_payment', 'icon' => 'bi-calendar-check'],
+        ['key' => 'payment',   'label' => 'Pembayaran',         'sub' => $match->status === 'awaiting_payment' ? 'Menunggu pembayaran kedua tim' : 'Pembayaran lengkap', 'done' => in_array($match->status, ['ongoing','completed']), 'current' => $match->status === 'awaiting_payment', 'icon' => 'bi-credit-card'],
         ['key' => 'completed', 'label' => 'Match Selesai',      'sub' => $isCompleted ? 'Skor telah diinput' : 'Menunggu', 'done' => $isCompleted, 'current' => $canInputScore, 'icon' => 'bi-trophy'],
         ['key' => 'verified',  'label' => 'Terverifikasi',      'sub' => optional($match->verification)->status === 'verified' ? 'Diverifikasi admin' : 'Menunggu admin', 'done' => optional($match->verification)->status === 'verified', 'icon' => 'bi-shield-check'],
     ];
@@ -343,6 +492,10 @@
                     $headerStatus = [
                         'pending'   => ['label'=>'Menunggu',   'class'=>'status-pending'],
                         'accepted'  => ['label'=>'Terjadwal',  'class'=>'status-accepted'],
+                        'scheduled' => ['label'=>'Terjadwal',  'class'=>'status-accepted'],
+                        'confirmed' => ['label'=>'Terkonfirmasi', 'class'=>'status-accepted'],
+                        'awaiting_payment' => ['label'=>'Menunggu Pembayaran', 'class'=>'status-pending'],
+                        'ongoing'   => ['label'=>'Berjalan', 'class'=>'status-accepted'],
                         'completed' => ['label'=>'Selesai',    'class'=>'status-completed'],
                         'cancelled' => ['label'=>'Dibatalkan', 'class'=>'status-cancelled'],
                     ][$match->status] ?? ['label'=>ucfirst($match->status), 'class'=>'status-pending'];
@@ -538,11 +691,21 @@
                     <span class="detail-row-label">Lokasi</span>
                     <span class="detail-row-val">{{ $match->venue->name ?? '—' }}</span>
                 </div>
-                @if ($match->total_cost)
+                @if (false && $match->total_cost)
                     <div class="detail-row">
-                        <span class="detail-row-label">Total Biaya Sewa Lapangan</span>
+                        <span class="detail-row-label">Total Biaya Pertandingan</span>
                         <span class="detail-row-val">Rp {{ number_format($match->total_cost, 0, ',', '.') }}</span>
                     </div>
+                    @if ($match->refereeRental)
+                        <div class="detail-row">
+                            <span class="detail-row-label">Biaya Sewa Wasit</span>
+                            <span class="detail-row-val">Rp {{ number_format($match->refereeRental->rental_cost, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-row-label">Wasit</span>
+                            <span class="detail-row-val">{{ $match->refereeRental->referee->name ?? '—' }} @if($match->refereeRental->referee->certification_level) ({{ $match->refereeRental->referee->certification_level }}) @endif</span>
+                        </div>
+                    @endif
                     <div class="detail-row">
                         <span class="detail-row-label">Biaya per tim (50:50)</span>
                         <span class="detail-row-val">Rp {{ number_format($homeTeamShare, 0, ',', '.') }}</span>
@@ -568,6 +731,162 @@
                 @endif
             </div>
         </div>
+
+        @if ($match->total_cost)
+            @php
+                $refereeRental = $match->refereeRental;
+                $refereeFee = $refereeRental ? (float) $refereeRental->rental_cost : 0;
+                $venueFee = max(0, (float) $match->total_cost - $refereeFee);
+                $refereeName = optional(optional($refereeRental)->referee)->name;
+                $refereeLevel = optional(optional($refereeRental)->referee)->certification_level;
+            @endphp
+            <div class="payment-card">
+                <div class="payment-card-header">
+                    <div class="payment-card-title">
+                        <i class="bi bi-receipt-cutoff"></i>
+                        Detail Pembayaran
+                    </div>
+                    <span class="payment-card-badge">Split 50:50</span>
+                </div>
+                <div class="payment-card-body">
+                    <div class="payment-total-row">
+                        <div>
+                            <div class="payment-total-label">Total biaya pertandingan</div>
+                            <div style="font-size:0.72rem;color:var(--txt-faint);margin-top:3px;">
+                                Termasuk venue dan biaya tambahan yang aktif.
+                            </div>
+                        </div>
+                        <div class="payment-total-value">Rp {{ number_format($match->total_cost, 0, ',', '.') }}</div>
+                    </div>
+
+                    <div class="payment-breakdown">
+                        <div class="payment-mini-card">
+                            <div class="payment-mini-label">
+                                <i class="bi bi-geo-alt"></i>
+                                Biaya Venue
+                            </div>
+                            <div class="payment-mini-value">Rp {{ number_format($venueFee, 0, ',', '.') }}</div>
+                        </div>
+                        <div class="payment-mini-card">
+                            <div class="payment-mini-label">
+                                <i class="bi bi-person-badge"></i>
+                                Wasit
+                            </div>
+                            <div class="payment-mini-value">
+                                {{ $refereeRental ? 'Rp ' . number_format($refereeFee, 0, ',', '.') : 'Tidak dipakai' }}
+                            </div>
+                            @if ($refereeRental)
+                                <div style="font-size:0.7rem;color:var(--txt-muted);margin-top:4px;">
+                                    {{ $refereeName ?? 'Wasit' }}{{ $refereeLevel ? ' - ' . ucfirst($refereeLevel) : '' }}
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="payment-team-grid">
+                        <div class="payment-team-card">
+                            <div class="payment-team-name">{{ $match->homeTeam->name ?? 'Tim Kandang' }}</div>
+                            <div class="payment-team-meta">
+                                <span>Bagian tim: <strong>Rp {{ number_format($homeTeamShare, 0, ',', '.') }}</strong></span>
+                                <span>{{ $homeTeamMembers }} anggota: <strong>{{ $homeCostPerMember ? 'Rp ' . number_format($homeCostPerMember, 0, ',', '.') : '-' }}</strong> / anggota</span>
+                            </div>
+                        </div>
+                        <div class="payment-team-card">
+                            <div class="payment-team-name">{{ $match->awayTeam->name ?? 'Tim Tamu' }}</div>
+                            <div class="payment-team-meta">
+                                <span>Bagian tim: <strong>Rp {{ number_format($awayTeamShare, 0, ',', '.') }}</strong></span>
+                                <span>{{ $awayTeamMembers }} anggota: <strong>{{ $awayCostPerMember ? 'Rp ' . number_format($awayCostPerMember, 0, ',', '.') : '-' }}</strong> / anggota</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-subtle);">
+                        @php
+                            $paymentStatusText = function ($payment) {
+                                return match (optional($payment)->status) {
+                                    'paid' => 'Sudah bayar',
+                                    'failed' => 'Gagal',
+                                    'expired' => 'Kedaluwarsa',
+                                    'cancelled' => 'Dibatalkan',
+                                    default => 'Pending',
+                                };
+                            };
+                        @endphp
+                        <div class="payment-breakdown" style="margin-bottom:1rem;">
+                            <div class="payment-mini-card">
+                                <div class="payment-mini-label">
+                                    <i class="bi bi-check-circle"></i>
+                                    {{ $match->homeTeam->name ?? 'Tim Kandang' }}
+                                </div>
+                                <div class="payment-mini-value">
+                                    {{ $paymentStatusText($homePayment) }}
+                                </div>
+                                @if (optional($homePayment)->paid_at)
+                                    <div style="font-size:0.7rem;color:var(--txt-muted);margin-top:4px;">
+                                        {{ $homePayment->paid_at->format('d M Y, H:i') }}
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="payment-mini-card">
+                                <div class="payment-mini-label">
+                                    <i class="bi bi-check-circle"></i>
+                                    {{ $match->awayTeam->name ?? 'Tim Tamu' }}
+                                </div>
+                                <div class="payment-mini-value">
+                                    {{ $paymentStatusText($awayPayment) }}
+                                </div>
+                                @if (optional($awayPayment)->paid_at)
+                                    <div style="font-size:0.7rem;color:var(--txt-muted);margin-top:4px;">
+                                        {{ $awayPayment->paid_at->format('d M Y, H:i') }}
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        @if ($match->status === 'awaiting_payment' && optional($myPayment)->status !== 'paid')
+                            <div class="payment-mini-card" style="margin-bottom:1rem;">
+                                <div class="payment-mini-label">
+                                    <i class="bi bi-wallet2"></i>
+                                    Invoice Tim Kamu
+                                </div>
+                                <div class="payment-mini-value">
+                                    Rp {{ number_format(optional($myPayment)->amount ?? ($isHome ? $homeTeamShare : $awayTeamShare), 0, ',', '.') }}
+                                </div>
+                                @if (optional($myPayment)->order_id)
+                                    <div style="font-size:0.7rem;color:var(--txt-muted);margin-top:4px;">
+                                        Order ID: {{ $myPayment->order_id }}
+                                    </div>
+                                @endif
+                                @if (optional($myPayment)->expired_at)
+                                    <div style="font-size:0.7rem;color:var(--txt-muted);margin-top:4px;">
+                                        Berlaku sampai {{ $myPayment->expired_at->format('d M Y, H:i') }}
+                                    </div>
+                                @endif
+                            </div>
+
+                            <button
+                                type="button"
+                                class="btn-lime js-pay-midtrans"
+                                data-create-url="{{ route('matches.payments.create', $match) }}"
+                                style="width:100%;justify-content:center;"
+                            >
+                                <i class="bi bi-credit-card"></i> Bayar Sekarang
+                            </button>
+                        @elseif (optional($myPayment)->status === 'paid' && $match->status === 'awaiting_payment')
+                            <div class="alert-matchgo-info" style="margin:0;">
+                                <i class="bi bi-hourglass-split me-2"></i>
+                                Pembayaran tim kamu sudah diterima. Menunggu pembayaran dari tim lawan.
+                            </div>
+                        @elseif ($match->status === 'ongoing')
+                            <div class="alert-matchgo-info" style="margin:0;">
+                                <i class="bi bi-check2-circle me-2"></i>
+                                Pembayaran kedua tim sudah lengkap. Match sedang berjalan.
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @endif
 
         {{-- Verification detail (if available) --}}
         @if ($match->verification)
@@ -686,3 +1005,62 @@
 </div>
 
 @endsection
+
+@if ($match->status === 'awaiting_payment' && optional($myPayment)->status !== 'paid')
+    @push('scripts')
+        <script
+            src="https://app.sandbox.midtrans.com/snap/snap.js"
+            data-client-key="{{ config('midtrans.client_key') }}"
+        ></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const button = document.querySelector('.js-pay-midtrans');
+
+                if (!button) return;
+
+                button.addEventListener('click', async function () {
+                    button.disabled = true;
+                    const originalText = button.innerHTML;
+                    button.innerHTML = '<i class="bi bi-hourglass-split"></i> Menyiapkan Pembayaran...';
+
+                    try {
+                        const response = await fetch(button.dataset.createUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok || !data.snap_token) {
+                            throw new Error(data.message || 'Gagal membuat transaksi pembayaran.');
+                        }
+
+                        window.snap.pay(data.snap_token, {
+                            onSuccess: function () {
+                                window.location.href = '{{ route('matches.payment.success', $match) }}';
+                            },
+                            onPending: function () {
+                                window.location.reload();
+                            },
+                            onError: function () {
+                                window.location.href = '{{ route('matches.payment.failed', $match) }}';
+                            },
+                            onClose: function () {
+                                button.disabled = false;
+                                button.innerHTML = originalText;
+                            }
+                        });
+                    } catch (error) {
+                        alert(error.message);
+                        button.disabled = false;
+                        button.innerHTML = originalText;
+                    }
+                });
+            });
+        </script>
+    @endpush
+@endif

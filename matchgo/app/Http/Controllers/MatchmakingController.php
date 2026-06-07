@@ -9,17 +9,23 @@ use App\Models\Team;
 use App\Models\TeamSchedule;
 use App\Models\Booking;
 use App\Models\MatchCost;
+use App\Models\MatchPayment;
 use App\Models\MatchRequest;
 use App\Models\Matches;
 use App\Models\Notification;
+use App\Models\Referee;
 use App\Services\MatchmakingService;
+use App\Services\PaymentGatewayService;
+use App\Services\RefereeRentalService;
 use App\Services\VenueRecommendationService;
 
 class MatchmakingController extends Controller
 {
     public function __construct(
         protected MatchmakingService $matchmaking,
-        protected VenueRecommendationService $venueRecommendation
+        protected VenueRecommendationService $venueRecommendation,
+        protected RefereeRentalService $refereeService,
+        protected PaymentGatewayService $paymentGateway
     ) {}
 
     /**
@@ -119,8 +125,11 @@ class MatchmakingController extends Controller
             'preferred_date' => 'required|date|after_or_equal:today',
             'start_time'     => 'required|date_format:H:i',
             'end_time'       => 'required|date_format:H:i|after:start_time',
+            'use_referee'    => 'nullable|boolean',
         ]);
         // Jika validasi gagal, Laravel otomatis return JSON 422 karena request->expectsJson()
+
+        $useReferee = $request->boolean('use_referee');
 
         $alreadyChallenged = MatchRequest::where('team_id', $myTeam->id)
             ->where('matched_with', $opponent->id)
@@ -158,6 +167,7 @@ class MatchmakingController extends Controller
                     'end_time'       => $validated['end_time'],
                     'status'         => 'matched',
                     'matched_with'   => $opponent->id,
+                    'use_referee'    => $useReferee || ($incomingRequest->use_referee ?? false),
                 ]);
 
                 $match = $this->createAutoMatch(
@@ -166,8 +176,18 @@ class MatchmakingController extends Controller
                     $validated['preferred_date'],
                     $validated['start_time'],
                     $validated['end_time'],
-                    'scheduled'
+                    'awaiting_payment'
                 );
+
+                $match = $this->assignRefereeIfRequested(
+                    $match,
+                    $validated['preferred_date'],
+                    $validated['start_time'],
+                    $validated['end_time'],
+                    $useReferee || ($incomingRequest->use_referee ?? false)
+                );
+
+                $this->ensurePaymentRecords($match->fresh(['cost']));
 
                 $this->notify($opponent->user_id, 'match_confirmed',
                     "Pertandingan melawan {$myTeam->name} dikonfirmasi pada {$validated['preferred_date']} pukul {$validated['start_time']}! ⚽");
@@ -190,6 +210,7 @@ class MatchmakingController extends Controller
                 'end_time'       => $validated['end_time'],
                 'status'         => 'searching',
                 'matched_with'   => $opponent->id,
+                'use_referee'    => $useReferee,
             ]);
 
             $this->notify($opponent->user_id, 'match_challenge',
@@ -205,10 +226,14 @@ class MatchmakingController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
+            $message = $e->getMessage() === 'Tidak ada wasit yang tersedia pada waktu tersebut.'
+                ? $e->getMessage()
+                : 'Terjadi kesalahan saat mengirim tantangan. Silakan coba lagi.';
+
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat mengirim tantangan. Silakan coba lagi.',
+                'message' => $message,
                 'debug'   => $e->getMessage(),
             ], 500);
         }
@@ -274,6 +299,7 @@ class MatchmakingController extends Controller
                 'end_time'       => $matchRequest->end_time,
                 'status'         => 'matched',
                 'matched_with'   => $matchRequest->team_id,
+                'use_referee'    => $matchRequest->use_referee,
             ]);
 
             $match = $this->createAutoMatch(
@@ -282,8 +308,20 @@ class MatchmakingController extends Controller
                 $matchRequest->preferred_date,
                 $matchRequest->start_time,
                 $matchRequest->end_time,
-                'scheduled'
+                    'awaiting_payment'
             );
+
+            if ($matchRequest->use_referee) {
+                $match = $this->assignRefereeIfRequested(
+                    $match,
+                    $matchRequest->preferred_date,
+                    $matchRequest->start_time,
+                    $matchRequest->end_time,
+                    true
+                );
+            }
+
+            $this->ensurePaymentRecords($match->fresh(['cost']));
 
             $challenger = $matchRequest->team;
 
@@ -306,7 +344,12 @@ class MatchmakingController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Terjadi kesalahan saat menerima tantangan. Silakan coba lagi.');
+
+            $message = $e->getMessage() === 'Tidak ada wasit yang tersedia pada waktu tersebut.'
+                ? $e->getMessage()
+                : 'Terjadi kesalahan saat menerima tantangan. Silakan coba lagi.';
+
+            return back()->with('error', $message);
         }
     }
 
@@ -412,34 +455,38 @@ class MatchmakingController extends Controller
         string $date,
         string $startTime,
         string $endTime,
-        string $status = 'scheduled'
+        string $status = 'awaiting_payment'
     ): Matches {
         $duration = $this->calcDuration($startTime, $endTime);
-        $venue    = $this->venueRecommendation->findBestVenueForMatch(
+        $recommendation = $this->venueRecommendation->findBestVenueForMatch(
             $homeTeam,
             $awayTeam,
             $date,
             $startTime,
             $endTime
         );
+        $venue = $recommendation['venue'] ?? null;
+        $field = $recommendation['field'] ?? null;
 
-        $totalCost = $venue ? round($venue->price_per_hour * ($duration / 60), 2) : 0;
+        $totalCost = $field ? round((float) $field->price_per_hour * ($duration / 60), 2) : 0;
 
         $match = Matches::create([
             'match_code'       => 'MCH-' . strtoupper(uniqid()),
             'home_team_id'     => $homeTeam->id,
             'away_team_id'     => $awayTeam->id,
             'venue_id'         => $venue?->id,
+            'field_id'         => $field?->id,
             'match_datetime'   => "$date $startTime",
             'duration_minutes' => $duration,
             'status'           => $status,
             'total_cost'       => $totalCost,
         ]);
 
-        if ($venue) {
+        if ($venue && $field) {
             Booking::create([
                 'match_id'     => $match->id,
                 'venue_id'     => $venue->id,
+                'field_id'     => $field->id,
                 'booking_date' => $date,
                 'start_time'   => $startTime,
                 'end_time'     => $endTime,
@@ -466,6 +513,71 @@ class MatchmakingController extends Controller
         }
 
         return $match;
+    }
+
+    private function findAvailableReferee(string $date, string $startTime, string $endTime): ?Referee
+    {
+        return (new Referee)->getAvailableReferees($date, $startTime, $endTime)->first();
+    }
+
+    private function assignRefereeIfRequested(Matches $match, string $date, string $startTime, string $endTime, bool $useReferee): Matches
+    {
+        if (! $useReferee) {
+            return $match;
+        }
+
+        $this->refereeService->assignBestRefereeForMatch($match);
+
+        return $match->refresh();
+    }
+
+    private function ensurePaymentRecords(Matches $match): void
+    {
+        $homePayment = MatchPayment::firstOrCreate(
+            ['match_id' => $match->id, 'team_id' => $match->home_team_id],
+            [
+                'user_id' => $match->homeTeam?->user_id,
+                'amount' => $this->paymentAmountForTeam($match, $match->home_team_id),
+                'status' => 'pending',
+            ]
+        );
+
+        $awayPayment = MatchPayment::firstOrCreate(
+            ['match_id' => $match->id, 'team_id' => $match->away_team_id],
+            [
+                'user_id' => $match->awayTeam?->user_id,
+                'amount' => $this->paymentAmountForTeam($match, $match->away_team_id),
+                'status' => 'pending',
+            ]
+        );
+
+        foreach ([$homePayment, $awayPayment] as $payment) {
+            $amount = $this->paymentAmountForTeam($match, $payment->team_id);
+            $payment->loadMissing('team');
+            $payment->update([
+                'amount' => $amount,
+                'user_id' => $payment->user_id ?: $payment->team?->user_id,
+            ]);
+
+            if (! $payment->snap_token) {
+                $this->paymentGateway->createInvoice($payment);
+            }
+        }
+    }
+
+    private function paymentAmountForTeam(Matches $match, int $teamId): float
+    {
+        $match->loadMissing('cost');
+
+        if ($match->cost) {
+            return (float) (
+                $teamId === $match->home_team_id
+                    ? $match->cost->home_team_cost
+                    : $match->cost->away_team_cost
+            );
+        }
+
+        return round(((float) $match->total_cost) / 2, 2);
     }
 
     /**

@@ -12,6 +12,7 @@ class Matches extends Model
         'away_team_id',
         'venue_id',
         'field_id',
+        'referee_id',
         'match_datetime',
         'duration_minutes',
         'home_score',
@@ -88,6 +89,24 @@ class Matches extends Model
 
     public function referee()
     {
-        return $this->hasOneThrough(Referee::class, RefereeRental::class, 'match_id', 'id', 'id', 'referee_id');
+        return $this->belongsTo(Referee::class, 'referee_id');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(MatchPayment::class, 'match_id');
+    }
+
+    public function paymentForTeam(int $teamId): ?MatchPayment
+    {
+        return $this->payments->firstWhere('team_id', $teamId);
+    }
+
+    public function allTeamsPaid(): bool
+    {
+        return $this->payments()
+            ->whereIn('team_id', [$this->home_team_id, $this->away_team_id])
+            ->where('status', 'paid')
+            ->count() === 2;
     }
 }

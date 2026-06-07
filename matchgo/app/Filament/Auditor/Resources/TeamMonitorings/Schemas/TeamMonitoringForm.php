@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Auditor\Resources\TeamMonitoringResource\Forms;
+namespace App\Filament\Auditor\Resources\TeamMonitorings\Schemas;
 
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\RichEditor;

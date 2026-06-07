@@ -12,7 +12,12 @@ class MatchRequest extends Model
         'start_time',
         'end_time',
         'status',
-        'matched_with'
+        'matched_with',
+        'use_referee',
+    ];
+
+    protected $casts = [
+        'use_referee' => 'boolean',
     ];
 
     public function team()

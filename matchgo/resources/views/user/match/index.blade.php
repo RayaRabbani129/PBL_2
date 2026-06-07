@@ -617,6 +617,11 @@
                     $isHome         = $match->home_team_id === $myTeam->id;
                     $myTeamInMatch  = $isHome ? $match->homeTeam : $match->awayTeam;
                     $oppTeamInMatch = $isHome ? $match->awayTeam : $match->homeTeam;
+                    $upcomingStatus = match ($match->status) {
+                        'awaiting_payment' => ['label' => 'Menunggu Pembayaran', 'icon' => 'bi-credit-card'],
+                        'ongoing' => ['label' => 'Berjalan', 'icon' => 'bi-play-circle'],
+                        default => ['label' => 'Terjadwal', 'icon' => 'bi-calendar-check'],
+                    };
                 @endphp
                 <a href="{{ route('matches.show', $match) }}" class="match-card status-scheduled">
                     <div class="match-card-teams">
@@ -665,7 +670,7 @@
                         @endif
                     </div>
                     <span class="match-status-badge badge-scheduled">
-                        <i class="bi bi-calendar-check"></i> Terjadwal
+                        <i class="bi {{ $upcomingStatus['icon'] }}"></i> {{ $upcomingStatus['label'] }}
                     </span>
                 </a>
             @endforeach
@@ -707,6 +712,9 @@
                                 @endif
                                 @if ($challenger->level)
                                     <span><i class="bi bi-trophy"></i> {{ ucfirst(str_replace('_', ' ', $challenger->level)) }}</span>
+                                @endif
+                                @if ($req->use_referee)
+                                    <span><i class="bi bi-person-badge"></i> Pakai wasit</span>
                                 @endif
                             </div>
                             <div class="challenge-actions">
@@ -1122,6 +1130,7 @@ cancelYesBtn?.addEventListener('click', function () {
                     <span><i class="bi bi-clock"></i> ${escHtml(req.start_time)} – ${escHtml(req.end_time)}</span>
                     ${req.team_city  ? `<span><i class="bi bi-geo-alt"></i> ${escHtml(req.team_city)}</span>` : ''}
                     ${req.team_level ? `<span><i class="bi bi-trophy"></i> ${escHtml(req.team_level)}</span>` : ''}
+                    ${req.use_referee ? `<span><i class="bi bi-person-badge"></i> Pakai wasit</span>` : ''}
                 </div>
                 <div class="challenge-actions">
                     <button type="button"

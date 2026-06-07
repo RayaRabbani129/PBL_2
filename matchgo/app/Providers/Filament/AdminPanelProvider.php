@@ -107,7 +107,6 @@ class AdminPanelProvider extends PanelProvider
         return $user->hasAnyRole([
             'super_admin',
             'admin_field',
-            'auditor',
         ]);
     }
 

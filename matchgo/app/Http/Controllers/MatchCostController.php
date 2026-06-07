@@ -78,7 +78,7 @@ class MatchCostController extends Controller
      */
     public function show(MatchCost $matchCost)
     {
-        $matchCost->load('match');
+        $matchCost->load(['match.refereeRental.referee']);
         return view('user.cost.show', compact('matchCost'));
     }
 

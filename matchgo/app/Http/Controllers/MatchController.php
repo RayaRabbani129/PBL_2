@@ -7,18 +7,25 @@ use Illuminate\Http\Request;
 use App\Models\Booking;
 use App\Models\Matches;
 use App\Models\MatchCost;
+use App\Models\MatchPayment;
 use App\Models\MatchRequest;
 use App\Models\MatchVerification;
 use App\Models\Notification;
 use App\Models\Team;
 use App\Models\VenueSchedule;
+use App\Services\PaymentGatewayService;
+use App\Services\RefereeRentalService;
 use App\Services\VenueRecommendationService;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
 class MatchController extends Controller
 {
-    public function __construct(protected VenueRecommendationService $venueRecommendation) {}
+    public function __construct(
+        protected VenueRecommendationService $venueRecommendation,
+        protected RefereeRentalService $refereeService,
+        protected PaymentGatewayService $paymentGateway
+    ) {}
 
     public function index(Request $request)
     {
@@ -31,14 +38,14 @@ class MatchController extends Controller
 
         $tab = $request->get('tab', 'upcoming');
 
-        $baseQuery = Matches::with(['homeTeam', 'awayTeam', 'venue', 'verification'])
+        $baseQuery = Matches::with(['homeTeam', 'awayTeam', 'venue', 'verification', 'payments'])
             ->where(function ($q) use ($myTeam) {
                 $q->where('home_team_id', $myTeam->id)
                   ->orWhere('away_team_id', $myTeam->id);
             });
 
         $upcoming = (clone $baseQuery)
-            ->whereIn('status', ['matched', 'confirmed', 'ongoing'])
+            ->whereIn('status', ['matched', 'confirmed', 'scheduled', 'awaiting_payment', 'ongoing'])
             ->orderBy('match_datetime')
             ->get();
 
@@ -92,7 +99,9 @@ class MatchController extends Controller
             'field',
             'verification.auditor',
             'booking',
-            'cost'
+            'cost',
+            'refereeRental.referee',
+            'payments.team',
         ]);
 
         $isHome         = $match->home_team_id === $myTeam->id;
@@ -102,18 +111,32 @@ class MatchController extends Controller
         $homeTeamMembers = $match->homeTeam->members->count();
         $awayTeamMembers = $match->awayTeam->members->count();
 
-        $homeTeamShare = round($match->total_cost / 2, 2);
-        $awayTeamShare = round($match->total_cost / 2, 2);
+        $refereeCost = optional($match->refereeRental)->rental_cost ?? 0;
+        $costRecord = $match->cost;
 
-        $homeCostPerMember = $homeTeamMembers > 0 ? round($homeTeamShare / $homeTeamMembers, 2) : null;
-        $awayCostPerMember = $awayTeamMembers > 0 ? round($awayTeamShare / $awayTeamMembers, 2) : null;
+        if ($costRecord) {
+            $homeTeamShare = $costRecord->home_team_cost;
+            $awayTeamShare = $costRecord->away_team_cost;
+            $homeCostPerMember = $costRecord->home_cost_per_player;
+            $awayCostPerMember = $costRecord->away_cost_per_player;
+        } else {
+            $homeTeamShare = round($match->total_cost / 2, 2);
+            $awayTeamShare = round($match->total_cost / 2, 2);
+            $homeCostPerMember = $homeTeamMembers > 0 ? round($homeTeamShare / $homeTeamMembers, 2) : null;
+            $awayCostPerMember = $awayTeamMembers > 0 ? round($awayTeamShare / $awayTeamMembers, 2) : null;
+        }
+
+        $myPayment = $match->paymentForTeam($myTeam->id);
+        $homePayment = $match->paymentForTeam($match->home_team_id);
+        $awayPayment = $match->paymentForTeam($match->away_team_id);
 
         return view('user.match.show', compact(
             'match', 'myTeam', 'isHome',
             'myTeamInMatch', 'oppTeamInMatch',
             'homeTeamMembers', 'awayTeamMembers',
             'homeTeamShare', 'awayTeamShare',
-            'homeCostPerMember', 'awayCostPerMember'
+            'homeCostPerMember', 'awayCostPerMember',
+            'myPayment', 'homePayment', 'awayPayment'
         ));
     }
 
@@ -142,6 +165,7 @@ class MatchController extends Controller
                                         ->translatedFormat('l, d M Y'),
                 'start_time'     => Carbon::parse($req->start_time)->format('H:i'),
                 'end_time'       => Carbon::parse($req->end_time)->format('H:i'),
+                'use_referee'    => (bool) $req->use_referee,
                 'accept_url'     => route('matches.challenge.accept', $req),
                 'reject_url'     => route('matches.challenge.reject', $req),
             ]);
@@ -150,7 +174,7 @@ class MatchController extends Controller
                 $q->where('home_team_id', $myTeam->id)
                   ->orWhere('away_team_id', $myTeam->id);
             })
-            ->whereIn('status', ['matched', 'confirmed', 'ongoing'])
+            ->whereIn('status', ['matched', 'confirmed', 'scheduled', 'awaiting_payment', 'ongoing'])
             ->count();
 
         $outgoingCount = MatchRequest::where('team_id', $myTeam->id)
@@ -187,10 +211,35 @@ class MatchController extends Controller
                 $matchRequest->preferred_date,
                 $matchRequest->start_time,
                 $matchRequest->end_time,
-                'confirmed'
+                'awaiting_payment'
             );
 
             $matchRequest->update(['status' => 'matched']);
+
+            MatchRequest::firstOrCreate(
+                [
+                    'team_id' => $myTeam->id,
+                    'matched_with' => $matchRequest->team_id,
+                    'preferred_date' => $matchRequest->preferred_date,
+                    'start_time' => $matchRequest->start_time,
+                    'end_time' => $matchRequest->end_time,
+                ],
+                [
+                    'status' => 'matched',
+                    'use_referee' => $matchRequest->use_referee,
+                ]
+            );
+
+            if ($matchRequest->use_referee) {
+                $this->refereeService->assignBestRefereeForMatch($match);
+                $match->refresh();
+            }
+
+            $this->ensurePaymentRecords($match->fresh(['cost']));
+
+            $successMessage = $matchRequest->use_referee
+                ? 'Tantangan diterima! Silakan lanjutkan pembayaran. Wasit otomatis sudah dipilih.'
+                : 'Tantangan diterima! Silakan lanjutkan pembayaran.';
 
             Notification::create([
                 'user_id' => $matchRequest->team->user_id,
@@ -206,6 +255,7 @@ class MatchController extends Controller
                 return response()->json([
                     'success'   => true,
                     'message'   => '✅ Tantangan diterima! Match telah terjadwal.',
+                    'message'   => $successMessage,
                     'match_url' => route('matches.show', $match),
                 ]);
             }
@@ -270,7 +320,7 @@ class MatchController extends Controller
         $myTeam = Team::where('user_id', auth()->id())->firstOrFail();
         $this->authorizeMatch($match, $myTeam);
 
-        if (!in_array($match->status, ['matched', 'accepted'])) {
+        if (!in_array($match->status, ['matched', 'accepted', 'confirmed', 'scheduled', 'awaiting_payment'])) {
             return back()->with('error', 'Match tidak bisa dibatalkan.');
         }
 
@@ -285,7 +335,7 @@ class MatchController extends Controller
         $myTeam = Team::where('user_id', auth()->id())->firstOrFail();
         $this->authorizeMatch($match, $myTeam);
 
-        if (!in_array($match->status, ['matched', 'accepted'])) {
+        if ($match->status !== 'ongoing') {
             return back()->with('error', 'Skor hanya bisa diinput untuk match yang terjadwal.');
         }
 
@@ -313,6 +363,32 @@ class MatchController extends Controller
 
         return redirect()->route('match.show', $match)
             ->with('success', 'Skor berhasil diinput, menunggu verifikasi admin.');
+    }
+
+    public function submitPayment(Request $request, Matches $match)
+    {
+        $myTeam = Team::where('user_id', auth()->id())->firstOrFail();
+        $this->authorizeMatch($match, $myTeam);
+
+        if ($match->status !== 'awaiting_payment') {
+            return back()->with('error', 'Pembayaran hanya bisa dikirim saat match menunggu pembayaran.');
+        }
+
+        $payment = MatchPayment::firstOrCreate(
+            ['match_id' => $match->id, 'team_id' => $myTeam->id],
+            ['amount' => $this->paymentAmountForTeam($match, $myTeam->id)]
+        );
+
+        if ($payment->status === 'paid') {
+            return back()->with('info', 'Tim kamu sudah membayar untuk match ini.');
+        }
+
+        if (! $payment->payment_url || ($payment->expired_at && $payment->expired_at->isPast())) {
+            $payment->update(['amount' => $this->paymentAmountForTeam($match, $myTeam->id)]);
+            $payment = $this->paymentGateway->createInvoice($payment);
+        }
+
+        return redirect()->away($payment->payment_url);
     }
 
     public function history()
@@ -359,7 +435,7 @@ class MatchController extends Controller
         string $date,
         string $startTime,
         string $endTime,
-        string $status = 'confirmed'
+        string $status = 'awaiting_payment'
     ): Matches {
         $duration = $this->calcDuration($startTime, $endTime) ?? 0;
 
@@ -445,6 +521,55 @@ class MatchController extends Controller
         }
 
         return $match;
+    }
+
+    private function ensurePaymentRecords(Matches $match): void
+    {
+        $homePayment = MatchPayment::firstOrCreate(
+            ['match_id' => $match->id, 'team_id' => $match->home_team_id],
+            [
+                'user_id' => $match->homeTeam?->user_id,
+                'amount' => $this->paymentAmountForTeam($match, $match->home_team_id),
+                'status' => 'pending',
+            ]
+        );
+
+        $awayPayment = MatchPayment::firstOrCreate(
+            ['match_id' => $match->id, 'team_id' => $match->away_team_id],
+            [
+                'user_id' => $match->awayTeam?->user_id,
+                'amount' => $this->paymentAmountForTeam($match, $match->away_team_id),
+                'status' => 'pending',
+            ]
+        );
+
+        foreach ([$homePayment, $awayPayment] as $payment) {
+            $amount = $this->paymentAmountForTeam($match, $payment->team_id);
+            $payment->loadMissing('team');
+            $payment->update([
+                'amount' => $amount,
+                'user_id' => $payment->user_id ?: $payment->team?->user_id,
+            ]);
+
+            if (! $payment->snap_token) {
+                $this->paymentGateway->createInvoice($payment);
+            }
+        }
+    }
+
+    private function paymentAmountForTeam(Matches $match, int $teamId): float
+    {
+        $match->loadMissing('cost');
+
+        if ($match->cost) {
+            return (float) (
+                $teamId === $match->home_team_id
+                    ? $match->cost->home_team_cost
+                    : $match->cost->away_team_cost
+            );
+        }
+
+        return round(((float) $match->total_cost) / 2, 2);
     }
 
     private function ajaxOrAbort(Request $request, int $code, string $message)

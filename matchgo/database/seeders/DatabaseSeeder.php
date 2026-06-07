@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
+use Illuminate\Database\Seeder;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
 
 class DatabaseSeeder extends Seeder
 {
@@ -23,40 +25,48 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         // Create Admin User
-        $admin = User::factory()->create([
-            'name' => 'Super Admin',
-            'email' => 'admin@matchgo.local',
-            'password' => bcrypt('password'),
-            'phone' => '082123456789',
-        ]);
-        $admin->assignRole('super_admin');
+        $admin = User::updateOrCreate(
+            ['email' => 'admin@matchgo.local'],
+            [
+                'name' => 'Super Admin',
+                'password' => bcrypt('password'),
+                'phone' => '082123456789',
+            ]
+        );
+        $admin->syncRoles(['super_admin']);
 
         // Create Field Admin User
-        $fieldAdmin = User::factory()->create([
-            'name' => 'Field Admin',
-            'email' => 'fieldadmin@matchgo.local',
-            'password' => bcrypt('password'),
-            'phone' => '082123456790',
-        ]);
-        $fieldAdmin->assignRole('admin_field');
+        $fieldAdmin = User::updateOrCreate(
+            ['email' => 'fieldadmin@matchgo.local'],
+            [
+                'name' => 'Field Admin',
+                'password' => bcrypt('password'),
+                'phone' => '082123456790',
+            ]
+        );
+        $fieldAdmin->syncRoles(['admin_field']);
 
         // Create Auditor User
-        $auditor = User::factory()->create([
-            'name' => 'Auditor',
-            'email' => 'auditor@matchgo.local',
-            'password' => bcrypt('password'),
-            'phone' => '082123456791',
-        ]);
-        $auditor->assignRole('auditor');
+        $auditor = User::updateOrCreate(
+            ['email' => 'auditor@matchgo.local'],
+            [
+                'name' => 'Auditor',
+                'password' => bcrypt('password'),
+                'phone' => '082123456791',
+            ]
+        );
+        $auditor->syncRoles(['auditor']);
 
         // Create Test Player User
-        $player = User::factory()->create([
-            'name' => 'Test Player',
-            'email' => 'test@example.com',
-            'password' => bcrypt('password'),
-            'phone' => '082123456792',
-        ]);
-        $player->assignRole('player');
+        $player = User::updateOrCreate(
+            ['email' => 'test@example.com'],
+            [
+                'name' => 'Test Player',
+                'password' => bcrypt('password'),
+                'phone' => '082123456792',
+            ]
+        );
+        $player->syncRoles(['player']);
 
         // Seed referees
         $this->call(RefereeSeeder::class);

@@ -23,21 +23,18 @@ class RefereeRentalService
         $matchStart = $match->match_datetime->toTimeString();
         $matchEnd = $match->match_datetime->copy()->addMinutes($match->duration_minutes ?? 90)->toTimeString();
 
-        return Referee::where('is_available', true)
-            ->whereDoesntHave('rentals', function ($query) use ($matchDate, $matchStart, $matchEnd) {
-                $query->where('rental_date', $matchDate)
-                    ->where('status', '!=', 'cancelled')
-                    ->where(function ($q) use ($matchStart, $matchEnd) {
-                        $q->whereBetween('start_time', [$matchStart, $matchEnd])
-                            ->orWhereBetween('end_time', [$matchStart, $matchEnd])
-                            ->orWhere(function ($q2) use ($matchStart, $matchEnd) {
-                                $q2->where('start_time', '<=', $matchStart)
-                                    ->where('end_time', '>=', $matchEnd);
-                            });
-                    });
-            })
-            ->orderByDesc('rating')
-            ->get();
+        return Referee::availableFor($matchDate, $matchStart, $matchEnd)
+            ->withCount([
+                'rentals as active_rentals_count' => fn ($query) => $query->whereIn('status', ['pending', 'confirmed']),
+            ])
+            ->get()
+            ->sortByDesc(fn (Referee $referee) => $this->scoreRefereeForMatch($referee, $match))
+            ->values();
+    }
+
+    public function getBestAvailableReferee(Matches $match): ?Referee
+    {
+        return $this->getAvailableReferees($match)->first();
     }
 
     /**
@@ -45,18 +42,24 @@ class RefereeRentalService
      */
     public function isRefereeAvailable(Referee $referee, string $date, string $startTime, string $endTime): bool
     {
-        return !RefereeRental::where('referee_id', $referee->id)
-            ->where('rental_date', $date)
-            ->where('status', '!=', 'cancelled')
-            ->where(function ($q) use ($startTime, $endTime) {
-                $q->whereBetween('start_time', [$startTime, $endTime])
-                    ->orWhereBetween('end_time', [$startTime, $endTime])
-                    ->orWhere(function ($q2) use ($startTime, $endTime) {
-                        $q2->where('start_time', '<=', $startTime)
-                            ->where('end_time', '>=', $endTime);
-                    });
-            })
+        return Referee::availableFor($date, $startTime, $endTime)
+            ->whereKey($referee->id)
             ->exists();
+    }
+
+    public function assignBestRefereeForMatch(Matches $match, ?string $notes = null): RefereeRental
+    {
+        if ($match->refereeRental) {
+            return $match->refereeRental;
+        }
+
+        $referee = $this->getBestAvailableReferee($match);
+
+        if (! $referee) {
+            throw new \RuntimeException('Tidak ada wasit yang tersedia pada waktu tersebut.');
+        }
+
+        return $this->createRefereeRental($match, $referee, $notes ?? 'Dipilih otomatis oleh sistem.');
     }
 
     /**
@@ -85,14 +88,24 @@ class RefereeRentalService
         $rental->calculateCost();
         $rental->save();
 
-        // Update match total cost if it exists
-        if ($match->total_cost) {
-            $match->update([
-                'total_cost' => $match->total_cost + $rental->rental_cost
-            ]);
-        } else {
-            $match->update([
-                'total_cost' => $rental->rental_cost
+        $match->update([
+            'total_cost' => ($match->total_cost ?: 0) + $rental->rental_cost,
+            'referee_id' => $referee->id,
+        ]);
+
+        $match->loadMissing(['cost', 'homeTeam.members', 'awayTeam.members']);
+
+        if ($match->cost) {
+            $homeCount = $match->cost->home_team_players ?: max(1, $match->homeTeam->members->count());
+            $awayCount = $match->cost->away_team_players ?: max(1, $match->awayTeam->members->count());
+            $totalAmount = round($match->cost->total_venue_cost + $rental->rental_cost, 2);
+
+            $match->cost->update([
+                'total_venue_cost'     => $totalAmount,
+                'home_team_cost'       => round($totalAmount / 2, 2),
+                'away_team_cost'       => round($totalAmount / 2, 2),
+                'home_cost_per_player' => round($totalAmount / 2 / $homeCount, 2),
+                'away_cost_per_player' => round($totalAmount / 2 / $awayCount, 2),
             ]);
         }
 
@@ -152,5 +165,30 @@ class RefereeRentalService
                 ->sum('rental_cost'),
             'average_rating' => $referee->rating,
         ];
+    }
+
+    private function scoreRefereeForMatch(Referee $referee, Matches $match): float
+    {
+        $certificationScore = [
+            'basic' => 10,
+            'intermediate' => 20,
+            'advanced' => 30,
+            'professional' => 40,
+        ][$referee->certification_level] ?? 0;
+
+        $sameCityScore = 0;
+        $venueCity = strtolower((string) optional($match->venue)->city);
+        $refereeCity = strtolower((string) $referee->city);
+
+        if ($venueCity !== '' && $refereeCity !== '' && $venueCity === $refereeCity) {
+            $sameCityScore = 25;
+        }
+
+        return $sameCityScore
+            + $certificationScore
+            + ((float) $referee->rating * 12)
+            + min((int) $referee->experience_years, 20)
+            - ((int) ($referee->active_rentals_count ?? 0) * 5)
+            - ((float) $referee->hourly_rate / 100000);
     }
 }
