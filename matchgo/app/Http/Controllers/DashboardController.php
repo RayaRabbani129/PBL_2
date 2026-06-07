@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Matches;
 use App\Models\Team;
 use App\Models\TeamSchedule;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
@@ -35,8 +34,7 @@ class DashboardController extends Controller
 
         $mySchedules = TeamSchedule::whereHas(
                 'team',
-                fn ($q) =>
-                $q->where('user_id', $userId)
+                fn ($q) => $q->where('user_id', $userId)
             )
             ->where('is_available', true)
             ->orderBy('day_of_week')
@@ -79,11 +77,30 @@ class DashboardController extends Controller
         |--------------------------------------------------------------------------
         | TEAM RATING
         |--------------------------------------------------------------------------
+        | Rating maksimal 5.0
+        |
+        | Menang = 3 poin
+        | Seri   = 1 poin
+        | Kalah  = 0 poin
+        |
+        | Rumus:
+        | rating = (poin diperoleh / poin maksimal) * 5
+        |--------------------------------------------------------------------------
         */
 
-        $teamRating =
-            ($totalWin * 3) +
-            ($totalDraw * 1);
+        $teamRating = '0.0';
+
+        if ($totalMatch > 0) {
+            $earnedPoints = ($totalWin * 3) + ($totalDraw * 1);
+            $maxPoints = $totalMatch * 3;
+
+            $ratingValue = ($earnedPoints / $maxPoints) * 5;
+
+            // Pastikan rating tidak lebih dari 5 dan tidak kurang dari 0
+            $ratingValue = max(0, min($ratingValue, 5));
+
+            $teamRating = number_format($ratingValue, 1);
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -92,24 +109,20 @@ class DashboardController extends Controller
         */
 
         $upcomingMatches = Matches::where(function ($query) use ($myTeam) {
-
                 $query
                     ->where('home_team_id', $myTeam?->id)
                     ->orWhere('away_team_id', $myTeam?->id);
             })
-
             ->whereIn('status', [
                 'scheduled',
                 'ongoing',
                 'confirmed',
             ])
-
             ->with([
                 'homeTeam',
                 'awayTeam',
                 'venue',
             ])
-
             ->orderBy('match_datetime')
             ->limit(5)
             ->get();
@@ -121,26 +134,21 @@ class DashboardController extends Controller
         */
 
         $recentMatches = Matches::where(function ($query) use ($myTeam) {
-
                 $query
                     ->where('home_team_id', $myTeam?->id)
                     ->orWhere('away_team_id', $myTeam?->id);
             })
-
             ->where('status', 'completed')
-
             ->with([
                 'homeTeam',
                 'awayTeam',
                 'venue',
             ])
-
             ->latest('match_datetime')
             ->limit(5)
             ->get();
 
         return view('user.dashboard.index', compact(
-
             'myTeam',
             'mySchedules',
 
