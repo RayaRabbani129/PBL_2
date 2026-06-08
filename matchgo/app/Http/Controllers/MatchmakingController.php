@@ -491,7 +491,7 @@ class MatchmakingController extends Controller
                 'start_time'   => $startTime,
                 'end_time'     => $endTime,
                 'status'       => 'booked',
-                'created_by'   => auth()->id(),
+                'created_by'   => $homeTeam->id,
             ]);
 
             $homeCount = max(1, $homeTeam->members()->count());
