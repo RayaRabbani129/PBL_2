@@ -471,8 +471,13 @@
     $statusSteps = [
         ['key' => 'created',   'label' => 'Tantangan Dikirim',  'sub' => $match->created_at->format('d M Y, H:i'), 'done' => true,         'icon' => 'bi-send'],
         ['key' => 'accepted',  'label' => 'Match Dijadwalkan',  'sub' => 'Status: ' . ucfirst(str_replace('_', ' ', $match->status)),    'done' => in_array($match->status, ['awaiting_payment','ongoing','completed']), 'current' => $match->status === 'awaiting_payment', 'icon' => 'bi-calendar-check'],
-        ['key' => 'payment',   'label' => 'Pembayaran',         'sub' => $match->status === 'awaiting_payment' ? 'Menunggu pembayaran kedua tim' : 'Pembayaran lengkap', 'done' => in_array($match->status, ['ongoing','completed']), 'current' => $match->status === 'awaiting_payment', 'icon' => 'bi-credit-card'],
-        ['key' => 'completed', 'label' => 'Match Selesai',      'sub' => $isCompleted ? 'Skor telah diinput' : 'Menunggu', 'done' => $isCompleted, 'current' => $canInputScore, 'icon' => 'bi-trophy'],
+        ['key' => 'payment',   'label' => 'Pembayaran',         'sub' => ($match->status === 'awaiting_payment'
+            ? 'Pending: kedua tim harus menyelesaikan pembayaran'
+            : 'Pembayaran lengkap'),
+            'done' => in_array($match->status, ['ongoing','completed']),
+            'current' => $match->status === 'awaiting_payment',
+            'icon' => 'bi-credit-card'],
+        ['key' => 'completed', 'label' => 'Match Selesai',      'sub' => ($isCompleted ? 'Skor telah diinput' : 'Menunggu verifikasi/selesai'), 'done' => $isCompleted, 'current' => $canInputScore, 'icon' => 'bi-trophy'],
         ['key' => 'verified',  'label' => 'Terverifikasi',      'sub' => optional($match->verification)->status === 'verified' ? 'Diverifikasi admin' : 'Menunggu admin', 'done' => optional($match->verification)->status === 'verified', 'icon' => 'bi-shield-check'],
     ];
 @endphp
