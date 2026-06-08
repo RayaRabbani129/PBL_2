@@ -114,6 +114,30 @@ class PaymentController extends Controller
 
         DB::transaction(function () use ($payment, $request, $mappedStatus): void {
             $payload = $request->all();
+            $match = $payment->match;
+
+            if ($match->status === 'cancelled') {
+                $refundStatus = $payment->status === 'refunded'
+                    ? 'refunded'
+                    : ($mappedStatus === 'refunded'
+                        ? 'refunded'
+                    : (in_array($payment->status, ['paid', 'refund_pending'], true) || $mappedStatus === 'paid'
+                        ? 'refund_pending'
+                        : 'cancelled'));
+
+                $payment->update([
+                    'status' => $refundStatus,
+                    'gateway_status' => $request->input('transaction_status'),
+                    'payment_type' => $request->input('payment_type'),
+                    'transaction_id' => $request->input('transaction_id'),
+                    'paid_at' => $mappedStatus === 'paid' ? ($payment->paid_at ?? now()) : $payment->paid_at,
+                    'raw_payload' => $payload,
+                    'notes' => trim(($payment->notes ? $payment->notes . "\n\n" : '') .
+                        'Callback diterima setelah match dibatalkan.'),
+                ]);
+
+                return;
+            }
 
             if ($payment->status === 'paid' && $mappedStatus !== 'paid') {
                 $payment->update([
@@ -211,6 +235,29 @@ class PaymentController extends Controller
         }
 
         DB::transaction(function () use ($payment, $status, $mappedStatus): void {
+            if ($payment->match->status === 'cancelled') {
+                $refundStatus = $payment->status === 'refunded'
+                    ? 'refunded'
+                    : ($mappedStatus === 'refunded'
+                        ? 'refunded'
+                    : (in_array($payment->status, ['paid', 'refund_pending'], true) || $mappedStatus === 'paid'
+                        ? 'refund_pending'
+                        : 'cancelled'));
+
+                $payment->update([
+                    'status' => $refundStatus,
+                    'gateway_status' => $status['transaction_status'] ?? null,
+                    'payment_type' => $status['payment_type'] ?? $payment->payment_type,
+                    'transaction_id' => $status['transaction_id'] ?? $payment->transaction_id,
+                    'paid_at' => $mappedStatus === 'paid' ? ($payment->paid_at ?? now()) : $payment->paid_at,
+                    'raw_payload' => $status,
+                    'notes' => trim(($payment->notes ? $payment->notes . "\n\n" : '') .
+                        'Status gateway disinkronkan setelah match dibatalkan.'),
+                ]);
+
+                return;
+            }
+
             if ($payment->status === 'paid' && $mappedStatus !== 'paid') {
                 return;
             }
