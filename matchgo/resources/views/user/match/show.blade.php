@@ -446,6 +446,115 @@
         border-color: var(--accent);
         box-shadow: 0 0 0 3px var(--accent-dim);
     }
+
+    .cancel-match-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.62);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.22s ease;
+    }
+
+    .cancel-match-backdrop.is-open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .cancel-match-modal {
+        width: min(100%, 440px);
+        background: var(--surface-2);
+        border: 1px solid var(--border-subtle);
+        border-radius: 18px;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
+        overflow: hidden;
+        transform: translateY(16px) scale(0.98);
+        transition: transform 0.22s ease;
+    }
+
+    .cancel-match-backdrop.is-open .cancel-match-modal {
+        transform: translateY(0) scale(1);
+    }
+
+    .cancel-match-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 1rem 1.15rem;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .cancel-match-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: 'Manrope', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: var(--txt-primary);
+    }
+
+    .cancel-match-title i { color: #f87171; }
+
+    .cancel-match-close {
+        width: 34px;
+        height: 34px;
+        border: 1px solid var(--border-subtle);
+        border-radius: 10px;
+        background: var(--surface-3);
+        color: var(--txt-muted);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .cancel-match-body { padding: 1.15rem; }
+
+    .cancel-match-desc {
+        font-size: 0.83rem;
+        line-height: 1.65;
+        color: var(--txt-secondary);
+        margin-bottom: 1rem;
+    }
+
+    .cancel-match-warning {
+        display: flex;
+        gap: 10px;
+        padding: 0.85rem;
+        border-radius: 12px;
+        background: rgba(248, 113, 113, 0.1);
+        border: 1px solid rgba(248, 113, 113, 0.22);
+        color: var(--txt-secondary);
+        font-size: 0.78rem;
+        line-height: 1.55;
+        margin-bottom: 1rem;
+    }
+
+    .cancel-match-warning i {
+        color: #f87171;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .cancel-match-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 1rem;
+    }
+
+    @media (max-width: 520px) {
+        .cancel-match-actions { grid-template-columns: 1fr; }
+    }
 </style>
 @endpush
 
@@ -467,6 +576,7 @@
     $canInputScore = $match->status === 'ongoing'
         && \Carbon\Carbon::parse($match->match_datetime)->isPast()
         && is_null($match->home_score);
+    $canCancelMatch = in_array($match->status, ['pending', 'accepted', 'matched', 'confirmed', 'scheduled', 'awaiting_payment'], true);
 
     $statusSteps = [
         ['key' => 'created',   'label' => 'Tantangan Dikirim',  'sub' => $match->created_at->format('d M Y, H:i'), 'done' => true,         'icon' => 'bi-send'],
@@ -805,6 +915,8 @@
                             $paymentStatusText = function ($payment) {
                                 return match (optional($payment)->status) {
                                     'paid' => 'Sudah bayar',
+                                    'refund_pending' => 'Refund diproses',
+                                    'refunded' => 'Sudah refund',
                                     'failed' => 'Gagal',
                                     'expired' => 'Kedaluwarsa',
                                     'cancelled' => 'Dibatalkan',
@@ -876,6 +988,16 @@
                             <div class="alert-matchgo-info" style="margin:0;">
                                 <i class="bi bi-hourglass-split me-2"></i>
                                 Pembayaran tim kamu sudah diterima. Menunggu pembayaran dari tim lawan.
+                            </div>
+                        @elseif (optional($myPayment)->status === 'refund_pending')
+                            <div class="alert-matchgo-info" style="margin:0;">
+                                <i class="bi bi-arrow-counterclockwise me-2"></i>
+                                Match dibatalkan. Pembayaran tim kamu sedang ditandai untuk proses refund.
+                            </div>
+                        @elseif (optional($myPayment)->status === 'refunded')
+                            <div class="alert-matchgo-info" style="margin:0;">
+                                <i class="bi bi-check2-circle me-2"></i>
+                                Match dibatalkan dan pembayaran tim kamu sudah dikembalikan.
                             </div>
                         @elseif ($match->status === 'ongoing')
                             <div class="alert-matchgo-info" style="margin:0;">
@@ -979,14 +1101,11 @@
                     </a>
                 @endif
 
-                @if (in_array($match->status, ['pending', 'accepted']))
-                    <form action="{{ route('matches.cancel', $match) }}" method="POST"
-                          onsubmit="return confirm('Batalkan match {{ $match->match_code }}?')">
-                        @csrf
-                        <button type="submit" class="btn-matchgo-danger" style="width:100%; justify-content:center;">
-                            <i class="bi bi-x-circle"></i> Batalkan Match
-                        </button>
-                    </form>
+                @if ($canCancelMatch)
+                    <button type="button" class="btn-matchgo-danger js-open-cancel-match" style="width:100%; justify-content:center;">
+                        <i class="bi bi-x-circle"></i>
+                        {{ $match->status === 'awaiting_payment' ? 'Batalkan Match & Proses Refund' : 'Batalkan Match' }}
+                    </button>
                 @endif
 
                 <a href="{{ route('matches.index') }}" class="btn-outline-lime" style="justify-content:center;">
@@ -1004,7 +1123,113 @@
 
 </div>
 
+@if ($canCancelMatch)
+    <div class="cancel-match-backdrop" id="cancel-match-backdrop" role="dialog" aria-modal="true" aria-labelledby="cancel-match-title">
+        <div class="cancel-match-modal">
+            <div class="cancel-match-header">
+                <div class="cancel-match-title" id="cancel-match-title">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Batalkan Match
+                </div>
+                <button type="button" class="cancel-match-close js-close-cancel-match" aria-label="Tutup">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <form action="{{ route('matches.cancel', $match) }}" method="POST" id="cancel-match-form">
+                @csrf
+                <div class="cancel-match-body">
+                    <div class="cancel-match-desc">
+                        Kamu akan membatalkan match <strong>{{ $match->match_code }}</strong>.
+                        @if ($match->status === 'awaiting_payment')
+                            Jika salah satu tim sudah membayar, sistem akan menandai pembayaran tersebut untuk proses refund.
+                        @endif
+                    </div>
+
+                    @if ($match->status === 'awaiting_payment')
+                        <div class="cancel-match-warning">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                            <div>
+                                Dana tidak langsung dikirim otomatis dari halaman ini. Status pembayaran akan menjadi <strong>Refund diproses</strong> agar admin/gateway bisa mengembalikannya.
+                            </div>
+                        </div>
+
+                        <div class="form-group-mg" style="margin-bottom:0;">
+                            <label class="form-label-mg">Alasan pembatalan</label>
+                            <textarea
+                                name="cancel_reason"
+                                class="form-control-mg"
+                                rows="3"
+                                maxlength="500"
+                                placeholder="Contoh: tim lawan tidak melakukan pembayaran"
+                            >{{ old('cancel_reason') }}</textarea>
+                        </div>
+                    @endif
+
+                    <div class="cancel-match-actions">
+                        <button type="button" class="btn-outline-lime js-close-cancel-match" style="justify-content:center;">
+                            Tidak Jadi
+                        </button>
+                        <button type="submit" class="btn-matchgo-danger" style="justify-content:center;">
+                            <i class="bi bi-x-circle"></i> Ya, Batalkan
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+@endif
+
 @endsection
+
+@if ($canCancelMatch)
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const backdrop = document.getElementById('cancel-match-backdrop');
+                const openButton = document.querySelector('.js-open-cancel-match');
+                const closeButtons = document.querySelectorAll('.js-close-cancel-match');
+                const form = document.getElementById('cancel-match-form');
+
+                const openModal = () => {
+                    backdrop?.classList.add('is-open');
+                    document.body.style.overflow = 'hidden';
+                    setTimeout(() => {
+                        backdrop?.querySelector('textarea, button[type="submit"]')?.focus();
+                    }, 80);
+                };
+
+                const closeModal = () => {
+                    backdrop?.classList.remove('is-open');
+                    document.body.style.overflow = '';
+                };
+
+                openButton?.addEventListener('click', openModal);
+                closeButtons.forEach((button) => button.addEventListener('click', closeModal));
+
+                backdrop?.addEventListener('click', function (event) {
+                    if (event.target === backdrop) {
+                        closeModal();
+                    }
+                });
+
+                document.addEventListener('keydown', function (event) {
+                    if (event.key === 'Escape' && backdrop?.classList.contains('is-open')) {
+                        closeModal();
+                    }
+                });
+
+                form?.addEventListener('submit', function () {
+                    const submitButton = form.querySelector('button[type="submit"]');
+                    if (!submitButton) return;
+
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Membatalkan...';
+                });
+            });
+        </script>
+    @endpush
+@endif
 
 @if ($match->status === 'awaiting_payment' && optional($myPayment)->status !== 'paid')
     @push('scripts')
