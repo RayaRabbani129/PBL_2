@@ -315,7 +315,7 @@ class MatchController extends Controller
         return back()->with('info', 'Tantangan telah ditolak.');
     }
 
-    public function cancel(Matches $match)
+    public function cancel(Request $request, Matches $match)
     {
         $myTeam = Team::where('user_id', auth()->id())->firstOrFail();
         $this->authorizeMatch($match, $myTeam);
@@ -324,10 +324,124 @@ class MatchController extends Controller
             return back()->with('error', 'Match tidak bisa dibatalkan.');
         }
 
-        $match->update(['status' => 'cancelled']);
+        $validated = $request->validate([
+            'cancel_reason' => 'nullable|string|max:500',
+        ]);
 
-        return redirect()->route('match.index')
-            ->with('success', 'Match berhasil dibatalkan.');
+        $refundSummary = [
+            'refunded' => 0,
+            'pending' => 0,
+        ];
+
+        \DB::transaction(function () use ($match, $myTeam, $validated, &$refundSummary): void {
+            $match->loadMissing([
+                'homeTeam',
+                'awayTeam',
+                'booking',
+                'payments.team',
+                'refereeRental',
+            ]);
+
+            $reason = $validated['cancel_reason'] ?? 'Match dibatalkan saat proses pembayaran.';
+            $cancelledBy = $myTeam->name;
+            $hasPaidPayment = $match->payments->contains(fn ($payment) => $payment->status === 'paid');
+
+            $match->update([
+                'status' => 'cancelled',
+                'notes' => trim(($match->notes ? $match->notes . "\n\n" : '') .
+                    "Dibatalkan oleh {$cancelledBy}. Alasan: {$reason}"),
+            ]);
+
+            if ($match->booking) {
+                $match->booking->update(['status' => 'rejected']);
+
+                VenueSchedule::where('field_id', $match->booking->field_id)
+                    ->whereDate('date', Carbon::parse($match->booking->booking_date)->toDateString())
+                    ->where('start_time', '<', $match->booking->end_time)
+                    ->where('end_time', '>', $match->booking->start_time)
+                    ->update(['is_available' => true]);
+            }
+
+            if ($match->refereeRental && $match->refereeRental->status !== 'cancelled') {
+                $match->refereeRental->update(['status' => 'cancelled']);
+            }
+
+            foreach ($match->payments as $payment) {
+                if ($payment->status === 'paid') {
+                    try {
+                        $reverseResult = $this->paymentGateway->reverseTransaction(
+                            $payment,
+                            "Match {$match->match_code} dibatalkan. {$reason}"
+                        );
+
+                        $payment->update([
+                            'status' => $reverseResult['status'],
+                            'gateway_status' => $reverseResult['gateway_status'],
+                            'raw_payload' => array_merge($payment->raw_payload ?? [], [
+                                'auto_refund' => [
+                                    'processed_at' => now()->toDateTimeString(),
+                                    'action' => $reverseResult['action'],
+                                    'response' => $reverseResult['response'],
+                                ],
+                            ]),
+                            'notes' => trim(($payment->notes ? $payment->notes . "\n\n" : '') .
+                                "Match dibatalkan. Refund otomatis berhasil diproses untuk {$payment->team?->name}."),
+                        ]);
+
+                        $refundSummary['refunded']++;
+                    } catch (\Throwable $e) {
+                        $payment->update([
+                            'status' => 'refund_pending',
+                            'raw_payload' => array_merge($payment->raw_payload ?? [], [
+                                'auto_refund' => [
+                                    'processed_at' => now()->toDateTimeString(),
+                                    'error' => $e->getMessage(),
+                                ],
+                            ]),
+                            'notes' => trim(($payment->notes ? $payment->notes . "\n\n" : '') .
+                                "Match dibatalkan. Refund otomatis gagal: {$e->getMessage()}. Dana perlu dikembalikan ke {$payment->team?->name}."),
+                        ]);
+
+                        $refundSummary['pending']++;
+                    }
+
+                    continue;
+                }
+
+                if (in_array($payment->status, ['pending', 'expired', 'failed', 'rejected'], true)) {
+                    $payment->update([
+                        'status' => 'cancelled',
+                        'notes' => trim(($payment->notes ? $payment->notes . "\n\n" : '') .
+                            'Invoice dibatalkan karena match dibatalkan.'),
+                    ]);
+                }
+            }
+
+            foreach ([$match->homeTeam, $match->awayTeam] as $team) {
+                Notification::create([
+                    'user_id' => $team->user_id,
+                    'type' => 'challenge_cancelled',
+                    'title' => 'Match Dibatalkan',
+                    'message' => $hasPaidPayment
+                        ? "Match {$match->match_code} dibatalkan oleh {$cancelledBy}. Pembayaran yang sudah masuk ditandai untuk refund."
+                        : "Match {$match->match_code} dibatalkan oleh {$cancelledBy}.",
+                    'status' => 'unread',
+                ]);
+            }
+        });
+
+        $message = 'Match berhasil dibatalkan.';
+
+        if ($refundSummary['refunded'] > 0 && $refundSummary['pending'] === 0) {
+            $message .= ' Pembayaran yang sudah masuk berhasil diproses refund otomatis.';
+        } elseif ($refundSummary['refunded'] > 0 && $refundSummary['pending'] > 0) {
+            $message .= ' Sebagian refund otomatis berhasil, sebagian masih perlu diproses admin.';
+        } elseif ($refundSummary['pending'] > 0) {
+            $message .= ' Refund otomatis belum berhasil, pembayaran ditandai untuk diproses admin.';
+        }
+
+        return redirect()->route('matches.index', ['tab' => 'cancelled'])
+            ->with('success', $message);
     }
 
     public function inputScore(Request $request, Matches $match)
@@ -361,7 +475,7 @@ class MatchController extends Controller
             'status'     => 'completed',
         ]);
 
-        return redirect()->route('match.show', $match)
+        return redirect()->route('matches.show', $match)
             ->with('success', 'Skor berhasil diinput, menunggu verifikasi admin.');
     }
 
@@ -478,7 +592,7 @@ class MatchController extends Controller
                 'start_time'   => $startTime,
                 'end_time'     => $endTime,
                 'status'       => 'approved',
-                'created_by'   => auth()->id(),
+                'created_by'   => $homeTeam->id,
             ]);
 
             // ─────────────────────────────────────────────────────────
