@@ -1,0 +1,847 @@
+@extends('user.layouts.app')
+
+@section('title', 'Notifications — MATCHGO')
+@section('page-title', 'Notifications')
+
+@push('styles')
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+
+.mg-hero {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    padding: 1.75rem 2rem;
+    margin-bottom: 1.5rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+}
+.mg-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at top left, var(--accent-dim) 0%, transparent 65%);
+    pointer-events: none;
+}
+.mg-hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(var(--border-subtle) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+    opacity: 0.35;
+}
+.mg-hero-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.mg-hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid rgba(163,177,75,0.20);
+    border-radius: 99px;
+    padding: 3px 11px;
+    margin-bottom: 10px;
+}
+.mg-hero h2 {
+    font-family: 'Manrope', sans-serif;
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: var(--txt-primary);
+    line-height: 1.25;
+    margin-bottom: 6px;
+}
+.mg-hero h2 span { color: var(--accent); }
+.mg-hero p {
+    font-size: 0.83rem;
+    color: var(--txt-muted);
+    margin: 0;
+    max-width: 420px;
+}
+.mg-hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-top: 4px;
+}
+.mg-hero-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+}
+.mg-hero-btn-accent {
+    background: var(--accent-dim);
+    border: 1px solid rgba(163,177,75,0.20);
+    color: var(--accent);
+}
+.mg-hero-btn-muted {
+    background: var(--surface-3);
+    border: 1px solid var(--border-medium);
+    color: var(--txt-secondary);
+}
+
+.mg-section {
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: border-color .25s;
+    margin-bottom: 1.25rem;
+}
+.mg-section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--surface-3);
+}
+.mg-section-num {
+    font-size: 1.35rem;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 900;
+    color: var(--accent);
+    opacity: .30;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
+    min-width: 2ch;
+}
+.mg-section-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: .82rem;
+    font-weight: 800;
+    color: var(--txt-primary);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: 2px;
+}
+.mg-section-sub {
+    font-size: .75rem;
+    color: var(--txt-faint);
+    margin: 0;
+    line-height: 1.5;
+}
+.mg-section-header-meta { flex: 1; min-width: 0; }
+.mg-section-header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+.mg-section-body { padding: 1.5rem; }
+
+.mg-mark-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.775rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-medium);
+    background: var(--surface-3);
+    color: var(--txt-secondary);
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    text-decoration: none;
+}
+.mg-mark-all:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--surface-4);
+    text-decoration: none;
+}
+
+.mg-notif-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.mg-notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 1.25rem 1.5rem;
+    transition: background 0.15s;
+    position: relative;
+    border-bottom: 1px solid var(--border-subtle);
+}
+.mg-notif-item:last-child { border-bottom: none; }
+.mg-notif-item:hover { background: var(--accent-dim); }
+.mg-notif-item.unread { border-left: 3px solid var(--accent); }
+.mg-notif-item.read { opacity: 0.55; }
+
+.mg-notif-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.mg-notif-icon.type-match     { background: rgba(163,177,75,0.14); color: var(--accent); }
+.mg-notif-icon.type-challenge { background: rgba(91,140,255,0.12);  color: #5b8cff; }
+.mg-notif-icon.type-reminder  { background: rgba(255,190,60,0.12);  color: #ffbe3c; }
+.mg-notif-icon.type-result    { background: rgba(80,200,120,0.12);  color: #50c878; }
+.mg-notif-icon.type-rejected  { background: rgba(248,113,113,0.12); color: #f87171; }
+.mg-notif-icon.type-system    { background: rgba(180,180,180,0.10); color: var(--txt-secondary); }
+
+.mg-notif-body { flex: 1; min-width: 0; }
+
+.mg-notif-body-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--txt-primary);
+    margin: 0 0 3px 0;
+    line-height: 1.3;
+}
+.mg-notif-body-desc {
+    font-size: 0.8rem;
+    color: var(--txt-secondary);
+    margin: 0 0 8px 0;
+    line-height: 1.5;
+}
+.mg-notif-time {
+    font-size: 0.68rem;
+    color: var(--txt-faint);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+}
+
+.mg-notif-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+.btn-notif-accept {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 16px;
+    border-radius: 10px;
+    background: var(--accent);
+    color: var(--btn-primary-txt);
+    font-size: 0.775rem;
+    font-weight: 700;
+    font-family: 'Manrope', sans-serif;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+    text-decoration: none;
+}
+.btn-notif-accept:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+    color: var(--btn-primary-txt);
+    text-decoration: none;
+}
+.btn-notif-reject {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 16px;
+    border-radius: 10px;
+    background: var(--surface-3);
+    color: var(--txt-secondary);
+    border: 1px solid var(--border-medium);
+    font-size: 0.775rem;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+}
+.btn-notif-reject:hover {
+    border-color: #f87171;
+    color: #f87171;
+    background: rgba(248,113,113,0.06);
+    text-decoration: none;
+}
+
+.mg-notif-empty {
+    text-align: center;
+    padding: 80px 24px;
+}
+.mg-notif-empty-icon {
+    font-size: 2.5rem;
+    color: var(--txt-faint);
+    opacity: 0.35;
+    margin-bottom: 14px;
+}
+.mg-notif-empty-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--txt-secondary);
+    margin: 0 0 6px 0;
+}
+.mg-notif-empty-sub {
+    font-size: 0.8rem;
+    color: var(--txt-muted);
+    margin: 0;
+}
+
+.mg-pagination-wrapper {
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    background: var(--surface-2);
+}
+.mg-pagination-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border-medium);
+    background: var(--surface-3);
+    color: var(--txt-secondary);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s;
+}
+.mg-pagination-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--surface-4);
+    text-decoration: none;
+}
+.mg-pagination-btn.disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+.mg-pagination-info {
+    font-size: 0.75rem;
+    color: var(--txt-muted);
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .mg-hero              { padding: 1.25rem; margin-bottom: 1rem; }
+    .mg-hero h2           { font-size: 1.2rem; }
+    .mg-hero p            { font-size: 0.8rem; }
+    .mg-hero-actions      { margin-top: 0.75rem; width: 100%; }
+    .mg-hero-btn          { font-size: 0.7rem; padding: 5px 10px; }
+    .mg-section-header    { padding: 1rem 1.25rem; }
+    .mg-section-body      { padding: 1.25rem; }
+    .mg-notif-item        { padding: 1rem 1.25rem; gap: 12px; }
+    .mg-notif-icon        { width: 36px; height: 36px; font-size: 0.875rem; }
+    .mg-notif-body-title  { font-size: 0.825rem; }
+    .mg-notif-body-desc   { font-size: 0.775rem; }
+    .mg-section-header-row { flex-direction: column; gap: 0.5rem; }
+}
+
+@media (max-width: 480px) {
+    .mg-hero              { border-radius: 14px; }
+    .mg-section           { border-radius: 14px; }
+    .mg-section-body      { padding: 1rem; }
+    .mg-notif-item        { padding: 0.875rem 1rem; }
+    .mg-notif-actions     { gap: 6px; }
+    .btn-notif-accept,
+    .btn-notif-reject     { font-size: 0.725rem; padding: 6px 12px; }
+
+    .mg-pagination-wrapper {
+        justify-content: center;
+    }
+
+    .mg-pagination-info {
+        width: 100%;
+        text-align: center;
+        order: -1;
+    }
+}
+</style>
+@endpush
+
+@section('content')
+
+<ul class="breadcrumb-matchgo">
+    <li>
+        <a href="{{ route('dashboard') }}">
+            <i class="bi bi-house me-1"></i>Dashboard
+        </a>
+    </li>
+    <li>
+        <span class="separator">
+            <i class="bi bi-chevron-right"></i>
+        </span>
+    </li>
+    <li>
+        <span class="active">Notifications</span>
+    </li>
+</ul>
+
+<div class="mg-hero">
+    <div class="mg-hero-grid"></div>
+
+    <div class="mg-hero-content">
+        <div>
+            <div class="mg-hero-eyebrow">
+                <i class="bi bi-bell-fill"></i> Notifikasi
+            </div>
+
+            <h2>Pusat <span>Notifikasi</span> Kamu</h2>
+
+            <p>Pantau semua aktivitas pertandingan, tantangan, dan pengingat jadwal kamu.</p>
+        </div>
+
+        <div class="mg-hero-actions">
+            <a href="{{ route('matchmaking.index') }}" class="mg-hero-btn mg-hero-btn-accent">
+                <i class="bi bi-search-heart"></i> Cari Lawan
+            </a>
+
+            <a href="{{ route('matches.index') }}" class="mg-hero-btn mg-hero-btn-muted">
+                <i class="bi bi-calendar-event"></i> Pertandingan
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="mg-section">
+
+    <div class="mg-section-header">
+        <div class="mg-section-num" id="notif-section-num">
+            {{ $notifications->total() > 0 ? $notifications->total() : '—' }}
+        </div>
+
+        <div class="mg-section-header-meta">
+            <div class="mg-section-header-row">
+                <div>
+                    <h6 class="mg-section-title">Semua Notifikasi</h6>
+
+                    <p class="mg-section-sub" id="notif-section-sub">
+                        @if($unreadCount > 0)
+                            {{ $unreadCount }} notifikasi belum dibaca.
+                        @else
+                            Semua notifikasi sudah dibaca.
+                        @endif
+                    </p>
+                </div>
+
+                <div id="notif-mark-all-form" style="{{ $unreadCount > 0 ? '' : 'display:none;' }}">
+                    <form action="{{ route('notifications.readAll') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="mg-mark-all">
+                            <i class="bi bi-check2-all"></i> Tandai semua dibaca
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mg-section-body" style="padding: 0;">
+
+        @if(session('success'))
+            <div style="
+                background: var(--alert-success-bg);
+                border-bottom: 1px solid var(--alert-success-bdr);
+                color: var(--alert-success-txt);
+                padding: 12px 1.5rem;
+                font-size: 0.825rem;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            ">
+                <i class="bi bi-check-circle-fill"></i>
+                {{ session('success') }}
+            </div>
+        @endif
+
+        <div id="notif-empty-state"
+             class="mg-notif-empty"
+             style="{{ $notifications->isEmpty() ? '' : 'display:none;' }}">
+            <div class="mg-notif-empty-icon">
+                <i class="bi bi-bell-slash"></i>
+            </div>
+
+            <p class="mg-notif-empty-title">Belum ada notifikasi</p>
+
+            <p class="mg-notif-empty-sub">
+                Notifikasi pertandingan dan aktivitas kamu akan muncul di sini.
+            </p>
+        </div>
+
+        <div id="notif-list-wrapper" class="mg-notif-list">
+
+            @foreach($notifications as $notif)
+
+                @php
+                    $notifData = is_array($notif->data)
+                        ? $notif->data
+                        : (json_decode($notif->data ?? '[]', true) ?: []);
+
+                    $notifType = $notif->display_type;
+
+                    $iconClass = match ($notifType) {
+                        'match_confirmed' => 'type-match',
+                        'match_challenge' => 'type-challenge',
+                        'match_reminder'  => 'type-reminder',
+                        'match_result'    => 'type-result',
+                        'match_rejected'  => 'type-rejected',
+                        default           => 'type-system',
+                    };
+
+                    $iconHtml = match ($notifType) {
+                        'match_confirmed' => '<i class="bi bi-trophy-fill"></i>',
+                        'match_challenge' => '<i class="bi bi-send-fill"></i>',
+                        'match_reminder'  => '<i class="bi bi-calendar-event-fill"></i>',
+                        'match_result'    => '<i class="bi bi-check-circle-fill"></i>',
+                        'match_rejected'  => '<i class="bi bi-x-circle-fill"></i>',
+                        default           => '<i class="bi bi-bell-fill"></i>',
+                    };
+                @endphp
+
+                <div class="mg-notif-item {{ $notif->is_unread ? 'unread' : 'read' }}"
+                     data-id="{{ $notif->id }}">
+
+                    <div class="mg-notif-icon {{ $iconClass }}">
+                        {!! $iconHtml !!}
+                    </div>
+
+                    <div class="mg-notif-body">
+
+                        <p class="mg-notif-body-title">
+                            {{ $notif->display_title }}
+                        </p>
+
+                        <p class="mg-notif-body-desc">
+                            {{ $notif->display_message }}
+                        </p>
+
+                        @if(
+                            $notifType === 'match_challenge' &&
+                            $notif->is_unread &&
+                            isset($notifData['match_request_id']) &&
+                            $notifData['match_request_id']
+                        )
+                            <div class="mg-notif-actions">
+                                <form action="{{ route('matchmaking.accept', $notifData['match_request_id']) }}"
+                                      method="POST"
+                                      style="display:inline;">
+                                    @csrf
+
+                                    <button type="submit" class="btn-notif-accept">
+                                        <i class="bi bi-check-lg"></i> Terima
+                                    </button>
+                                </form>
+
+                                <form action="{{ route('matchmaking.reject', $notifData['match_request_id']) }}"
+                                      method="POST"
+                                      style="display:inline;">
+                                    @csrf
+
+                                    <button type="submit" class="btn-notif-reject">
+                                        <i class="bi bi-x-lg"></i> Tolak
+                                    </button>
+                                </form>
+                            </div>
+                        @endif
+
+                        <p class="mg-notif-time">
+                            <i class="bi bi-clock me-1"></i>
+                            {{ $notif->created_at ? $notif->created_at->diffForHumans() : '-' }}
+                        </p>
+
+                    </div>
+                </div>
+
+            @endforeach
+
+        </div>
+
+        @if($notifications->hasPages())
+            <div class="mg-pagination-wrapper">
+
+                @if($notifications->onFirstPage())
+                    <span class="mg-pagination-btn disabled">
+                        <i class="bi bi-chevron-left"></i>
+                        Sebelumnya
+                    </span>
+                @else
+                    <a href="{{ $notifications->previousPageUrl() }}" class="mg-pagination-btn">
+                        <i class="bi bi-chevron-left"></i>
+                        Sebelumnya
+                    </a>
+                @endif
+
+                <span class="mg-pagination-info">
+                    Halaman {{ $notifications->currentPage() }} dari {{ $notifications->lastPage() }}
+                </span>
+
+                @if($notifications->hasMorePages())
+                    <a href="{{ $notifications->nextPageUrl() }}" class="mg-pagination-btn">
+                        Selanjutnya
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                @else
+                    <span class="mg-pagination-btn disabled">
+                        Selanjutnya
+                        <i class="bi bi-chevron-right"></i>
+                    </span>
+                @endif
+
+            </div>
+        @endif
+
+    </div>
+</div>
+
+@push('scripts')
+<script>
+(function () {
+    const POLL_URL      = '{{ route("notifications.poll") }}';
+    const POLL_INTERVAL = 15000;
+    const CSRF          = '{{ csrf_token() }}';
+
+    let lastUnreadCount = Number({{ $unreadCount ?? 0 }});
+    let lastTotal       = Number({{ $notifications->total() ?? 0 }});
+
+    function escapeHtml(value) {
+        if (value === null || value === undefined) return '';
+
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function updateSidebarBadge(count) {
+        const badge = document.getElementById('notif-sidebar-badge');
+        const dot   = document.getElementById('notif-topbar-dot');
+
+        if (badge) {
+            badge.textContent   = count > 99 ? '99+' : count;
+            badge.style.display = count > 0 ? 'inline-flex' : 'none';
+        }
+
+        if (dot) {
+            dot.style.display = count > 0 ? 'block' : 'none';
+        }
+    }
+
+    function updateHeader(total, unreadCount) {
+        const numEl     = document.getElementById('notif-section-num');
+        const subEl     = document.getElementById('notif-section-sub');
+        const markAllEl = document.getElementById('notif-mark-all-form');
+
+        if (numEl) {
+            numEl.textContent = total > 0 ? total : '—';
+        }
+
+        if (subEl) {
+            subEl.textContent = unreadCount > 0
+                ? `${unreadCount} notifikasi belum dibaca.`
+                : 'Semua notifikasi sudah dibaca.';
+        }
+
+        if (markAllEl) {
+            markAllEl.style.display = unreadCount > 0 ? 'block' : 'none';
+        }
+    }
+
+    function renderList(notifications) {
+        const listEl  = document.getElementById('notif-list-wrapper');
+        const emptyEl = document.getElementById('notif-empty-state');
+
+        if (!listEl) return;
+
+        if (!Array.isArray(notifications) || notifications.length === 0) {
+            listEl.innerHTML = '';
+
+            if (emptyEl) {
+                emptyEl.style.display = 'block';
+            }
+
+            return;
+        }
+
+        if (emptyEl) {
+            emptyEl.style.display = 'none';
+        }
+
+        const iconClassMap = {
+            match_confirmed: 'type-match',
+            match_challenge: 'type-challenge',
+            match_reminder: 'type-reminder',
+            match_result: 'type-result',
+            match_rejected: 'type-rejected',
+            system: 'type-system',
+        };
+
+        const iconElMap = {
+            match_confirmed: '<i class="bi bi-trophy-fill"></i>',
+            match_challenge: '<i class="bi bi-send-fill"></i>',
+            match_reminder: '<i class="bi bi-calendar-event-fill"></i>',
+            match_result: '<i class="bi bi-check-circle-fill"></i>',
+            match_rejected: '<i class="bi bi-x-circle-fill"></i>',
+            system: '<i class="bi bi-bell-fill"></i>',
+        };
+
+        listEl.innerHTML = notifications.map(function (n) {
+            const type      = n.type || 'system';
+            const iconClass = iconClassMap[type] || 'type-system';
+            const iconEl    = iconElMap[type] || '<i class="bi bi-bell-fill"></i>';
+            const data      = n.data || {};
+            const isUnread  = Boolean(n.is_unread);
+
+            let actionBtns = '';
+
+            if (
+                type === 'match_challenge' &&
+                isUnread &&
+                data.match_request_id
+            ) {
+                const requestId = encodeURIComponent(data.match_request_id);
+
+                actionBtns = `
+                    <div class="mg-notif-actions">
+                        <form action="/matchmaking/accept/${requestId}" method="POST" style="display:inline;">
+                            <input type="hidden" name="_token" value="${CSRF}">
+                            <button type="submit" class="btn-notif-accept">
+                                <i class="bi bi-check-lg"></i> Terima
+                            </button>
+                        </form>
+
+                        <form action="/matchmaking/reject/${requestId}" method="POST" style="display:inline;">
+                            <input type="hidden" name="_token" value="${CSRF}">
+                            <button type="submit" class="btn-notif-reject">
+                                <i class="bi bi-x-lg"></i> Tolak
+                            </button>
+                        </form>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="mg-notif-item ${isUnread ? 'unread' : 'read'}" data-id="${escapeHtml(n.id)}">
+                    <div class="mg-notif-icon ${iconClass}">
+                        ${iconEl}
+                    </div>
+
+                    <div class="mg-notif-body">
+                        <p class="mg-notif-body-title">${escapeHtml(n.title)}</p>
+                        <p class="mg-notif-body-desc">${escapeHtml(n.message)}</p>
+
+                        ${actionBtns}
+
+                        <p class="mg-notif-time">
+                            <i class="bi bi-clock me-1"></i>
+                            ${escapeHtml(n.time)}
+                        </p>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function playNotifSound() {
+        try {
+            const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+            const osc  = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.frequency.value = 880;
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.3);
+        } catch (e) {}
+    }
+
+    function poll() {
+        fetch(POLL_URL, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            }
+        })
+        .then(function (res) {
+            if (!res.ok) {
+                throw new Error('Gagal mengambil data notifikasi');
+            }
+
+            return res.json();
+        })
+        .then(function (data) {
+            const notifications = Array.isArray(data.notifications)
+                ? data.notifications
+                : [];
+
+            const newCount = Number(data.unread_count || 0);
+            const newTotal = Number(data.total ?? notifications.length);
+
+            if (newCount > lastUnreadCount) {
+                playNotifSound();
+            }
+
+            lastUnreadCount = newCount;
+            lastTotal       = newTotal;
+
+            updateSidebarBadge(newCount);
+            updateHeader(newTotal, newCount);
+
+            if (window.location.pathname.includes('/notifications')) {
+                renderList(notifications);
+            }
+        })
+        .catch(function (err) {
+            console.warn('[Polling] Error:', err);
+        });
+    }
+
+    poll();
+    setInterval(poll, POLL_INTERVAL);
+})();
+</script>
+@endpush
+
+@endsection
