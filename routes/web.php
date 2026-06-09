@@ -96,9 +96,15 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/challenge/{matchRequest}/reject', [MatchController::class, 'rejectChallenge'])->name('challenge.reject');
         Route::get('/{match}', [MatchController::class, 'show'])->name('show');
         Route::post('/{match}/cancel', [MatchController::class, 'cancel'])->name('cancel');
-        Route::post('/{match}/payments/create', [PaymentController::class, 'createPayment'])->name('payments.create');
+
+        // Fake payment (semua match)
+        Route::post('/{match}/payments/create', [\App\Http\Controllers\FakePaymentController::class, 'createPayment'])->name('payments.create');
+        Route::post('/{match}/payment/fake/paid', [\App\Http\Controllers\FakePaymentController::class, 'markPaid'])->name('payment.fake.paid');
+
+        // (Gateway asli masih ada, tapi UI akan diarahkan ke fake)
         Route::get('/{match}/payment/success', [PaymentController::class, 'success'])->name('payment.success');
         Route::get('/{match}/payment/failed', [PaymentController::class, 'failed'])->name('payment.failed');
+
         Route::post('/{match}/score', [MatchController::class, 'inputScore'])->name('score');
     });
 

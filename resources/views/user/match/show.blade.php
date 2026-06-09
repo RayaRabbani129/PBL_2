@@ -446,6 +446,13 @@
         border-color: var(--accent);
         box-shadow: 0 0 0 3px var(--accent-dim);
     }
+
+    /* ── Fake payment UX ── */
+    .btn-lime.is-processing {
+        pointer-events: none;
+        opacity: 0.85;
+        transform: translateY(0.5px);
+    }
 </style>
 @endpush
 
@@ -871,9 +878,11 @@
 
                             <button
                                 type="button"
-                                class="btn-lime js-pay-midtrans"
+                                class="btn-lime js-pay-fake"
                                 data-create-url="{{ route('matches.payments.create', $match) }}"
-                                style="width:100%;justify-content:center;"
+                                data-mark-paid-url="{{ route('matches.payment.fake.paid', $match) }}"
+                                style="width:100%; justify-content:center;"
+                                aria-label="Bayar sekarang (fake)"
                             >
                                 <i class="bi bi-credit-card"></i> Bayar Sekarang
                             </button>
@@ -1013,20 +1022,19 @@
 
 @if ($match->status === 'awaiting_payment' && optional($myPayment)->status !== 'paid')
     @push('scripts')
-        <script
-            src="https://app.sandbox.midtrans.com/snap/snap.js"
-            data-client-key="{{ config('midtrans.client_key') }}"
-        ></script>
+
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                const button = document.querySelector('.js-pay-midtrans');
+                const button = document.querySelector('.js-pay-fake');
 
                 if (!button) return;
 
                 button.addEventListener('click', async function () {
                     button.disabled = true;
                     const originalText = button.innerHTML;
-                    button.innerHTML = '<i class="bi bi-hourglass-split"></i> Menyiapkan Pembayaran...';
+                    // UX: tampilkan status bertahap agar terlihat real
+                    button.style.opacity = 0.85;
+                    button.innerHTML = '<i class="bi bi-hourglass-split"></i> Membuat pembayaran (pending)...';
 
                     try {
                         const response = await fetch(button.dataset.createUrl, {
@@ -1040,29 +1048,35 @@
 
                         const data = await response.json();
 
-                        if (!response.ok || !data.snap_token) {
-                            throw new Error(data.message || 'Gagal membuat transaksi pembayaran.');
+                        if (!response.ok) {
+                            throw new Error(data.message || 'Gagal membuat pembayaran.');
                         }
 
-                        window.snap.pay(data.snap_token, {
-                            onSuccess: function () {
-                                window.location.href = '{{ route('matches.payment.success', $match) }}';
-                            },
-                            onPending: function () {
-                                window.location.reload();
-                            },
-                            onError: function () {
-                                window.location.href = '{{ route('matches.payment.failed', $match) }}';
-                            },
-                            onClose: function () {
-                                button.disabled = false;
-                                button.innerHTML = originalText;
+                        // Setelah invoice/pending dibuat, anggap user menekan konfirmasi pembayaran.
+                        button.innerHTML = '<i class="bi bi-check2-circle"></i> Konfirmasi pembayaran...';
+                        button.classList.add('is-processing');
+
+                        const paidRes = await fetch(button.dataset.markPaidUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
                             }
                         });
+
+                        const paidData = await paidRes.json();
+                        if (!paidRes.ok) {
+                            throw new Error(paidData.message || 'Gagal memproses pembayaran fake.');
+                        }
+
+                        // Reload untuk menampilkan pending/paid sesuai kondisi kedua tim.
+                        window.location.reload();
                     } catch (error) {
                         alert(error.message);
                         button.disabled = false;
                         button.innerHTML = originalText;
+                        button.style.opacity = 1;
                     }
                 });
             });
